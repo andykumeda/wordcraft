@@ -1,8 +1,10 @@
 # Portable assistant implementation ledger
 
-Updated 2026-10-28 (America/Los_Angeles). **Implementation: Verified.** All shared and WordCraft
-automated gates passed, and a real local model completed MCP read/edit/read-back/Undo acceptance.
-Codex account, hosted-provider and other-platform live acceptance remain separate release gates.
+Updated 2026-10-28 (America/Los_Angeles). **Implementation: In progress — Codex live follow-up.**
+The original shared and WordCraft automated gates passed, and a real local model completed MCP
+read/edit/read-back/Undo acceptance. The newly authorized Codex live test found a continuation
+defect and a long-chat-title layout defect; fixes and fresh acceptance are in progress below.
+Hosted-provider and other-platform live acceptance remain separate release gates.
 The execution host is **AK's Mini**. **Local preview installation: Deployed**, following the
 user's request to place a testable build in `~/Applications`. `/Applications/WordCraft.app` is
 unchanged. No public app release or WordCraft push has occurred. After compaction, read this ledger
@@ -32,6 +34,10 @@ and inspect Git state; do not restart completed implementation or checks.
 - The user authorized a separate local test build in `~/Applications`: the installed bundle is
   `WordCraft Assistant Preview.app`. Preserve the existing `/Applications/WordCraft.app` and MCP
   wrappers. This authorizes local installation, not a public release.
+- Follow-up authorization: after the corrected Codex edit/Undo path works, try a local Ollama model
+  for **App control**, keeping Codex for **General chat** to exercise independent mixed-provider
+  routing. Discover and verify an already installed tool-capable model; do not silently substitute
+  models/providers or download a model without establishing that it is needed.
 - **Deferred:** GridCraft/PdfCraft/other app integrations, browser inference and public app release.
   Do not copy existing Codex authentication, chats, settings, skills or MCP registrations.
 
@@ -40,9 +46,9 @@ and inspect Git state; do not restart completed implementation or checks.
 | Repository | Checkout / branch | Revision and delivery |
 | --- | --- | --- |
 | WordCraft | `/Users/andy/Dev/wordcraft`, `codex/portable-assistant` | Base `c4fafc215490a0186ee750454b1ce73a9823daed`; verified implementation and installed binary source `38ca44788a5b190db630059bbbe967c5b6a91f26`. Not pushed; separate local preview installed. |
-| craft-libs | `/Users/andy/Dev/craft-libs`, `codex/portable-assistant` | Base `92d392cff132eaf53e13afff77f38b5c11b73aa0`; initial implementation `566be16052de3cbe04fa132a88c24db0b7c7f756`; verified follow-up and final consumer pin **`a8d4c0a178aff4c31d27e05bf87a4e93915bc831`** |
+| craft-libs | `/Users/andy/Dev/craft-libs`, `codex/portable-assistant` | Base `92d392cff132eaf53e13afff77f38b5c11b73aa0`; initial implementation `566be16052de3cbe04fa132a88c24db0b7c7f756`; home isolation `a8d4c0a178aff4c31d27e05bf87a4e93915bc831`; reviewed continuation/layout fix and current consumer pin **`d4641d3663819aeb20cab5ccc1623292c5f4e30e`** |
 
-The user explicitly approved publishing to **andykumeda/craft-libs**. Both shared commits were
+The user explicitly approved publishing to **andykumeda/craft-libs**. All three shared commits were
 pushed to that fork's `codex/portable-assistant` branch, and the remote SHA was verified. All
 WordCraft craft-libs dependencies and Cargo.lock use the final revision from
 `https://github.com/andykumeda/craft-libs`; no sibling-path overrides remain. Original storytold
@@ -55,7 +61,8 @@ public and connected reads; no unavailable instructions were invented. Installed
 ## Local preview installation checkpoint
 
 **State: Deployed — local test build, native smoke verified.** The installed native release was
-built from `38ca44788a5b190db630059bbbe967c5b6a91f26`, with the shared revision pinned above.
+built from `38ca44788a5b190db630059bbbe967c5b6a91f26`, with shared revision `a8d4c0a`.
+This is the original installed preview; the corrected `d4641d3` build is in progress below.
 This follow-up adds no application source changes and is not a public release.
 
 | Item | Installed configuration / verification |
@@ -83,6 +90,68 @@ Output is at `/private/tmp/wordcraft-preview-ci.log`; the release build log is
 `/private/tmp/wordcraft-preview-build.log`. This delivery record is committed separately from the
 installed source revision; obtain its commit with `git log -1 --format=%H -- docs/assistant-implementation.md`.
 
+## Codex live acceptance follow-up
+
+**State: In progress.** The user requested sign-in and an actual assistant edit test. They completed
+the device-code flow in the browser; the preview saved the isolated Craft Codex account after its
+initial containment checks and model discovery. Both roles were explicitly set to the discovered
+`gpt-6.1-sol` model as **WordCraft-only overrides**; suite defaults remain unset. Credentials and
+one-time codes are not copied into this ledger or test artifacts.
+
+A separate installed-preview process (PID 91872, temporary owned control port 17981) opened
+`/private/tmp/wordcraft-codex-acceptance-rdx0kihp/Assistant Test.txt` with its own disposable document
+profile and the normal shared assistant configuration. The user's original preview process was
+preserved. The request was to read the synthetic document, change only 9:00 AM to 10:00 AM, then
+read back. Sign-in and model capability checks succeeded, but the control role made **11 successful
+get_text calls and no edits**, then stopped at the configured round limit. Independent document
+read confirmed the original text was unchanged. No command was replayed after the failure.
+Synthetic-only failure evidence is `attempt-1.json` in that test directory; the UI screenshot is
+`assistant-running.png`. The test process received normal Quit after evidence capture.
+
+Root cause: Codex's adapter closed its ephemeral worker at each tool call and supplied results to
+the next worker as quoted JSON history, rather than replying to the actual dynamic-tool callback.
+The original compatibility probe masked this by removing tools and adding a new user instruction
+for the continuation. Services work now retains a bounded ephemeral exchange, returns the actual
+identified tool result, and strengthens continuation/cancellation/mismatch tests. Craft remains the
+canonical history owner. Separately, a long saved-chat title expands the History combo and its
+trailing label wraps vertically; the widgets workstream is fixing the compact header layout.
+
+Both shared fixes are now committed as `d4641d3663819aeb20cab5ccc1623292c5f4e30e`, published to the
+already authorized fork, and verified with `git ls-remote`. Shared fmt, full all-target Clippy,
+unfiltered tests (**1,841 passed / 29 ignored**) and core/UI WASM all passed; logs are
+`/private/tmp/craft-assistant-continuation-shared-{fmt,clippy,tests,wasm}.log`. Native focused tests
+passed **45 / 2 ignored**; long-title geometry passed all 12 width/height/idle/running cases and four
+screenshots were inspected. The portable provider lifetime contract is documented explicitly.
+
+WordCraft's manifests and lockfile now pin that revision; no other package versions changed.
+Final post-pin `cargo xtask ci` passed all eight stages: fmt, Clippy, **4,625 ordinary tests
+passed / 6 ignored / zero failures**, the separate localization audit (one test), doctests, assets,
+layers and the 16-crate WASM check. Log: `/private/tmp/wordcraft-codex-fixed-ci.log`; retained
+target: `/private/tmp/wordcraft-codex-acceptance-ci`. The ARM64 release cache build also passed
+in 14m20s at `/private/tmp/wordcraft-codex-preview-build`, log
+`/private/tmp/wordcraft-codex-preview-build.log`. Its temporary `uncommitted` identity must be
+replaced by the verified WordCraft commit before installation. The old preview quit normally
+through its app menu with no save prompt; PID 59858 and the test listener are absent.
+
+Next: commit the verified integration, rebuild with its commit identity, install the corrected preview, and
+repeat the synthetic Codex edit/read-back/Undo test. Then configure the user-requested local Ollama control
+role and verify the mixed Codex-chat/Ollama-control path. Preserve the completed sign-in and explicit model
+choices. The pre-fix CI rerun at `/private/tmp/wordcraft-codex-acceptance-ci.log` passed fmt/Clippy,
+then stopped at sandbox-denied loopback binds (40 tests passed, 11 control-server tests failed with
+`PermissionDenied`); later stages did not run. This was an execution-permission failure, not a
+product assertion. Retain `/private/tmp/wordcraft-codex-acceptance-ci` for the post-pin full rerun
+with the required permission to bind the existing ephemeral test listeners. It cannot validate
+the pending source changes. The ignored live acceptance helper now creates/drops a provider for
+each standalone capability probe before creating the provider for its real turn, matching the
+documented Codex lifetime contract; production WordCraft already uses per-turn provider ownership.
+
+Routing verification requested by the user must distinguish configured labels from actual work:
+record effective per-app bindings, routed provider/model status, the delegation/MCP journal, and
+Ollama request-log plus active-model evidence during the synthetic edit, followed by read-back
+and normal Undo. Ollama is installed at `/opt/homebrew/bin/ollama`; `gemma4:e4b` is already present,
+and port 11434 was free on inspection. Recheck ownership before starting it after the Codex retest;
+no model download or local inference has occurred in this follow-up yet.
+
 ## Workstreams
 
 | Workstream / owner | State | Acceptance / release status |
@@ -90,12 +159,14 @@ installed source revision; obtain its commit with `git log -1 --format=%H -- doc
 | Shared contracts, runtime, HTTP, storage, widgets / shared agents | Verified | Full shared gates; two independent synthetic app hosts; published source |
 | Codex home isolation / services agent | Verified | HOME/USERPROFILE/CODEX_HOME isolated; actual macOS read/write/network sandbox probe; account/model acceptance remains gated |
 | WordCraft MCP host, file grants, pane/settings/history / primary | Verified | Existing MCP and UI-thread command path; protection, Undo, cancellation, selection/window boundaries and persistence regressions |
-| WordCraft final CI / primary | Verified | All eight stages passed; 4,625 ordinary tests passed, 6 ignored; localization and 16-crate WASM check passed |
+| WordCraft final CI / primary | Verified | Post-fix eight-stage gate passed: 4,625 ordinary tests / 6 ignored; localization audit and 16-crate WASM passed |
 | Local model acceptance / primary + services | Verified | Ollama 0.40.11, existing gemma4:e4b, both roles, actual MCP read/edit/read-back and one normal Undo passed |
-| Codex/hosted live acceptance | Blocked | Requires explicit Craft sign-in and a configured hosted connection; existing private credentials were not copied or read |
+| Codex live continuation / services agent | Verified | Shared actual dynamic-tool result continuation repaired; full shared gates and 45 native focused tests passed; corrected installed app live retest pending |
+| Long-title assistant layout / widgets agent | Verified | Compact bounded history row; all 12 geometry cases and four inspected captures passed; corrected installed pane check pending |
+| Hosted live acceptance | Blocked | Requires a configured hosted connection; existing private credentials were not copied or read |
 | Other-platform credential/native acceptance | Not started | Windows/Linux/BSD runtime and credential checks remain manual release gates |
-| Documentation and local commits / primary | Verified | Help, architecture, progress docs and this ledger updated; local WordCraft A1 commit, shared commits published |
-| Local preview build/installation / primary | Deployed | Installed ARM64 release; strict signature, native Assistant, persistent profile and owned-listener cleanup verified |
+| Documentation and local commits / primary | In progress | Original A1 and preview delivery committed; shared corrective commit published; consumer pin/docs/lifetime-test update passed final CI and awaits commit |
+| Local preview build/installation / primary | In progress | Original ARM64 preview installed; corrected release cache built; commit-tagged rebuild, installation and native verification next |
 | Public release/other app integrations/browser inference | Not started | Deferred scope; existing installed app and MCP wrappers preserved |
 
 ## Implementation and review decisions

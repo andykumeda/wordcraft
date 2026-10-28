@@ -1,7 +1,7 @@
 # WordCraft architecture
 
 > **Last reviewed:** 2026-10-10 · **Last updated:** 2026-10-28 · **Change:** minor (`proof` is per language: English and Polish; previously major: first committed version; `plan/architecture.md` is local-only) · **Target:** Microsoft Word (Microsoft 365) for Mac 16.113.4
-> **Assistant update:** 2026-10-28 · Add portable assistant architecture and guarded internal MCP dispatch; live acceptance remains open. See [implementation status](assistant-implementation.md).
+> **Assistant update:** 2026-10-28 · Codex returns actual tool results to bounded ephemeral exchanges while Craft keeps canonical history; provider lifetime is scoped to each turn or standalone probe. See [implementation status](assistant-implementation.md).
 
 
 How WordCraft is built today (origin/main `40c5d51`). The longer design notes in
@@ -69,13 +69,17 @@ The desktop assistant uses `craft-ai-core` contracts, `craft-ai-native` executio
 the engine: it sends internal requests through `wordcraft_mcp::Server`, dispatches on the UI thread,
 checks the originating window/document/selection and revision, and confines exact file access at
 the engine I/O boundary. External MCP remains unchanged. Provider workers have no WordCraft
-document dependency. Native services are excluded on WASM. See [assistant help](assistant.md) and
+document dependency. Each active Codex role keeps its bounded ephemeral exchange alive while
+Craft dispatches tools; matching identified results return over the native protocol. WordCraft
+owns providers per turn (and separately for standalone probes), so all workers close on every
+exit. Craft remains the canonical history owner. Native services are excluded on WASM. See [assistant help](assistant.md) and
 [the implementation ledger](assistant-implementation.md) for configuration, portability and gates.
 
 ## Revision history
 
 | Date | Change | Summary |
 |---|---|---|
+| 2026-10-28 | minor | Codex returns actual tool results to bounded ephemeral exchanges while Craft keeps canonical history; provider lifetime is scoped to each turn or standalone probe. |
 | 2026-10-28 | minor | Add portable assistant architecture and guarded internal MCP dispatch; live acceptance remains open. |
 | 2026-10-10 | minor | `proof`: proofing languages (English, Polish), affix engine, Polish patterns; layout and engine route each run by its language |
 | 2026-10-10 | major | First committed architecture doc, from the crates' sources and `AGENTS.md` |

@@ -25,7 +25,12 @@ connection and model for each role, then select **Apply model**. API keys go int
 store, separate from settings and chats. If that store is unavailable, saving the key fails visibly.
 
 Codex uses a separate Craft-managed sign-in. It does not reuse your coding assistant's credentials,
-history, settings or MCP registrations. The installed Codex executable must pass compatibility and
+history, settings or MCP registrations. Under **Codex account**, choose **Sign in to Codex**, then
+enter the one-time code shown in WordCraft on the browser page. Keep WordCraft open until it shows
+**Codex connection saved**, then choose and apply a model for each role. Signing into the browser
+account alone does not complete the device connection.
+
+The installed Codex executable must pass compatibility and
 containment checks before document context is supplied. Failures remain visible and do not switch
 providers. Set `CRAFT_CODEX_BINARY` to an absolute executable path when Codex is not on the
 desktop app's PATH. Sign-in and discovery alone do not confirm readiness: a synthetic callback

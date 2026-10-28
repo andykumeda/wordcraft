@@ -1146,16 +1146,18 @@ mod tests {
         let config = shared.config().unwrap_or_else(|_| panic!("the explicit live test runtime limits could not be loaded"));
         let app_id = app_id().unwrap();
         let (chat, control) = resolve_choices(&store, &app_id).unwrap_or_else(|_| panic!("configure both WordCraft assistant role bindings"));
-        let providers = Providers::new(&root, Arc::new(KeyringStore));
         let cancel = Cancellation::new();
         for (index, choice) in [&chat, &control].into_iter().enumerate() {
             if index == 1 && choice.connection.id == chat.connection.id && choice.model == chat.model {
                 continue;
             }
-            if let Err(error) = verify_model(&providers, &choice.connection, &choice.model, &config, &cancel) {
+            // A standalone capability probe leaves its callback pending until its provider drops.
+            let probe = Providers::new(&root, Arc::new(KeyringStore));
+            if let Err(error) = verify_model(&probe, &choice.connection, &choice.model, &config, &cancel) {
                 panic!("configured model failed the synthetic tool-capability probe ({:?}): {}", error.kind, diagnostic(&error.message));
             }
         }
+        let providers = Providers::new(&root, Arc::new(KeyringStore));
 
         let mut app = app();
         enable_without_profile(&mut app);
