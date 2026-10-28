@@ -130,6 +130,7 @@ impl WordApp {
             quit_requested: false,
             autosave: true,
             zotero: zotero::ZoteroLink::default(),
+            assistant: Default::default(),
             ctx: None,
             ime_origin: false,
             read_aloud_error: None,
@@ -301,6 +302,7 @@ impl WordApp {
             self.poll_printing(ctx);
         }
         self.drain_control(ctx);
+        crate::assistant::poll(self, ctx);
         // The active window's own work; with native windows each window does it again as it
         // draws, for itself.
         self.window_work(ctx);

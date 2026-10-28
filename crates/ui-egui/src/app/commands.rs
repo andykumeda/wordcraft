@@ -373,7 +373,11 @@ impl WordApp {
             self.canvas.scroll_to_caret = true;
         }
         for req in std::mem::take(&mut self.session.ui_requests) {
-            self.handle_request(&req);
+            if self.assistant.dispatching {
+                self.assistant.requested_dialog = true;
+            } else {
+                self.handle_request(&req);
+            }
         }
         if let Some(p) = self.session.path.as_ref().map(|p| p.to_string_lossy().to_string())
             && self.ui.recent.first() != Some(&p)
@@ -483,6 +487,9 @@ impl WordApp {
 
     /// Commands that live in the UI layer.
     pub(crate) fn ui_command(&mut self, id: &str, p: &Value) -> Option<Result<Value, String>> {
+        if let Some(result) = crate::assistant::command(self, id, p) {
+            return Some(result);
+        }
         let s = |k: &str| p.get(k).and_then(Value::as_str);
         Some(Ok(match id {
             "ui.checkForUpdates" | "help.checkForUpdates" => {
@@ -1020,6 +1027,7 @@ pub(crate) fn works_without_document(id: &str) -> bool {
             | "ui.startScreen"
             | "ui.checkForUpdates"
     ) || id.starts_with("help.")
+        || id.starts_with("ui.assistant")
 }
 
 /// Commands that save, export, print, send or replace the document: comment text still being

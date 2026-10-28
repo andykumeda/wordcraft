@@ -155,6 +155,11 @@ Web: `cd apps/wordcraft-web && trunk serve`, then open <http://127.0.0.1:8771/?s
 
 ## For agents: CLI and MCP
 
+The desktop [Assistant pane](docs/assistant.md) provides one conversation with independent general
+chat and app-control models. Configure connections under File → Options → Agents. The portable
+shared implementation is available in this branch; [verification and release gates](docs/assistant-implementation.md)
+track what has actually been tested.
+
 WordCraft was designed to be driven by people *and* by AI agents.
 
 ```sh

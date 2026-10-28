@@ -1004,7 +1004,14 @@ fn commands_dialog(app: &mut WordApp, ui: &mut Ui, d: &mut Dialog) -> bool {
         reg.all().iter().filter(|c| command_matches(c, query)).collect()
     };
     hits.truncate(14);
+    let assistant_match = query.trim().is_empty() || tl!("Assistant").to_lowercase().contains(&query.trim().to_lowercase());
     let enter = ui.input(|i| i.key_pressed(egui::Key::Enter));
+    if assistant_match && (ui.button(tl!("Assistant")).clicked() || (enter && !query.trim().is_empty())) {
+        // Assistant is a UI command, so it is not in the engine hit list below. A typed match
+        // must be keyboard-accessible too; empty-box Enter keeps its existing suggested command.
+        let _ = app.run("ui.assistant", json!({"value":true}));
+        return true;
+    }
     let mut run: Option<&str> = enter.then(|| hits.first().map(|c| c.id)).flatten();
     for c in &hits {
         let sc = crate::widgets::shortcut_text(app, c.id);
@@ -1510,4 +1517,47 @@ fn check_errors_dialog(ui: &mut Ui, d: &mut Dialog) -> bool {
     ui.label(egui::RichText::new(crate::i18n::fmt(tl!("Recipients: {count}"), &[("count", &records.to_string())])).weak());
     let (ok, cancel) = buttons(ui, tl!("Close"));
     ok || cancel
+}
+
+#[cfg(test)]
+mod assistant_search_tests {
+    use super::*;
+
+    #[test]
+    fn enter_opens_the_matching_assistant_instead_of_finding_document_text() {
+        struct Fixture {
+            app: WordApp,
+            dialog: Dialog,
+            closed: bool,
+        }
+        for already_open in [false, true] {
+            let mut app = WordApp::new(
+                wordcraft_engine::Session::new(wordcraft_doc::Document::from_text("Assistant in the document")),
+                crate::Services::default(),
+            );
+            app.assistant.open = already_open;
+            let original = serde_json::to_value(&app.session.doc).unwrap();
+            let mut harness = egui_kittest::Harness::builder().with_size(vec2(600.0, 700.0)).build_ui_state(
+                |ui, fixture: &mut Fixture| {
+                    if !fixture.closed {
+                        fixture.closed = commands_dialog(&mut fixture.app, ui, &mut fixture.dialog);
+                    }
+                },
+                Fixture { app, dialog: Dialog::Commands { query: tl!("Assistant").into(), swallow: false }, closed: false },
+            );
+            harness.run_steps(3);
+            harness.event(egui::Event::Key {
+                key: egui::Key::Enter,
+                physical_key: None,
+                pressed: true,
+                repeat: false,
+                modifiers: egui::Modifiers::NONE,
+            });
+            harness.run_steps(3);
+            assert!(harness.state().closed);
+            assert!(harness.state().app.assistant.open);
+            assert!(!harness.state().app.session.view.nav_pane);
+            assert_eq!(serde_json::to_value(&harness.state().app.session.doc).unwrap(), original);
+        }
+    }
 }

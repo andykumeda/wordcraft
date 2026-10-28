@@ -111,8 +111,12 @@ fn a_thai_run_with_latin_falls_back_to_one_face() {
     for c in &chars {
         assert!(f.covers(*c), "{} covers {c}", f.family);
     }
-    // A Thai font with OpenType tables, as the per-character fallback prefers.
-    assert!(f.has_layout_tables(), "{} shapes Thai", f.family);
+    // Thai shaping can use OpenType tables or Apple's AAT tables (Thonburi on macOS).
+    // Check the behavior: a tone mark over an upper vowel must move or use another glyph.
+    let tone = |text: &str| crate::shape(&f, text, &[], |c| c).into_iter().last().map(|g| (g.gid, g.y_offset));
+    let (bare, stacked) = (tone("ป่"), tone("ปั่"));
+    assert!(bare.is_some() && stacked.is_some(), "{} shapes Thai marks", f.family);
+    assert_ne!(bare, stacked, "{} stacks the Thai tone mark above the upper vowel", f.family);
     // Without system fonts and without craft-fonts' Thai face (built in since craft-fonts
     // 3d9ab3a1) no bundled face covers Thai: the caller keeps the per-character path.
     let bundled = FontDb::with_font_dirs(Vec::new());

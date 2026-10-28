@@ -465,6 +465,7 @@ fn main() -> eframe::Result {
             let mut app = WordApp::new(session, services(file_dialog, &cc.egui_ctx));
             app.set_startup_update_check(true);
             load_prefs(&mut app);
+            app.assistant.enabled = true;
             load_user_dictionary(&mut app);
             // A region chosen in File › Options replaces the system's for the first blank
             // document too (#838).

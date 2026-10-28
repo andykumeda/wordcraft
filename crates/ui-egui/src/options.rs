@@ -174,7 +174,7 @@ pub fn page(app: &mut WordApp, ui: &mut Ui) {
                 "language" => language(app, ui),
                 "accessibility" => accessibility(app, ui),
                 "advanced" => advanced(app, ui),
-                "agents" => agents(ui),
+                "agents" => agents(app, ui),
                 _ => general(app, ui),
             }
         });
@@ -642,7 +642,9 @@ fn templates_folder(app: &mut WordApp, ui: &mut Ui) {
     note(ui, "File › New lists the .dotx and .dotm templates here under Personal; Save as Word Template starts here.");
 }
 
-fn agents(ui: &mut Ui) {
+fn agents(app: &mut WordApp, ui: &mut Ui) {
+    crate::assistant::settings(app, ui);
+    ui.separator();
     section(ui, "Agents");
     ui.label(tl!("Every command is available to scripts and AI agents: run `wordcraft-cli mcp` for an MCP server, or start the app with `--control <port>` for the JSON control channel."));
 }

@@ -15,6 +15,7 @@ macro_rules! tl {
 
 pub mod a11y;
 pub mod a11y_pane;
+pub mod assistant;
 pub mod async_saves;
 pub mod autoscroll;
 pub mod backstage;
@@ -574,6 +575,7 @@ pub struct WordApp {
     pub(crate) outline_prev_tab: Option<String>,
     /// Zotero commands in flight (`ui.zotero.*`).
     pub zotero: zotero::ZoteroLink,
+    pub assistant: assistant::Assistant,
     /// The egui context, once the first frame has run (background work wakes the UI with it).
     pub(crate) ctx: Option<egui::Context>,
     /// Whether the current command was entered by an input method's own transaction. The engine

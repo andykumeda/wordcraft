@@ -35,6 +35,65 @@ pub enum Access {
     Write,
 }
 
+/// Exact files explicitly supplied to an assistant turn, never their containing folders.
+#[derive(Clone, Debug, Default)]
+pub struct FileGrants {
+    files: Vec<(PathBuf, PathBuf)>,
+}
+
+impl FileGrants {
+    pub fn new(paths: &[String]) -> Result<Self, String> {
+        if paths.len() > 32 {
+            return Err("give at most 32 files to one assistant turn".into());
+        }
+        let mut files = Vec::new();
+        for path in paths {
+            let resolved = resolve(path)?;
+            if resolved.is_dir() {
+                return Err("assistant access is for individual files, not folders".into());
+            }
+            files.push((resolved, resolve_entry(path)?));
+        }
+        Ok(Self { files })
+    }
+
+    fn check(&self, path: &str, access: Access) -> Result<(), String> {
+        let resolved = resolve(path)?;
+        let entry = resolve_entry(path)?;
+        if self.files.iter().any(|(file, granted_entry)| {
+            inside(&resolved, file)
+                && inside(file, &resolved)
+                && (access == Access::Read || (inside(&entry, granted_entry) && inside(granted_entry, &entry)))
+        }) {
+            Ok(())
+        } else {
+            Err("assistant file access requires a file explicitly named or chosen for this turn".into())
+        }
+    }
+}
+
+thread_local! {
+    static FILE_GRANTS: RefCell<Option<Arc<FileGrants>>> = const { RefCell::new(None) };
+}
+
+struct RestoreFiles(Option<Arc<FileGrants>>);
+
+impl Drop for RestoreFiles {
+    fn drop(&mut self) {
+        FILE_GRANTS.with(|scope| *scope.borrow_mut() = self.0.take());
+    }
+}
+
+/// Apply exact-file authorization at the existing shared I/O boundary, including indirect reads.
+pub fn confine_files<T>(files: &Arc<FileGrants>, f: impl FnOnce() -> T) -> T {
+    let _restore = RestoreFiles(FILE_GRANTS.with(|scope| scope.replace(Some(files.clone()))));
+    f()
+}
+
+fn check_files(path: &str, access: Access) -> Result<(), String> {
+    FILE_GRANTS.with(|scope| scope.borrow().as_ref().map_or(Ok(()), |grants| grants.check(path, access)))
+}
+
 /// The folders automation may read and write; a root left out grants no access of its kind.
 #[derive(Debug)]
 pub struct AutomationRoots {
@@ -192,11 +251,13 @@ fn plain(path: PathBuf) -> PathBuf {
 
 /// May `path` be read here? Always, without roots in force.
 pub fn check_read(path: &str) -> Result<(), String> {
+    check_files(path, Access::Read)?;
     current().map_or(Ok(()), |r| r.check(path, Access::Read))
 }
 
 /// May `path` be written here? Always, without roots in force.
 pub fn check_write(path: &str) -> Result<(), String> {
+    check_files(path, Access::Write)?;
     current().map_or(Ok(()), |r| r.check(path, Access::Write))
 }
 
@@ -294,6 +355,40 @@ fn is_device_name(component: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn assistant_grants_are_exact_and_scoped() {
+        let (base, _) = folders("assistant-exact");
+        let allowed = s(base.join("in/a.docx"));
+        let output = s(base.join("out/new.docx"));
+        let other = s(base.join("outside/secret.docx"));
+        let grants = Arc::new(FileGrants::new(&[allowed.clone(), output.clone()]).unwrap());
+        confine_files(&grants, || {
+            assert!(check_read(&allowed).is_ok());
+            assert!(check_write(&output).is_ok());
+            assert!(check_read(&other).is_err());
+            assert!(check_write(&s(base.join("out/another.docx"))).is_err());
+            let none = Arc::new(FileGrants::default());
+            confine_files(&none, || assert!(check_read(&allowed).is_err()));
+            assert!(check_read(&allowed).is_ok());
+        });
+        assert!(check_read(&other).is_ok(), "the user's ordinary I/O is restored");
+        assert!(FileGrants::new(&[s(base.clone())]).is_err());
+        let _ = std::fs::remove_dir_all(base);
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn assistant_grants_reject_retargeted_symlinks() {
+        let (base, _) = folders("assistant-symlink");
+        let link = base.join("in/link.docx");
+        std::os::unix::fs::symlink(base.join("in/a.docx"), &link).unwrap();
+        let grants = Arc::new(FileGrants::new(&[s(link.clone())]).unwrap());
+        std::fs::remove_file(&link).unwrap();
+        std::os::unix::fs::symlink(base.join("outside/secret.docx"), &link).unwrap();
+        confine_files(&grants, || assert!(check_read(&s(link)).is_err()));
+        let _ = std::fs::remove_dir_all(base);
+    }
 
     /// A fresh folder holding `in` (read root), `out` (write root) and `outside`.
     fn folders(name: &str) -> (PathBuf, Arc<AutomationRoots>) {

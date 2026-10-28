@@ -1,5 +1,9 @@
 # MCP server
 
+The desktop [Assistant pane](assistant.md) uses this same server through an internal channel.
+Its model routing, conversation history and stricter per-turn document/file grants are separate
+from external MCP connections, whose protocol remains unchanged.
+
 WordCraft speaks the [Model Context Protocol](https://modelcontextprotocol.io) over stdio, so
 Claude and other agents can write and edit documents.
 
