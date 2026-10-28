@@ -9,6 +9,8 @@ Hosted-provider and other-platform live acceptance remain separate release gates
 The subsequent Qwen Instruct trial failed the original prompt without editing; a guided diagnostic
 completed with Codex correction and exact Undo. The document-scope repair checkpoint under
 Workstreams records the completed fix, unchanged-prompt acceptance and portable download.
+Latest follow-up: the MacBook's Codex lives in `~/.local/bin`; the launcher repair and corrected
+DMG are recorded at the end of this ledger. All automated checks passed; MacBook feedback is provisional.
 The execution host is **AK's Mini**. **Local preview installation: Deployed**, following the
 user's request to place a testable build in `~/Applications`. `/Applications/WordCraft.app` is
 unchanged. No public app release or WordCraft push has occurred. After compaction, read this ledger
@@ -534,3 +536,34 @@ sign-in, build, Codex/Gemma tests or Qwen comparison after context compaction.
 
 No global memory update was requested or performed. This is the durable repository ledger;
 the shared repository ledger owns shared implementation details and verification.
+
+## MacBook launcher PATH follow-up — verified packaging; user feedback provisional
+
+The user reported Codex executable not found from Finder despite Terminal working. MacBook
+`command -v codex` is `/Users/andy/.local/bin/codex`; the portable launcher only appended Homebrew
+paths. Add the destination user's `~/.local/bin` after existing PATH/Homebrew entries, preserving
+explicit CRAFT_CODEX_BINARY and prior executable precedence. No native code/model changes.
+Repackage the existing verified ca279f8c native binary and provide a new DMG. The prior ZIP
+MacBook Archive Utility Error94 remains destination-unverified; source ZIP passes integrity.
+DMG alternative was verified mount/signature/version on Mini and copied to Mini Downloads.
+Launcher/package smoke and mandatory pre-commit CI passed for this packaging repair.
+
+The corrected archive is built from the unchanged verified native ca279f8c binary.
+ZIP: `dist/assistant-preview/localbin-fix/wordcraft-assistant-preview-0.11.0-ca279f8c-macos-aarch64.zip`.
+DMG: same directory, `wordcraft-assistant-preview-0.11.0-ca279f8c-macos-aarch64-localbin-fix.dmg`,
+also copied with checksum to the Mini's Downloads. DMG SHA256:
+`de4a14dbf04b6295e9809fe431a57d5034152381acdc5ce20abd5d29f1cdbb91`.
+Smoke verified destination HOME containing spaces, discovery from its `.local/bin`, preserved
+explicit CRAFT_CODEX_BINARY, native version, extracted/mounted signatures and DMG checksum.
+Receipt: `/private/tmp/wordcraft-localbin-receipt.json`. The user reported “I think it is working”
+after the Finder-launch test and moved on to Ollama configuration. This is provisional user feedback,
+not an independently observed MacBook inference test. Supplied local Ollama configuration: endpoint
+`http://127.0.0.1:11434/v1`, exact Qwen Instruct model for App control, Codex retained for General chat. No user settings, credentials, models or installed Mini preview changed.
+Full precommit CI completed with exit 0: all eight gates passed; 4,627 ordinary tests passed,
+0 failed, 6 ignored; separate localization audit and all 16 WASM crates passed. Log:
+`/private/tmp/wordcraft-launcher-ci.log`. After verified exit, the owned cache
+`/private/tmp/wordcraft-launcher-ci` was removed; logs, DMG and receipts remain. This increment
+changes only the launcher and three help/ledger documents. No Rust rebuild, repeated inference,
+Mini reinstall, public publication or provider/model substitution was performed. The native
+binary remains source ca279f8c; this packaging revision is identified by the latest commit touching
+`packaging/macos/assistant-preview.sh`. Do not repeat completed validation after compaction.

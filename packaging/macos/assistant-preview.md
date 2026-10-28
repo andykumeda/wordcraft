@@ -23,7 +23,7 @@ with optional fonts, supply the same `CRAFT_FONTS_DIR` so `copy_docs` includes t
 
 The bundle uses `ai.storyteller.wordcraft.assistant-preview`. Its shell launcher derives the
 document profile from the destination user's `HOME`, respects `WORDCRAFT_PROFILE_DIR`, and
-adds standard Homebrew paths for Codex discovery while preserving `CRAFT_CODEX_BINARY`.
+adds standard Homebrew paths and `~/.local/bin` for Codex discovery while preserving `CRAFT_CODEX_BINARY`.
 There is no machine-specific `LSEnvironment`. The launcher executes the separately signed
 `WordCraft-native` binary. Only that binary, original project assets, licences and generated
 metadata are packaged: no settings, chats, credentials, Codex installation or Ollama models.

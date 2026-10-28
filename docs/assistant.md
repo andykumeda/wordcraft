@@ -96,7 +96,7 @@ existing bundled/system-font defaults, without the optional shared translation/f
 It is not notarized for distribution to other Macs. Its own document preferences, logs and recovery
 use `/Users/andy/Library/Application Support/WordCraft Assistant Preview`, with recovery enabled.
 Assistant connections and conversations still use the normal shared Craft configuration below.
-The portable launcher finds Codex on PATH, including standard Homebrew locations;
+The portable launcher finds Codex on PATH, including standard Homebrew locations and `~/.local/bin`;
 `CRAFT_CODEX_BINARY` can override it. Craft sign-in and compatibility gates are still required.
 No credentials or model choices are copied. The Apple silicon ZIP, checksum and install guide are
 in `dist/assistant-preview/ca279f8c/`; see the ledger for the exact files and verification.

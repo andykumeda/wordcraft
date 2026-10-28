@@ -86,7 +86,7 @@ if [ -z "${WORDCRAFT_PROFILE_DIR:-}" ]; then
 fi
 export WORDCRAFT_PROFILE_DIR
 # Finder has a minimal PATH. Preserve explicit choices and add standard Codex install locations.
-PATH="${PATH:-/usr/bin:/bin:/usr/sbin:/sbin}:/opt/homebrew/bin:/usr/local/bin"
+PATH="${PATH:-/usr/bin:/bin:/usr/sbin:/sbin}:/opt/homebrew/bin:/usr/local/bin${HOME:+:$HOME/.local/bin}"
 export PATH
 PREVIEW_BIN_DIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
 exec "$PREVIEW_BIN_DIR/WordCraft-native" "$@"
