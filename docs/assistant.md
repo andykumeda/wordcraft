@@ -68,8 +68,9 @@ also cancels settings operations and sign-in.
 ## Local preview on AK's Mini
 
 The test build is installed at `/Users/andy/Applications/WordCraft Assistant Preview.app`.
-Version `0.11.0 (1692eef9)` is installed with the corrected Codex continuation and compact history
-header. Native Codex and mixed Codex/Ollama editing, read-back and normal Undo passed. Open **Home → Assistant**, then configure models under
+Version `0.11.0 (ca279f8c)` includes corrected Codex continuation, compact history controls and
+document-scoped tools. This build passed Codex-chat/Qwen-control editing, read-back and normal Undo.
+Open **Home → Assistant**, then configure models under
 **File → Options → Agents**. The existing `/Applications/WordCraft.app` and its MCP wrappers are
 preserved. The current WordCraft-only choices are Codex `gpt-6.1-sol` for General chat and
 Ollama `qwen3:4b-instruct-2507-q4_K_M` for App control, selected for the user-requested trial.
@@ -80,8 +81,11 @@ passed in about 4m16s. Qwen's original identical-prompt run stopped after 46s wi
 it guessed an invalid document ID. A separate diagnostic with explicit current-document guidance
 completed in about 67s after Codex corrected another refused Qwen write. Its final edit and normal
 Undo passed, but Qwen also falsely reported success during the failed intermediate attempt.
-These observations do not establish a reliability rate, and the guided run is not the same-prompt
-speed benchmark. Inspect actual tool results and the document rather than relying on a model's
+After the tool-contract repair, the original unchanged prompt passed in about 61s with four
+successful MCP calls, zero errors, exact read-back and one normal Undo. Codex delegated twice
+(edit, then verification); no extra user guidance was needed. These observations do not establish
+a reliability rate, and the earlier guided run is not the same-prompt speed benchmark. Inspect
+actual tool results and the document rather than relying on a model's
 summary. The full evidence and exact model identity are in the implementation ledger.
 
 **Choose Later on update prompts while testing.** The existing updater offers the standard
@@ -92,8 +96,13 @@ existing bundled/system-font defaults, without the optional shared translation/f
 It is not notarized for distribution to other Macs. Its own document preferences, logs and recovery
 use `/Users/andy/Library/Application Support/WordCraft Assistant Preview`, with recovery enabled.
 Assistant connections and conversations still use the normal shared Craft configuration below.
-The generated preview bundle environment selects `/opt/homebrew/bin/codex` explicitly; Craft sign-in
-and the Codex compatibility gates are still required. No credentials or model choices are copied.
+The portable launcher finds Codex on PATH, including standard Homebrew locations;
+`CRAFT_CODEX_BINARY` can override it. Craft sign-in and compatibility gates are still required.
+No credentials or model choices are copied. The Apple silicon ZIP, checksum and install guide are
+in `dist/assistant-preview/ca279f8c/`; see the ledger for the exact files and verification.
+Share the ZIP and checksum privately, extract it and place the preview in `~/Applications` on the
+receiving Mac. Each Mac needs its own Codex/Ollama setup. This preview is ad-hoc signed and not notarized;
+the install guide links Apple's per-app approval instructions.
 
 ## Verify a model route
 

@@ -4,11 +4,11 @@ Updated 2026-10-28 (America/Los_Angeles). **Implementation: Verified for the loc
 The original shared and WordCraft automated gates passed, and a real local model completed MCP
 read/edit/read-back/Undo acceptance. The Codex live follow-up found and repaired a continuation
 defect and a long-chat-title layout defect. Corrected native Codex and mixed Codex/Ollama
-edit/read-back/Undo acceptance now pass; current installed source is `1692eef9`.
+edit/read-back/Undo acceptance now pass; current installed source is `ca279f8c`.
 Hosted-provider and other-platform live acceptance remain separate release gates.
 The subsequent Qwen Instruct trial failed the original prompt without editing; a guided diagnostic
 completed with Codex correction and exact Undo. The document-scope repair checkpoint under
-Workstreams now tracks the requested fix and portable download; native revalidation is pending.
+Workstreams records the completed fix, unchanged-prompt acceptance and portable download.
 The execution host is **AK's Mini**. **Local preview installation: Deployed**, following the
 user's request to place a testable build in `~/Applications`. `/Applications/WordCraft.app` is
 unchanged. No public app release or WordCraft push has occurred. After compaction, read this ledger
@@ -282,7 +282,7 @@ This documentation increment is on `codex/portable-assistant`; identify its comm
 
 ## Workstreams
 
-### Document scope repair — in progress
+### Document scope repair — verified and locally deployed
 
 Additional user request: after repair and native acceptance, make the preview downloadable for other
 Macs. Prepare a versioned archive, checksum and install notes. The user confirmed **Apple silicon
@@ -361,20 +361,70 @@ preview still showed its saved baseline and was quit normally through its app me
 was independently verified. Installation is now unblocked; replace only the separate preview from
 the newly verified archive, retaining its backup and the original `/Applications/WordCraft.app`.
 
+#### Final repair and download checkpoint
+
+**Verified / Deployed locally:** installed source `ca279f8c4e24aabef56680846709a9bea63bd86e`,
+shared runtime unchanged at `d4641d3`. Incremental release passed in 6m07s. Its portable ARM64 ZIP
+was signed, checksum-verified, freshly extracted and installed in `~/Applications/WordCraft
+Assistant Preview.app`. Original `/Applications/WordCraft.app` remains byte-identical. Install
+receipt: `/private/tmp/wordcraft-document-scope-install.json`; previous preview backup is recorded
+there. No model bindings or runtime limits changed.
+
+The original prompt completed in **60.52s**, with Codex `gpt-6.1-sol` for General chat and
+Ollama `qwen3:4b-instruct-2507-q4_K_M` for App control. There was no extra user guidance, no supplied
+document ID and no tool error. Two automatic delegations covered editing and then read-back;
+four successful MCP calls were `get_text`, `select_text`, `type_text`, `get_text`. All six local
+inference requests returned HTTP 200; the actual loaded model digest matched the previously verified
+`0edcdef34593eac1aa2be9c7d06c432dcf81945adca5eca2f27662c18f168ba0`.
+Independent full text confirmed only 9:00 changed to 10:00, and **one normal Undo restored the exact
+baseline**. The native screenshot was inspected. This is one successful smoke run, not a statistical
+reliability benchmark; prior failed and partial runs remain recorded above.
+
+Evidence directory: `/private/tmp/wordcraft-document-scope-sd0lsnne`:
+`original-prompt.txt`, `final-status.json`, `final-conversation.json`, `final-verification.json`,
+`final-ollama-active.json`, `final-ollama-requests.log`, `final-complete.png`.
+Test PID 72615 saved only the restored baseline and quit normally; loopback 17981 was verified
+released. The installed preview was reopened normally without a listener for user testing.
+
+**Download:** Apple silicon only, macOS 11 declared minimum, ad-hoc signed and **not notarized**.
+No Developer ID Application identity is available. Credentials, chats, settings, Codex and Ollama
+models are not bundled. A portable launcher derives the receiving user's preview profile and
+supports normal per-user Codex discovery. Each recipient configures providers/sign-in locally.
+The user confirmed Apple silicon; public/GitHub publication was not selected, so no release or
+WordCraft push was performed. Private sharing artifacts are retained in
+`dist/assistant-preview/ca279f8c/`:
+
+- `wordcraft-assistant-preview-0.11.0-ca279f8c-macos-aarch64.zip` (about 28 MiB)
+- adjacent `.zip.sha256` and `-INSTALL.md`
+
+ZIP SHA-256: `23d0742de69e10d8a40adfbc23a066e9578a72fe4a99f7303fd554c3748c7d66`.
+Native binary SHA-256: `af3dc8d1164686862d0c230040c47005e0ce73c523f68d68ac39d0c46e9f6016`.
+The reusable packaging command and signing limits are in `packaging/macos/assistant-preview.md`.
+Other-Mac acceptance remains unperformed; this is a private preview, not a public production release.
+
+Final documentation CI passed with exit 0: all eight stages, 4,627 ordinary tests passed / 6 ignored /
+0 failed, separate localization audit and 16-crate WASM. Log:
+`/private/tmp/wordcraft-document-scope-delivery-ci.log`. After verified exit, the owned build cache
+`/private/tmp/wordcraft-document-scope-ci` was removed; logs, receipts, installed app and ZIP remain.
+On the ordinary launch the Assistant pane was closed. At the user's request it was opened through
+command search → Assistant; native accessibility confirmed the fresh composer, saved baseline and
+Codex/Qwen routes. Home → Assistant also opens it. No new inference was started.
+Do not rerun completed inference or rebuild the app after compaction.
+
 | Workstream / owner | State | Acceptance / release status |
 | --- | --- | --- |
 | Shared contracts, runtime, HTTP, storage, widgets / shared agents | Verified | Full shared gates; two independent synthetic app hosts; published source |
 | Codex home isolation / services agent | Verified | HOME/USERPROFILE/CODEX_HOME isolated; actual macOS read/write/network sandbox probe and selected-model continuation passed; broader adversarial acceptance remains gated |
 | WordCraft MCP host, file grants, pane/settings/history / primary | Verified | Existing MCP and UI-thread command path; protection, Undo, cancellation, selection/window boundaries and persistence regressions |
-| WordCraft final CI / primary | Verified | Post-fix eight-stage gate passed: 4,625 ordinary tests / 6 ignored; localization audit and 16-crate WASM passed |
+| WordCraft final CI / primary | Verified | Repair eight-stage gates passed: 4,627 ordinary tests / 6 ignored; localization audit and 16-crate WASM passed; final documentation rerun tracked above |
 | Local model acceptance / primary + services | Verified | Ollama 0.40.11, existing gemma4:e4b, both roles, actual MCP read/edit/read-back and one normal Undo passed |
-| Qwen comparison / primary | Verified | Exact Instruct model downloaded and selected for control; original prompt failed without editing; separate guided recovery completed exact read/edit/read-back/Undo after Codex correction |
+| Qwen original-prompt repair / primary | Verified | Scoped tools and replacement contract; unchanged prompt completed in 60.52s with four successful MCP calls, no errors and exact read-back/Undo; earlier failures retained above |
 | Codex live continuation / services agent | Verified | Shared actual dynamic-tool result continuation repaired; full shared gates and 45 native focused tests passed; corrected installed Codex and mixed-provider live edit/read-back/Undo passed |
 | Long-title assistant layout / widgets agent | Verified | Compact bounded history row; all 12 geometry cases and four inspected captures passed; corrected installed pane inspected with long titles, composer and Stop visible |
 | Hosted live acceptance | Blocked | Requires a configured hosted connection; existing private credentials were not copied or read |
 | Other-platform credential/native acceptance | Not started | Windows/Linux/BSD runtime and credential checks remain manual release gates |
 | Documentation and local commits / primary | Verified | Consumer repair committed `1692eef9`; acceptance/help/progress docs updated after passing full delivery CI; shared evidence published as `6820cf7` |
-| Local preview build/installation / primary | Deployed | Corrected `1692eef9` ARM64 preview installed, signature/original preservation and Codex/mixed native acceptance verified |
+| Local preview build/installation / primary | Deployed | Portable `ca279f8c` ARM64 preview installed from the ZIP; signature/original preservation and Codex-chat/Qwen-control native acceptance verified |
 | Public release/other app integrations/browser inference | Not started | Deferred scope; existing installed app and MCP wrappers preserved |
 
 ## Implementation and review decisions

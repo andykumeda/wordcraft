@@ -251,7 +251,7 @@ can be used without committing Word output.
 
 Assistant update (2026-10-28): AI row now distinguishes local implementation from the remaining
 live acceptance and publication gates. Document-scoped tool schemas repair the Qwen document-ID
-failure; focused host regressions pass, with refreshed native acceptance pending. Readiness
+failure; full CI and the original Qwen prompt/read-back/Undo pass in the portable ARM64 preview. Readiness
 estimates have not been raised.
 
 | Date | Change | Summary |
