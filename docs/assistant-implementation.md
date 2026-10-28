@@ -310,6 +310,12 @@ The packaging agent added `packaging/macos/assistant-preview.sh` and its guide. 
 checks and rejected mismatched provenance. This is packaging evidence only, not repaired-app
 acceptance. No Developer ID Application certificate is available; the archive is ad-hoc signed and
 not notarized. The package uses a portable launcher and no machine-specific plist environment.
+Repair and packaging source were committed as `d075a068be401677b4e4d510d2ca2d585ca5df71`.
+The release build passed in session 78960 (11m16s) with the same target, two jobs, deployment target
+macOS 11.0, explicit build SHA, and optional font/translation inputs unset. Log:
+`/private/tmp/wordcraft-document-scope-release.log`. Root prepared
+`/private/tmp/install-wordcraft-portable-preview.py` to validate/extract a ZIP, preserve the original
+app, back up and replace only the preview, verify signatures, and record the install receipt.
 The ordinary preview currently has the saved synthetic baseline and Codex/Qwen bindings. Do not
 restart completed sign-in or change models. After passing CI, commit the repair, build release with
 that commit embedded, package it with the new script, and install the freshly extracted portable
@@ -321,6 +327,39 @@ Independently inspect tool results,
 verify exact text and one Undo, restore/save the fixture, stop the test listener, and reopen the
 ordinary preview. Update evidence, rerun incremental CI for the final documentation commit, and
 remove owned build caches only after all verification/install work completes.
+
+During the release build the Mini locked; CUA could not inspect the current preview, and a manual
+unlock was requested asynchronously. Do not quit or replace that instance without checking for
+unsaved work. Packaging can continue, and a separate extracted app may be tested with its own
+disposable profile/control channel while leaving the existing instance untouched. The last observed
+ordinary preview was saved with the synthetic 9:00 baseline and Codex/Qwen bindings.
+
+The d075a068 ARM64 candidate ZIP is under `dist/assistant-preview/d075a068/`; checksum and extracted
+signature/version checks passed. A separate extracted app at
+`/private/tmp/wordcraft-scope-extracted-ww_nff85/.../WordCraft Assistant Preview.app` ran as PID 43817,
+with verified loopback 17981 and fixture/profile `/private/tmp/wordcraft-document-scope-zwlb16b0`.
+The original prompt ran unchanged with Codex chat and the exact Qwen Instruct model/digest.
+**Document-ID errors were resolved, but the turn did not complete:** Qwen first chose an unknown
+generic command, then misused `edit.replace` parameters. Codex redelegated; a correct `edit.replaceAll`
+and `get_text` produced the exact requested text, but the global tool-round limit ended the turn at
+70.56s. Independent exact text and one normal Undo passed. No extra user guidance was supplied.
+Evidence: `repaired-{status,conversation,verification,ollama-active}.json` in that fixture directory.
+The test saved only its restored baseline and quit normally; the original preview is untouched.
+This ZIP is an intermediate candidate, not the final completed-task download.
+
+The follow-up correction is generic tool-contract prose: direct text replacement to `select_text` followed
+by `type_text`; reserve `execute`/`batch` for discovered command IDs/parameters. No model changes,
+guard changes or round-limit increase. The services agent owns the minimal host description update
+and strengthened the existing selection/replacement/Undo behavioral test. Focused tests passed
+24/0 failures/1 manual capture ignored; full CI passed all eight gates, 4,627 ordinary tests with
+6 ignored, separate localization audit, and 16-crate WASM. Logs:
+`/private/tmp/wordcraft-replacement-contract-{focused,ci}.log`. Root must commit, rebuild/repackage that new source, and run a fresh
+unchanged-prompt turn before final delivery. Preserve the d075 partial result rather than overwriting it.
+
+The user clarified there is no lock-screen password; fresh CUA inspection succeeded. The ordinary
+preview still showed its saved baseline and was quit normally through its app menu. Process exit
+was independently verified. Installation is now unblocked; replace only the separate preview from
+the newly verified archive, retaining its backup and the original `/Applications/WordCraft.app`.
 
 | Workstream / owner | State | Acceptance / release status |
 | --- | --- | --- |

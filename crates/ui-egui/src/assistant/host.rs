@@ -182,18 +182,28 @@ fn bound_tool(tool: &Value) -> Option<ToolDefinition> {
     schema.insert("additionalProperties".into(), Value::Bool(false));
     let description = match name {
         "execute" => {
-            "Run one permitted document command by id with params, e.g. {command:\"format.bold\"}. Use list_commands for available commands and their parameters."
+            "Run a permitted document command for operations other than text replacement. First call list_commands and use its exact command id and documented params; do not guess either. To replace text, use select_text followed by type_text."
         }
-        "batch" => "Run permitted document commands in order; stops at the first error unless keepGoing.",
+        "batch" => {
+            "Run permitted document commands in order; stops at the first error unless keepGoing. First call list_commands and use its exact command ids and documented params; do not guess either. For text replacement, use select_text followed by type_text."
+        }
+        "select_text" => {
+            "Select the n-th occurrence of exact existing text (occurrence is 1-based). To replace it, call this tool first, then type_text with only the replacement text. This replaces the selected text, preserves the rest of the document, and supports normal Undo."
+        }
         "open_document" => {
             "Open a file the user explicitly named or chose. Supply its path and password if protected. After a successful open, subsequent tools operate on that document."
         }
         _ => tool.get("description").and_then(Value::as_str).unwrap_or_default(),
     };
+    let replacement = if name == "type_text" {
+        " To replace existing text, first call select_text, then pass only the replacement text here. The selected text is replaced, the rest of the document is preserved, and one normal Undo restores the edit."
+    } else {
+        ""
+    };
     Some(ToolDefinition {
         name: name.into(),
         description: format!(
-            "{description} WordCraft already scopes this tool to the document bound to the assistant turn. Pass only the listed arguments."
+            "{description}{replacement} WordCraft already scopes this tool to the document bound to the assistant turn. Pass only the listed arguments."
         ),
         input_schema: Value::Object(schema),
     })

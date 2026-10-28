@@ -130,7 +130,7 @@ fn mcp_read_edit_readback_and_normal_undo_share_the_session() {
         &mut guard,
         vec![
             ("get_text", json!({})),
-            ("execute", json!({"command":"select.all"})),
+            ("select_text", json!({"text":"Original"})),
             ("type_text", json!({"text":"Assistant replacement"})),
             ("get_text", json!({})),
             ("execute", json!({"command":"edit.undo"})),
@@ -139,7 +139,7 @@ fn mcp_read_edit_readback_and_normal_undo_share_the_session() {
     );
     assert_eq!(results.len(), 6);
     assert!(results.iter().all(|result| result.get("isError").and_then(Value::as_bool) != Some(true)), "{results:?}");
-    assert!(results.get(3).unwrap().to_string().contains("Assistant replacement"));
+    assert!(results.get(3).unwrap().to_string().contains("Assistant replacement text"));
     assert_eq!(text(&app), original);
     assert!(guard.read);
 }
