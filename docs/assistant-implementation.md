@@ -6,6 +6,8 @@ read/edit/read-back/Undo acceptance. The Codex live follow-up found and repaired
 defect and a long-chat-title layout defect. Corrected native Codex and mixed Codex/Ollama
 edit/read-back/Undo acceptance now pass; current installed source is `1692eef9`.
 Hosted-provider and other-platform live acceptance remain separate release gates.
+The subsequent Qwen Instruct trial failed the original prompt without editing; a guided diagnostic
+completed with Codex correction and exact Undo. The Qwen follow-up below is the latest checkpoint.
 The execution host is **AK's Mini**. **Local preview installation: Deployed**, following the
 user's request to place a testable build in `~/Applications`. `/Applications/WordCraft.app` is
 unchanged. No public app release or WordCraft push has occurred. After compaction, read this ledger
@@ -201,8 +203,81 @@ The pre-delivery WordCraft CI rerun passed all eight stages again: **4,625 ordin
 The user asked about a faster model. Hardware was verified as **Apple M1, 16GiB RAM, eight CPU cores**.
 The Gemma run used Metal with 43/43 layers offloaded. Recommended next candidate is
 `qwen3:4b-instruct-2507-q4_K_M` (official Ollama 2.5 GB listing and Qwen non-thinking model card),
-which has not been downloaded or benchmarked here. Keep this recommendation distinct from the
-verified Gemma route. No automatic provider/model substitution was made.
+which had not yet been downloaded or benchmarked at that checkpoint. The following section records
+the subsequently authorized download and comparison. No automatic provider/model substitution was made.
+
+## Qwen comparison follow-up — October 28, 2026
+
+**State: Verified comparison; Qwen requires correction on this task.** The user requested the same edit/read-back/Undo test with Codex retained
+for General chat. Inspection found `qwen3:4b`, Q4_K_M, 4.0B parameters, with tool support and
+thinking enabled. The user then explicitly requested downloading the recommended exact
+non-thinking variant: `qwen3:4b-instruct-2507-q4_K_M` from
+[the official Ollama listing](https://ollama.com/library/qwen3:4b-instruct-2507-q4_K_M).
+No timed inference was run with the first tag, and no automatic fallback was made.
+
+The existing installed preview remains source `1692eef9`; no application code or binary change
+was needed. A new disposable fixture/profile under `/private/tmp/wordcraft-routing-e29k8dlb`
+used the identical text and prompt. Test PID 1724 owned loopback 17981, verified before private-key
+use. The idle duplicate ordinary preview was quit normally with its unchanged saved fixture.
+The configured IPv4 Ollama endpoint is still the verified process 70544. A separate user-owned
+IPv6 Ollama process 95060 was observed and left unchanged. Download log: `qwen-download.log`
+in the new test directory. The user-authorized exact Instruct model is now saved for App control; General chat remains
+Codex/gpt-6.1-sol. Existing downloaded models were preserved.
+
+The exact Instruct download succeeded and its manifest digest is
+`0edcdef34593eac1aa2be9c7d06c432dcf81945adca5eca2f27662c18f168ba0` (2,497,293,803 bytes).
+WordCraft discovered it, passed the synthetic tool-capability check and saved it for App control;
+General chat remained Codex/gpt-6.1-sol. Model residency was captured before timing. Only the
+positively identified CI process tree was paused for the timed run and resumed afterward.
+
+**Original identical-prompt result: failed correctness after 46.44 seconds.** The Qwen control
+model called `get_text` with `doc:0`; the bound-document guard rejected that target. The assistant
+reported the failure and stopped. Independent document text was unchanged, zero mutations
+occurred, and Undo was not run because there was no edit. Two local inference requests returned
+HTTP 200, which establishes transport success rather than edit success. Evidence: `qwen-status.json`,
+`qwen-conversation.json`, `qwen-verification.json`, `qwen-ollama-requests.log`, and
+`qwen-original-failed.png`. Do not present 46.44s as an editing speedup.
+
+The separate diagnostic completed in **66.78 seconds** with the added instruction to omit optional
+`doc` parameters and pass that instruction through delegation. It first read and selected correctly,
+then again supplied `doc:0` to `type_text`, which the host refused before any mutation. Qwen's
+control summary incorrectly claimed success despite that rejected write. Codex inspected the
+canonical tool results, re-delegated with corrective guidance, and the second control sequence
+read, selected, edited and read back successfully. Final document text was independently checked,
+and one normal Undo restored the exact full baseline. Seven MCP calls were recorded: six successful
+and one rejected; two delegations and nine HTTP 200 inference requests. The original failed run is
+not replaced by this diagnostic. No host guard, application code or runtime limit changed; this was
+recovery from an acknowledged refusal, not replay after an uncertain edit.
+
+Diagnostic evidence: `qwen-diagnostic-status.json`, `qwen-diagnostic-conversation.json`,
+`qwen-diagnostic-verification.json`, `qwen-diagnostic-requests.log` and visually inspected
+`qwen-diagnostic-complete.png` under the same test directory. The receipt explicitly records the
+extra guidance, recovered error, false intermediate control summary and successful final Undo.
+CI was running during this diagnostic, so its time is not a controlled comparison with the original
+isolated run. The guided Qwen observation was shorter than the earlier Gemma observation, but Qwen
+needed correction on this task; this does not establish an overall speed or reliability result.
+
+The test instance saved only its restored synthetic baseline and quit normally. Port 17981 was
+verified released. The ordinary installed preview was reopened with the Qwen control choice and
+Codex chat preserved, no control listener, and a fresh conversation for further user testing.
+The existing IPv4 and IPv6 Ollama services were not restarted or reconfigured. No public release,
+WordCraft push, dependency update, binary replacement or shared-library edit was needed.
+
+Compare approximate observed task time with the previous 30.27s Codex and 256.04s Gemma runs,
+including active route transitions, actual local requests/model identity, ordered MCP reads/edit,
+independent exact document read and one normal Undo. Two-second polling gives approximate wall
+time; one completed test establishes a smoke result, not a statistical reliability rate. A concise
+comparison is saved as `qwen-comparison.md` in the Qwen evidence directory.
+
+Required pre-commit `cargo xtask ci` completed with exit 0: all eight stages passed (fmt, strict
+Clippy, tests, localization audit, doctest, assets, layers and WASM). Ordinary tests: **4,625 passed /
+6 ignored / 0 failed**; the separate localization audit passed; doctest had zero tests; WASM checked
+16 crates. Log: `/private/tmp/wordcraft-qwen-ci.log`. Only this ledger and the assistant help changed;
+the installed preview remains `1692eef9`, and the shared dependency remains pinned to `d4641d3`.
+After the CI process tree exited, its owned `/private/tmp/wordcraft-qwen-ci` build cache was removed
+(8.5 GiB). Verification logs, synthetic evidence, downloaded models and the installed preview remain.
+This documentation increment is on `codex/portable-assistant`; identify its commit with
+`git log -1 -- docs/assistant-implementation.md`. No WordCraft push or public release was made.
 
 ## Workstreams
 
@@ -213,6 +288,7 @@ verified Gemma route. No automatic provider/model substitution was made.
 | WordCraft MCP host, file grants, pane/settings/history / primary | Verified | Existing MCP and UI-thread command path; protection, Undo, cancellation, selection/window boundaries and persistence regressions |
 | WordCraft final CI / primary | Verified | Post-fix eight-stage gate passed: 4,625 ordinary tests / 6 ignored; localization audit and 16-crate WASM passed |
 | Local model acceptance / primary + services | Verified | Ollama 0.40.11, existing gemma4:e4b, both roles, actual MCP read/edit/read-back and one normal Undo passed |
+| Qwen comparison / primary | Verified | Exact Instruct model downloaded and selected for control; original prompt failed without editing; separate guided recovery completed exact read/edit/read-back/Undo after Codex correction |
 | Codex live continuation / services agent | Verified | Shared actual dynamic-tool result continuation repaired; full shared gates and 45 native focused tests passed; corrected installed Codex and mixed-provider live edit/read-back/Undo passed |
 | Long-title assistant layout / widgets agent | Verified | Compact bounded history row; all 12 geometry cases and four inspected captures passed; corrected installed pane inspected with long titles, composer and Stop visible |
 | Hosted live acceptance | Blocked | Requires a configured hosted connection; existing private credentials were not copied or read |
@@ -307,9 +383,9 @@ is tracked in the delivery closeout below.
   on port 17981 also stopped; their launch/cleanup evidence is recorded in that inventory. No proxy
   or persistent startup entry was added.
 
-## Delivery closeout
+## Delivery closeout before the Qwen follow-up
 
-The installed ordinary preview is running as PID 79467 with Assistant open, the synthetic baseline
+At that checkpoint, the installed ordinary preview was running as PID 79467 with Assistant open, the synthetic baseline
 and the saved mixed provider choices; it has no control listener. Ollama PID 70544 remains on
 127.0.0.1:11434 for the user trial. The restored fixture is saved. The original installed app hash
 is still unchanged. The install receipt was updated with these checks.
@@ -322,9 +398,9 @@ WordCraft continues to pin reviewed runtime `d4641d3`. The WordCraft documentati
 commit follows installed source `1692eef9`; use `git log -1 -- docs/assistant-implementation.md`
 for its identity.
 
-Remaining work is explicitly limited to the release gates above, the user's proposed faster-model
-comparison if requested, and later integrations already deferred. Do not repeat the completed
-sign-in, build, Codex edit test or mixed Gemma routing test after context compaction.
+The later Qwen comparison is complete with the limitations recorded above. Remaining work is
+limited to the release gates above and later integrations already deferred. Do not repeat completed
+sign-in, build, Codex/Gemma tests or Qwen comparison after context compaction.
 
 No global memory update was requested or performed. This is the durable repository ledger;
 the shared repository ledger owns shared implementation details and verification.

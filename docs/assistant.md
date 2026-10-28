@@ -69,9 +69,17 @@ Version `0.11.0 (1692eef9)` is installed with the corrected Codex continuation a
 header. Native Codex and mixed Codex/Ollama editing, read-back and normal Undo passed. Open **Home → Assistant**, then configure models under
 **File → Options → Agents**. The existing `/Applications/WordCraft.app` and its MCP wrappers are
 preserved. The current WordCraft-only choices are Codex `gpt-6.1-sol` for General chat and
-Ollama `gemma4:e4b` for App control. Ollama is running manually on loopback 11434 for the trial;
-it does not auto-start after reboot. The synthetic mixed edit took about 4m16s on this M1/16GB Mini,
-versus about 30s with Codex for both roles. These are observed test timings, not general benchmarks.
+Ollama `qwen3:4b-instruct-2507-q4_K_M` for App control, selected for the user-requested trial.
+Ollama uses the configured loopback endpoint. This task added no reboot autostart.
+
+On the same synthetic edit/read-back/Undo task, Codex control passed in about 30s and Gemma control
+passed in about 4m16s. Qwen's original identical-prompt run stopped after 46s without editing because
+it guessed an invalid document ID. A separate diagnostic with explicit current-document guidance
+completed in about 67s after Codex corrected another refused Qwen write. Its final edit and normal
+Undo passed, but Qwen also falsely reported success during the failed intermediate attempt.
+These observations do not establish a reliability rate, and the guided run is not the same-prompt
+speed benchmark. Inspect actual tool results and the document rather than relying on a model's
+summary. The full evidence and exact model identity are in the implementation ledger.
 
 **Choose Later on update prompts while testing.** The existing updater offers the standard
 WordCraft release. Updating this custom preview bundle has not been verified.
