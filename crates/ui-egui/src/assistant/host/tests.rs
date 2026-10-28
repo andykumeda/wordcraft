@@ -54,6 +54,73 @@ fn mcp(app: &mut WordApp, guard: &mut Guard, calls: Vec<(&'static str, Value)>) 
 }
 
 #[test]
+fn assistant_catalog_has_a_bound_target_without_changing_external_mcp() {
+    let cancel = Cancellation::new();
+    let (sender, _receiver) = mpsc::channel();
+    let mut host = McpHost::new(sender, cancel.clone(), egui::Context::default(), Duration::from_secs(10));
+    let external = host.request("tools/list", json!({})).unwrap();
+    let tools = host.tools(&Target { id: "synthetic-target".into(), revision: 0 }, &cancel).unwrap();
+    assert_eq!(tools.len(), TOOLS.len());
+    for tool in &tools {
+        assert!(TOOLS.contains(&tool.name.as_str()));
+        assert!(tool.input_schema.pointer("/properties/doc").is_none(), "{}", tool.name);
+        assert!(!tool.input_schema.get("required").unwrap().as_array().unwrap().iter().any(|name| name == "doc"));
+        assert_eq!(tool.input_schema.get("additionalProperties"), Some(&Value::Bool(false)));
+        assert!(tool.description.contains("document bound to the assistant turn"));
+        assert!(!tool.description.contains("`doc`"));
+        assert!(!tool.description.contains("list_documents"));
+        assert!(!tool.description.contains("view.switchWindows"));
+        assert!(!tool.input_schema.to_string().contains("list_documents"));
+    }
+    let external_tools = external.get("tools").unwrap().as_array().unwrap();
+    for name in ["execute", "batch", "save_document", "type_text", "select_text", "get_text", "inspect_document"] {
+        let external_tool = external_tools.iter().find(|tool| tool.get("name").and_then(Value::as_str) == Some(name)).unwrap();
+        assert_eq!(external_tool.pointer("/inputSchema/properties/doc/minimum"), Some(&json!(0)), "{name}");
+        assert!(external_tool.pointer("/inputSchema/properties/doc/description").unwrap().as_str().unwrap().contains("list_documents"));
+    }
+    assert!(external_tools.iter().any(|tool| tool.get("name").and_then(Value::as_str) == Some("list_documents")));
+    assert!(!tools.iter().any(|tool| tool.name == "list_documents"));
+    assert_eq!(host.request("tools/list", json!({})).unwrap(), external);
+    let typing = tools.iter().find(|tool| tool.name == "type_text").unwrap();
+    assert_eq!(typing.input_schema.pointer("/properties/text/type"), Some(&json!("string")));
+    assert_eq!(typing.input_schema.pointer("/properties/paragraphs/type"), Some(&json!("boolean")));
+    assert_eq!(typing.input_schema.get("required"), Some(&json!(["text"])));
+}
+
+#[test]
+fn explicit_foreign_document_ids_are_rejected_through_embedded_mcp() {
+    let mut app = app();
+    let mut guard = Guard::new(&app, "Edit this document".into(), vec![]);
+    assert_ne!(guard.document, 0);
+    read(&mut app, &mut guard);
+    let original = text(&app);
+    let revision = app.session.rev();
+    for wrong in [0, u64::MAX] {
+        let results = mcp(
+            &mut app,
+            &mut guard,
+            vec![
+                ("get_text", json!({"doc":wrong})),
+                ("inspect_document", json!({"doc":wrong})),
+                ("select_text", json!({"text":"Original","doc":wrong})),
+                ("type_text", json!({"text":"wrong document edit","doc":wrong})),
+                ("execute", json!({"command":"text.insert","params":{"text":"wrong document edit"},"doc":wrong})),
+                ("batch", json!({"commands":[{"command":"text.insert","params":{"text":"wrong document edit"}}],"doc":wrong})),
+            ],
+        );
+        assert_eq!(results.len(), 6);
+        assert!(results.iter().all(|result| result.get("isError") == Some(&Value::Bool(true))), "{results:?}");
+        assert!(results.iter().all(|result| result.to_string().contains("this turn is bound to the original document")), "{results:?}");
+        assert_eq!(text(&app), original);
+        assert_eq!(app.session.rev(), revision);
+        assert_eq!(SelectionState::new(&app.session).text, guard.selection.text);
+    }
+    let results = mcp(&mut app, &mut guard, vec![("get_text", json!({}))]);
+    assert_eq!(results.first().unwrap().get("isError"), Some(&Value::Bool(false)));
+    assert!(results.first().unwrap().to_string().contains("Original text"));
+}
+
+#[test]
 fn mcp_read_edit_readback_and_normal_undo_share_the_session() {
     let mut app = app();
     let mut guard = Guard::new(&app, "Replace the text".into(), vec![]);

@@ -47,6 +47,9 @@ A turn captures its document, window, selection and file grants. Switching docum
 closing the document, or changing the selection stops edits for that turn. A changed document
 revision must be read again before editing. The assistant's own selection commands remain usable.
 An explicitly authorized Open may continue in the opened document after reading it.
+Assistant tool schemas target that bound document without a document-ID parameter. External MCP
+clients retain explicit document targeting; the assistant still rejects foreign document IDs if
+a model sends one despite the restricted schema.
 
 For file operations, choose individual files in the pane or include an exact absolute path in your
 prompt. Quote paths containing spaces, for example `Save to "/Users/me/Documents/New report.docx"`.

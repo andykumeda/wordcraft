@@ -68,7 +68,9 @@ The desktop assistant uses `craft-ai-core` contracts, `craft-ai-native` executio
 `craft-ui::assistant` state/action widgets from craft-libs. Only the WordCraft host adapter knows
 the engine: it sends internal requests through `wordcraft_mcp::Server`, dispatches on the UI thread,
 checks the originating window/document/selection and revision, and confines exact file access at
-the engine I/O boundary. External MCP remains unchanged. Provider workers have no WordCraft
+the engine I/O boundary. The assistant catalog omits external MCP's document selector because the
+turn already owns its target; supplied foreign IDs still fail the dispatch guard. External MCP
+retains its document selectors. Provider workers have no WordCraft
 document dependency. Each active Codex role keeps its bounded ephemeral exchange alive while
 Craft dispatches tools; matching identified results return over the native protocol. WordCraft
 owns providers per turn (and separately for standalone probes), so all workers close on every
@@ -79,6 +81,7 @@ exit. Craft remains the canonical history owner. Native services are excluded on
 
 | Date | Change | Summary |
 |---|---|---|
+| 2026-10-28 | minor | Specialize assistant tools for the bound document; preserve external MCP selectors and dispatch guards. |
 | 2026-10-28 | minor | Native Codex callback continuation and mixed Codex/Ollama routing verified through installed WordCraft; shared runtime remains app-independent. |
 | 2026-10-28 | minor | Codex returns actual tool results to bounded ephemeral exchanges while Craft keeps canonical history; provider lifetime is scoped to each turn or standalone probe. |
 | 2026-10-28 | minor | Add portable assistant architecture and guarded internal MCP dispatch; live acceptance remains open. |

@@ -7,7 +7,8 @@ defect and a long-chat-title layout defect. Corrected native Codex and mixed Cod
 edit/read-back/Undo acceptance now pass; current installed source is `1692eef9`.
 Hosted-provider and other-platform live acceptance remain separate release gates.
 The subsequent Qwen Instruct trial failed the original prompt without editing; a guided diagnostic
-completed with Codex correction and exact Undo. The Qwen follow-up below is the latest checkpoint.
+completed with Codex correction and exact Undo. The document-scope repair checkpoint under
+Workstreams now tracks the requested fix and portable download; native revalidation is pending.
 The execution host is **AK's Mini**. **Local preview installation: Deployed**, following the
 user's request to place a testable build in `~/Applications`. `/Applications/WordCraft.app` is
 unchanged. No public app release or WordCraft push has occurred. After compaction, read this ledger
@@ -280,6 +281,46 @@ This documentation increment is on `codex/portable-assistant`; identify its comm
 `git log -1 -- docs/assistant-implementation.md`. No WordCraft push or public release was made.
 
 ## Workstreams
+
+### Document scope repair — in progress
+
+Additional user request: after repair and native acceptance, make the preview downloadable for other
+Macs. Prepare a versioned archive, checksum and install notes. The user confirmed **Apple silicon
+only**; private ZIP versus GitHub release destination remains pending (default private ZIP).
+Do not claim notarization or Intel support
+without verifying them. Packaging/distribution is pending and part of this follow-up's scope.
+
+The user requested repairing Qwen's guessed document ID and rerunning the original prompt with
+Codex chat unchanged. The assistant currently exposes the external MCP `doc` parameter and refers
+to `list_documents`, although its restricted catalog has no such tool. The repair will specialize
+the assistant's tool contract for its bound document while preserving the external MCP catalog and
+the UI-thread document/window/selection guards. Regression checks, full CI, a refreshed preview,
+and a fresh original-prompt edit/read-back/Undo run are pending. Prior Qwen failures remain recorded.
+
+Current source changes: `assistant/host.rs` specializes the copied catalog; `assistant/host/tests.rs`
+adds catalog isolation and embedded-MCP foreign-ID regressions. Dispatch is unchanged. The services
+agent owns verification using `/private/tmp/wordcraft-document-scope-ci` (two build jobs); focused
+log `/private/tmp/wordcraft-document-scope-focused.log`: **24 passed, 0 failed, 1 manual capture
+ignored**, including both new regressions. Full CI completed with exit 0: all eight gates passed, **4,627 ordinary tests passed / 6 ignored /
+0 failed**, the separate localization audit passed, and WASM checked 16 crates. Log:
+`/private/tmp/wordcraft-document-scope-ci.log`. Keep that cache for
+the release build. Root reviewed the code and owns documentation, commit, packaging and live testing.
+The packaging agent added `packaging/macos/assistant-preview.sh` and its guide. Old-source
+`1692eef9` smoke passed archive/checksum/extracted signature/version/architecture/profile override
+checks and rejected mismatched provenance. This is packaging evidence only, not repaired-app
+acceptance. No Developer ID Application certificate is available; the archive is ad-hoc signed and
+not notarized. The package uses a portable launcher and no machine-specific plist environment.
+The ordinary preview currently has the saved synthetic baseline and Codex/Qwen bindings. Do not
+restart completed sign-in or change models. After passing CI, commit the repair, build release with
+that commit embedded, package it with the new script, and install the freshly extracted portable
+bundle only after normal preview quit (retain a backup). Do not use the older installer that copies
+the machine-specific plist. Create a disposable fixture/profile with
+`/private/tmp/launch-wordcraft-document-scope-test.py` and run the original prompt without guidance,
+so native acceptance covers the artifact recipients will receive.
+Independently inspect tool results,
+verify exact text and one Undo, restore/save the fixture, stop the test listener, and reopen the
+ordinary preview. Update evidence, rerun incremental CI for the final documentation commit, and
+remove owned build caches only after all verification/install work completes.
 
 | Workstream / owner | State | Acceptance / release status |
 | --- | --- | --- |

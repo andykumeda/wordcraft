@@ -167,24 +167,43 @@ impl McpHost {
 const TOOLS: &[&str] =
     &["list_commands", "execute", "batch", "open_document", "save_document", "type_text", "select_text", "get_text", "inspect_document"];
 
+/// External MCP clients can address documents, but an assistant turn already has its target.
+/// Adapt a copy of the catalog; supplied document IDs still pass through the dispatch guard.
+fn bound_tool(tool: &Value) -> Option<ToolDefinition> {
+    let name = tool.get("name")?.as_str()?;
+    if !TOOLS.contains(&name) {
+        return None;
+    }
+    let mut schema = tool.get("inputSchema")?.as_object()?.clone();
+    schema.get_mut("properties")?.as_object_mut()?.remove("doc");
+    if let Some(required) = schema.get_mut("required").and_then(Value::as_array_mut) {
+        required.retain(|property| property.as_str() != Some("doc"));
+    }
+    schema.insert("additionalProperties".into(), Value::Bool(false));
+    let description = match name {
+        "execute" => {
+            "Run one permitted document command by id with params, e.g. {command:\"format.bold\"}. Use list_commands for available commands and their parameters."
+        }
+        "batch" => "Run permitted document commands in order; stops at the first error unless keepGoing.",
+        "open_document" => {
+            "Open a file the user explicitly named or chose. Supply its path and password if protected. After a successful open, subsequent tools operate on that document."
+        }
+        _ => tool.get("description").and_then(Value::as_str).unwrap_or_default(),
+    };
+    Some(ToolDefinition {
+        name: name.into(),
+        description: format!(
+            "{description} WordCraft already scopes this tool to the document bound to the assistant turn. Pass only the listed arguments."
+        ),
+        input_schema: Value::Object(schema),
+    })
+}
+
 impl ToolHost for McpHost {
     fn tools(&mut self, _target: &Target, cancel: &Cancellation) -> Result<Vec<ToolDefinition>, AiError> {
         cancel.check()?;
         let result = self.request("tools/list", json!({}))?;
-        Ok(result
-            .get("tools")
-            .and_then(Value::as_array)
-            .into_iter()
-            .flatten()
-            .filter_map(|tool| {
-                let name = tool.get("name")?.as_str()?;
-                TOOLS.contains(&name).then(|| ToolDefinition {
-                    name: name.into(),
-                    description: tool.get("description").and_then(Value::as_str).unwrap_or_default().into(),
-                    input_schema: tool.get("inputSchema").cloned().unwrap_or_else(|| json!({"type":"object"})),
-                })
-            })
-            .collect())
+        Ok(result.get("tools").and_then(Value::as_array).into_iter().flatten().filter_map(bound_tool).collect())
     }
     fn call(&mut self, _target: &Target, call: &ToolCall, cancel: &Cancellation) -> Result<Value, AiError> {
         cancel.check()?;

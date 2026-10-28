@@ -250,7 +250,9 @@ can be used without committing Word output.
 ## Revision history
 
 Assistant update (2026-10-28): AI row now distinguishes local implementation from the remaining
-live acceptance and publication gates. Readiness estimates have not been raised.
+live acceptance and publication gates. Document-scoped tool schemas repair the Qwen document-ID
+failure; focused host regressions pass, with refreshed native acceptance pending. Readiness
+estimates have not been raised.
 
 | Date | Change | Summary |
 |---|---|---|
