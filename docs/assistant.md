@@ -1,7 +1,7 @@
 # Desktop assistant
 
-Status: desktop implementation verified by automated gates, 2026-10-28. Local-model MCP editing and Undo passed;
-Codex, hosted-provider and other-platform live acceptance remain open; evidence is tracked in
+Status: desktop implementation verified by automated gates, 2026-10-28. Codex and mixed Codex-chat/Ollama-control MCP editing
+and Undo passed on the Mini; hosted-provider, adversarial containment and other-platform acceptance remain open; evidence is tracked in
 [the implementation ledger](assistant-implementation.md). A separate local preview is installed
 and its native launch verified; this feature has not been publicly released.
 
@@ -35,7 +35,7 @@ containment checks before document context is supplied. Failures remain visible 
 providers. Set `CRAFT_CODEX_BINARY` to an absolute executable path when Codex is not on the
 desktop app's PATH. Sign-in and discovery alone do not confirm readiness: a synthetic callback
 and result-continuation check must succeed for the selected model before document context is sent.
-The full live Codex acceptance gate is still open; see the ledger.
+The installed Codex basic edit/read-back/Undo test passed; broader adversarial containment remains a release gate. See the ledger.
 
 Ask for document work in the same conversation as general chat. Requested edits apply directly and
 use normal **Undo**. Relevant document text is read when the task needs it and may be sent to **both**
@@ -65,10 +65,13 @@ also cancels settings operations and sign-in.
 ## Local preview on AK's Mini
 
 The test build is installed at `/Users/andy/Applications/WordCraft Assistant Preview.app`.
-Version `0.11.0 (38ca4478)` was launched from the installed bundle; the Assistant pane and its
-separate persistent profile were verified. Open **Home → Assistant**, then configure models under
+Version `0.11.0 (1692eef9)` is installed with the corrected Codex continuation and compact history
+header. Native Codex and mixed Codex/Ollama editing, read-back and normal Undo passed. Open **Home → Assistant**, then configure models under
 **File → Options → Agents**. The existing `/Applications/WordCraft.app` and its MCP wrappers are
-preserved.
+preserved. The current WordCraft-only choices are Codex `gpt-6.1-sol` for General chat and
+Ollama `gemma4:e4b` for App control. Ollama is running manually on loopback 11434 for the trial;
+it does not auto-start after reboot. The synthetic mixed edit took about 4m16s on this M1/16GB Mini,
+versus about 30s with Codex for both roles. These are observed test timings, not general benchmarks.
 
 **Choose Later on update prompts while testing.** The existing updater offers the standard
 WordCraft release. Updating this custom preview bundle has not been verified.
@@ -80,6 +83,20 @@ use `/Users/andy/Library/Application Support/WordCraft Assistant Preview`, with 
 Assistant connections and conversations still use the normal shared Craft configuration below.
 The generated preview bundle environment selects `/opt/homebrew/bin/codex` explicitly; Craft sign-in
 and the Codex compatibility gates are still required. No credentials or model choices are copied.
+
+## Verify a model route
+
+The pane shows the effective **General chat** and **App control** models. During a document request,
+its status changes to the active provider/model. Expand `control_app` and the individual MCP actions
+to inspect delegation, reads, edits and returned results. Check the actual document, then use normal
+Undo to confirm the edit belongs to its undo history.
+
+Model labels describe the selected route. For independent local execution evidence, also check the
+Ollama server request log and `ollama ps` while the turn runs. A successful request after the handoff,
+the expected loaded model, the completed MCP results and exact document read-back together verify
+that route. Saved chat files preserve tool calls/results but do not currently persist model provenance;
+capture the effective settings and live status alongside a test transcript. Relevant document context
+can still reach Codex when General chat uses Codex and App control uses Ollama.
 
 ## Shared configuration
 

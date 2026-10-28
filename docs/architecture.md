@@ -1,7 +1,7 @@
 # WordCraft architecture
 
 > **Last reviewed:** 2026-10-10 · **Last updated:** 2026-10-28 · **Change:** minor (`proof` is per language: English and Polish; previously major: first committed version; `plan/architecture.md` is local-only) · **Target:** Microsoft Word (Microsoft 365) for Mac 16.113.4
-> **Assistant update:** 2026-10-28 · Codex returns actual tool results to bounded ephemeral exchanges while Craft keeps canonical history; provider lifetime is scoped to each turn or standalone probe. See [implementation status](assistant-implementation.md).
+> **Assistant update:** 2026-10-28 · Native Codex callback continuation and mixed Codex/Ollama routing verified through installed WordCraft; shared runtime remains app-independent. See [implementation status](assistant-implementation.md).
 
 
 How WordCraft is built today (origin/main `40c5d51`). The longer design notes in
@@ -79,6 +79,7 @@ exit. Craft remains the canonical history owner. Native services are excluded on
 
 | Date | Change | Summary |
 |---|---|---|
+| 2026-10-28 | minor | Native Codex callback continuation and mixed Codex/Ollama routing verified through installed WordCraft; shared runtime remains app-independent. |
 | 2026-10-28 | minor | Codex returns actual tool results to bounded ephemeral exchanges while Craft keeps canonical history; provider lifetime is scoped to each turn or standalone probe. |
 | 2026-10-28 | minor | Add portable assistant architecture and guarded internal MCP dispatch; live acceptance remains open. |
 | 2026-10-10 | minor | `proof`: proofing languages (English, Polish), affix engine, Polish patterns; layout and engine route each run by its language |
