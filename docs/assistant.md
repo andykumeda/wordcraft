@@ -2,7 +2,8 @@
 
 Status: desktop implementation verified by automated gates, 2026-10-28. Local-model MCP editing and Undo passed;
 Codex, hosted-provider and other-platform live acceptance remain open; evidence is tracked in
-[the implementation ledger](assistant-implementation.md). This feature has not been released.
+[the implementation ledger](assistant-implementation.md). A separate local preview is installed
+and its native launch verified; this feature has not been publicly released.
 
 Open **Home → Assistant**, or find **Assistant** in command search. The pane can dock, float and
 resize like the other task panes. **File → Options → Agents** contains its connection and model
@@ -56,6 +57,25 @@ inference or document edits. Chats can contain document text and tool results; d
 pane when they are no longer needed. **Reload settings** retries a failed settings load; **Stop**
 also cancels settings operations and sign-in.
 
+## Local preview on AK's Mini
+
+The test build is installed at `/Users/andy/Applications/WordCraft Assistant Preview.app`.
+Version `0.11.0 (38ca4478)` was launched from the installed bundle; the Assistant pane and its
+separate persistent profile were verified. Open **Home → Assistant**, then configure models under
+**File → Options → Agents**. The existing `/Applications/WordCraft.app` and its MCP wrappers are
+preserved.
+
+**Choose Later on update prompts while testing.** The existing updater offers the standard
+WordCraft release. Updating this custom preview bundle has not been verified.
+
+This preview uses an ARM64 release build with local ad-hoc signing, an English interface and the
+existing bundled/system-font defaults, without the optional shared translation/font build inputs.
+It is not notarized for distribution to other Macs. Its own document preferences, logs and recovery
+use `/Users/andy/Library/Application Support/WordCraft Assistant Preview`, with recovery enabled.
+Assistant connections and conversations still use the normal shared Craft configuration below.
+The generated preview bundle environment selects `/opt/homebrew/bin/codex` explicitly; Craft sign-in
+and the Codex compatibility gates are still required. No credentials or model choices are copied.
+
 ## Shared configuration
 
 The configuration root is `CRAFT_AI_CONFIG_DIR`, if set, otherwise the platform configuration
@@ -99,4 +119,5 @@ app integrations are deferred, as is browser inference.
 
 | Date | Change |
 | --- | --- |
+| 2026-10-28 | Record installed ARM64 preview, separate document profile, native launch checks and standard-release updater caveat |
 | 2026-10-28 | Document settings, two-model routing, local history, document/file boundaries and current release gates |
