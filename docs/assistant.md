@@ -1,22 +1,27 @@
 # Desktop assistant
 
-Status: preview 0.12.0 (04afd95e) installed at `/Applications/WordCraft Assistant Preview.app` and native UI/updater-guard smoke verified, 2026-10-29. Earlier Codex and mixed Codex-chat/Ollama-control MCP editing
-and Undo passed on the Mini; hosted-provider, adversarial containment and other-platform acceptance remain open; evidence is tracked in
-[the implementation ledger](assistant-implementation.md). A separate local preview is installed
-and its native launch verified; this feature has not been publicly released.
+Status: preview **0.12.0 (`9c6c2cb0`)** installed at
+`/Applications/WordCraft Assistant Preview.app`, 2026-10-29. Single-model settings, View discovery
+and disabled-updater smoke passed. Sol/Terra actual document/readback/save/reopen/Undo checks and
+external MCP comparisons are recorded in [benchmarks](assistant-benchmarks.md). WordCraft's
+per-app model is now Codex `gpt-6.1-terra`; suite/other-app settings and conversations are preserved.
+The exact installed bundle's Terra handbook edit passed in **11.477s**, including visible result,
+saved/reopened content and formatting, and one normal Undo. Hosted-provider, broader
+adversarial containment and other-Mac acceptance remain open. This is a private local preview,
+not a public release; see [the implementation ledger](assistant-implementation.md).
 
 Open **View → Assistant** (the first ribbon button) or **Home → Assistant** to show or hide the pane. The pane can dock, float and
 resize like the other task panes. **File → Options → Agents** contains its connection and model
 settings. Browser inference is not available.
 
-The current source candidate uses **one model choice** for general conversation and document work.
+The installed preview uses **one model choice** for general conversation and document work.
 Choose an OpenAI subscription through Codex, a local Ollama connection, or an OpenRouter/API
 connection. The selected model calls WordCraft's MCP tools directly in the same conversation;
 there is no General chat/App control handoff. Fresh settings leave the choice unset. Select a
 model with streaming and tool support before sending. The pane shows its effective connection
 and model. Missing connections, unavailable models and unsupported capabilities fail visibly;
-WordCraft never chooses another provider for you. This candidate is **not installed or live-verified**;
-the installed revision above still uses two choices.
+WordCraft never chooses another provider for you. OpenRouter/API setup is supported; its live
+provider acceptance has not been performed.
 
 Expand **Add or edit a connection → API or local server** to add an OpenAI-compatible connection using the OpenAI, OpenRouter, Ollama, LM Studio or custom
 endpoint preset. The endpoint is the API base, including its version path. Discover models, or enter
@@ -40,19 +45,19 @@ providers. Set `CRAFT_CODEX_BINARY` to an absolute executable path when Codex is
 desktop app's PATH. Sign-in and discovery alone do not confirm readiness: a synthetic callback
 and result-continuation check must succeed for the selected model before document context is sent.
 Earlier Codex basic edit/read-back/Undo acceptance passed; broader adversarial containment remains
-a release gate. The pending performance change retains successful compatibility proofs in memory
+a release gate. The preview retains successful compatibility proofs in memory
 for the app session. Every turn gets fresh callback exchanges and checks the signed-in account
 before private context; conversations and pending tool exchanges are never shared between turns.
 Changing the executable, model or runtime limits invalidates the proof. Reloading settings,
 starting sign-in or changing the configuration root clears the template. Ordinary document or
-window changes keep it. No proof is saved to disk. These changes still need integrated acceptance;
-see the ledger.
+window changes keep it. No proof is saved to disk. Source gates and synthetic model acceptance
+are recorded in the ledger and benchmarks.
 
 Ask for document work in the same conversation as general chat. Requested edits apply directly and
-use normal **Undo**. In the single-model candidate, relevant document text and tool results go to
+use normal **Undo**. Relevant document text and tool results go to
 the selected provider when the task needs them. Selecting Ollama removes the two-provider handoff;
-this is not a network privacy audit. The installed two-role build can send document context to
-both configured providers. Tool activity and results appear in the pane. **Stop** cancels inference and
+this is not a network privacy audit. Existing chat history can contain document text and tool
+results; changing providers does not erase it. Tool activity and results appear in the pane. **Stop** cancels inference and
 invalidates commands that have not been dispatched. Completed edits remain in the document and can
 be undone; an uncertain command outcome is never replayed automatically.
 
@@ -65,14 +70,15 @@ permission to edit another document. Assistant tool schemas target that bound do
 clients retain explicit document targeting; the assistant still rejects foreign document IDs if
 a model sends one despite the restricted schema.
 
-The current candidate distinguishes saved page fill, dark-page display and interface appearance.
+The preview distinguishes saved page fill, dark-page display and interface appearance.
 Visual inspection exposes only those settings and the registry-backed commands needed to change
 them; it does not grant access to document content. Successful background setters return the
 actual post-change state with their result, avoiding a separate verification request. Explicit
 setter values and existing target/selection/revision guards still apply.
-Screen-only changes leave writing and its normal Undo history unchanged. These controls, built-in
-document creation, listing and feature metadata are under acceptance testing; the installed build
-above predates them. Page-image rendering, screenshots and simulated mouse/keyboard input remain
+Correct display/interface changes leave writing and its normal Undo history unchanged. Sol and
+Terra passed all three background-source checks. The existing Qwen model passed only two of
+seven warm cases and made a wrong document-fill edit in the interface case; model narration is
+not edit proof. Built-in document creation/listing and feature metadata retain their host guards. Page-image rendering, screenshots and simulated mouse/keyboard input remain
 external-client capabilities; full MCP parity is not established.
 
 For file operations, choose individual files in the pane or include an exact absolute path in your
@@ -92,15 +98,21 @@ also cancels settings operations and sign-in.
 ## Local preview on AK's Mini
 
 The preview is installed at `/Applications/WordCraft Assistant Preview.app`.
-Version `0.12.0 (04afd95e)` includes upstream 0.12.0, simpler settings, the direct View button,
-safe context-limit diagnostics and disabled standard updates. Installed native View/settings
-and updater-guard checks passed with synthetic content. The earlier 0.11 preview passed
-Codex-chat/Qwen-control editing, read-back and normal Undo; inference was not repeated for 0.12.0.
-Open **Home → Assistant**, then configure models under
-**File → Options → Agents**. The existing `/Applications/WordCraft.app` and its MCP wrappers are
-preserved. The saved pre-migration WordCraft-only choices are Codex `gpt-6.1-sol` for General chat and
-Ollama `qwen3:4b-instruct-2507-q4_K_M` for App control, selected for the user-requested trial.
-Ollama uses the configured loopback endpoint. This task added no reboot autostart.
+Version `0.12.0 (9c6c2cb0)` includes upstream 0.12.0, one model selector, direct MCP tools,
+app-session compatibility proofs, bundled background inspection/verification, the View button,
+safe context-limit diagnostics and disabled standard updates. Native View/settings/updater smoke
+passed with synthetic content. The installed Terra handbook edit also passed in **11.477s**, with
+visible result, saved/reopened content/formatting and one normal Undo verified.
+Open **View → Assistant**, then configure the model under **File → Options → Agents**.
+Codex `gpt-6.1-terra` is the applied WordCraft-only default after matching observed correctness
+and lower measured medians than Sol. Those small samples do not guarantee every turn is faster.
+The main `/Applications/WordCraft.app` (0.10) and its MCP wrappers are unchanged. Existing legacy
+Control choices and chats are preserved but no longer route requests. Ollama retains its configured
+loopback endpoint; this task added no reboot autostart. See [current benchmarks](assistant-benchmarks.md)
+for Sol, Terra, Qwen and external-client results.
+
+The following measurements describe earlier two-role previews, not the installed single-model
+workflow; they are retained as historical evidence.
 
 On the same synthetic edit/read-back/Undo task, Codex control passed in about 30s and Gemma control
 passed in about 4m16s. Qwen's original identical-prompt run stopped after 46s without editing because
@@ -127,14 +139,16 @@ Assistant connections and conversations still use the normal shared Craft config
 The portable launcher finds Codex on PATH, including standard Homebrew locations and `~/.local/bin`;
 `CRAFT_CODEX_BINARY` can override it. Craft sign-in and compatibility gates are still required.
 No credentials or model choices are copied. The Apple silicon DMG, ZIP, checksums and install guide are
-in `dist/assistant-preview/04afd95e/`; the DMG and notes are also in Downloads. See the ledger
-for exact files and verification. Share the DMG and checksum privately and drag the preview
+in `dist/assistant-preview/9c6c2cb0/`; the DMG and notes are also in Downloads. See the ledger
+for exact files and verification. Mounted and extracted DMG apps, installed native hash and
+rollback copy were verified. DMG SHA-256:
+`cea0796333f9ca009ea685a9c58a1a15184dd47546a05216b36ab8b248f288c2`. Share the DMG and checksum privately and drag the preview
 to `/Applications` on the receiving Mac. Each Mac needs its own Codex/Ollama setup. This preview is ad-hoc signed and not notarized;
 the install guide links Apple's per-app approval instructions.
 
 ## Verify a model route
 
-The single-model candidate shows one effective provider/model. Expand the individual MCP actions
+The pane shows one effective provider/model. Expand the individual MCP actions
 to inspect reads, edits and returned results. Check the actual document, saved/reopened content
 and normal Undo; a model's success message alone does not verify an edit.
 
@@ -142,9 +156,8 @@ For independent local execution evidence, check the Ollama server request log an
 while the turn runs. The expected loaded model, successful MCP results and exact document
 read-back together verify that route. Saved chat files preserve tool calls/results but do not
 currently persist model provenance; capture effective settings and live status with each test.
-The installed two-role revision shows both routes and can still send document tasks/results to
-Codex when its App control choice is Ollama. The unified candidate's live routing and performance
-acceptance remain pending.
+Current synthetic routing and performance evidence is in the benchmarks. The existing Qwen
+model is not a reliable substitute for the tested Codex models on background requests.
 
 ## Shared configuration
 
@@ -159,11 +172,11 @@ directory followed by `Craft/ai` (on macOS, `~/Library/Application Support/Craft
 | Platform credential store | API credentials; never embedded in documents or transcript files |
 | `codex/` under the shared root | Craft account state and restricted runtime configuration; child HOME, USERPROFILE and CODEX_HOME all use this isolated home |
 
-The single-model candidate uses the existing `assistant.chat` binding as its canonical model
+The preview uses the existing `assistant.chat` binding as its canonical model
 choice. Legacy `assistant.control` bindings, credentials and conversations are preserved but do
 not route WordCraft requests. An unset or invalid chat binding never falls back to that legacy
 control choice. A WordCraft override takes precedence over the suite default; an invalid override
-fails explicitly. The installed revision still uses both roles. Runtime defaults are defined once in
+fails explicitly. Runtime defaults are defined once in
 `craft-ai-core::assistant::RuntimeConfig` and documented in the shared `craft-ai-native` README.
 Changes to connections and runtime settings are locked and atomically saved. Never put API keys
 in either JSON file.
@@ -180,13 +193,13 @@ channel to the same MCP server and executes permitted commands on the UI thread,
 protection and Undo handling. No additional TCP listener is started.
 
 The UI commands are `ui.assistant {value?}`, `ui.assistant.send {text, files?}`,
-`ui.assistant.stop {}` and `ui.assistant.status {}`. The candidate adds
+`ui.assistant.stop {}` and `ui.assistant.status {}`. Use
 `ui.assistant.newChat {}` using the pane's normal New chat action and busy guards; it starts an
 asynchronous operation and returns `{"started":true}`. Wait for a changed opaque `chatId`,
 `settingsBusy:false` and `busy:false` before sending to the new chat. Status reports canonical
 `model`, busy state and errors without credentials or chat contents. Legacy `chatModel` and
 `controlModel` fields alias the same selected route. Sending requires configured desktop services.
-These candidate automation additions are not in the installed revision.
+
 
 Connections, provider adapters, routing, persistence and widgets live in `craft-libs`. WordCraft's
 adapter supplies app identity, the opaque target and permitted MCP handling. Other Craft apps can
@@ -197,6 +210,7 @@ app integrations are deferred, as is browser inference.
 
 | Date | Change |
 | --- | --- |
+| 2026-10-29 | Install verified portable 9c6c2cb0 preview with one model, proof reuse and background verification; apply WordCraft-only Terra default after measured acceptance; retain Qwen/parity/platform limits |
 | 2026-10-29 | Document pending single-model routing, app-session compatibility proofs and background metadata/verification bundling; installed revision and live acceptance unchanged |
 | 2026-10-28 | Record installed ARM64 preview, separate document profile, native launch checks and standard-release updater caveat |
 | 2026-10-28 | Document settings, two-model routing, local history, document/file boundaries and current release gates |

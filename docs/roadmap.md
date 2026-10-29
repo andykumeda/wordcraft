@@ -1,7 +1,7 @@
 # WordCraft roadmap: milestones and what's next
 
 > **Last reviewed:** 2026-10-10 · **Last updated:** 2026-10-29 · **Change:** trivial (egui 0.37 migration: 27 interface languages remain pinned by `craft-i18n.rev` (9205108…), and the input-method handling has synthetic regressions while managed CI passed and native acceptance (#155–#164) remains open; previously trivial: M6: Manage Sources imports Word's `Sources.xml`, #2640; previously minor: Czech proofing review fixes; previously minor: Portuguese proofing; previously minor: Polish interface and Polish proofing; previously trivial: M7: formatting revisions landed, #41; previously trivial: M5: Draw Table and Eraser landed, #303; previously minor: beta distance restated: ~15 points, ~150–230 h; previously: alpha gate checked: six core workflows pass; previously major: milestones moved here from ROADMAP.md; Current focus set from the re-measured gaps) · **Target:** Microsoft Word (Microsoft 365) for Mac 16.113.4
-> **Assistant update:** 2026-10-29 · Candidate single-model orchestration and guarded document/view controls passed all source gates; Sol/Terra live comparison pending. Native exposes 13/17 MCP tools, so full parity is not claimed. Installed preview remains 04afd95e. See [ledger](assistant-implementation.md).
+> **Assistant update:** 2026-10-29 · Single-model preview 9c6c2cb0 installed with WordCraft-only Terra default after Sol/Terra document and latency checks; external MCP comparisons pass on tested cases. Existing Qwen passes 2/7 warm cases; native has 13/17 tools. Hosted-provider/other-Mac acceptance remains open. See [benchmarks](assistant-benchmarks.md).
 
 
 Forward-looking plan. The summary is [`ROADMAP.md`](../ROADMAP.md); the ranked work list is
@@ -72,12 +72,14 @@ partial rows are fidelity gaps (beta work), not broken workflows. WordCraft stay
 Charts and SmartArt editing, the Draw tab, `.doc` writing, PDF Reflow, the remaining interface
 languages, screen-reader access, ecosystem decisions (VBA, add-ins, cloud). The in-app assistant
 is implemented locally with its shared dependencies published to the approved fork; remaining
-provider/platform acceptance remains a release gate ([ledger](assistant-implementation.md)).
+hosted-provider/platform acceptance, local-model reliability and full MCP parity remain gates
+([benchmarks](assistant-benchmarks.md)).
 
 ## Revision history
 
 | Date | Change | Summary |
 |---|---|---|
+| 2026-10-29 | minor | Deploy portable single-model preview 9c6c2cb0 and WordCraft-only Terra default after measured Sol/Terra/external acceptance; record Qwen failures and 13/17-tool/platform limits. |
 | 2026-10-29 | minor | Remove duplicate same-model orchestration; add guarded document creation/listing and visual inspection/setters. Source gates pass; candidate model/performance acceptance pending; 13/17 tools, not full parity. |
 | 2026-10-29 | minor | Integrate upstream 0.12.0; deploy isolated assistant preview under /Applications with verified portable DMG; retain native pane and manual upstream-maintenance workflow. |
 | 2026-10-28 | minor | Corrected preview `1692eef9` installed; Codex and mixed local-provider acceptance passed; remaining release gates tracked separately. |

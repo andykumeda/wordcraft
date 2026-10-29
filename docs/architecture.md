@@ -1,7 +1,7 @@
 # WordCraft architecture
 
 > **Last reviewed:** 2026-10-10 · **Last updated:** 2026-10-28 · **Change:** minor (`proof` is per language: English and Polish; previously major: first committed version; `plan/architecture.md` is local-only) · **Target:** Microsoft Word (Microsoft 365) for Mac 16.113.4
-> **Assistant update:** 2026-10-28 · Native Codex callback continuation and mixed Codex/Ollama routing verified through installed WordCraft; shared runtime remains app-independent. See [implementation status](assistant-implementation.md).
+> **Assistant update:** 2026-10-29 · Single-model preview 9c6c2cb0 installed with safe app-session compatibility proofs and bundled background verification; Sol/Terra acceptance and external comparisons recorded; Qwen and full parity limits remain. See [implementation status](assistant-implementation.md).
 
 
 How WordCraft is built today (origin/main `40c5d51`). The longer design notes in
@@ -71,7 +71,7 @@ checks the originating window/document/selection and revision, and confines exac
 the engine I/O boundary. The assistant catalog omits external MCP's document selector because the
 turn already owns its target; supplied foreign IDs still fail the dispatch guard. External MCP
 retains its document selectors. Provider workers have no WordCraft
-document dependency. In the pending single-model candidate, the selected `assistant.chat` choice
+document dependency. In the installed single-model preview, the selected `assistant.chat` choice
 handles conversation and MCP tools directly; legacy Control bindings remain stored but do not
 route WordCraft turns. An app-wide Codex template retains only successful compatibility proofs
 in memory. Each turn forks fresh pending exchanges and authentication-verification state, checks
@@ -80,14 +80,16 @@ changes invalidate proofs; settings reload, sign-in and configuration-root chang
 template. Document/window changes retain it. HTTP providers and standalone probes keep separate
 lifetimes. Craft remains the canonical history owner. Native services are excluded on WASM.
 Background tool metadata and authoritative post-setter verification are bundled without granting
-visual inspection access to writing. These changes remain under integration/live acceptance;
-the installed `04afd95e` preview predates them. See [assistant help](assistant.md) and
+visual inspection access to writing. Source gates, Sol/Terra synthetic document acceptance and external comparisons passed; the
+existing Qwen model failed five of seven warm cases. Native exposes 13/17 external tools; full
+parity, hosted-provider and other-Mac acceptance remain open. Installed preview is `9c6c2cb0`. See [assistant help](assistant.md) and
 [the implementation ledger](assistant-implementation.md) for configuration, portability and gates.
 
 ## Revision history
 
 | Date | Change | Summary |
 |---|---|---|
+| 2026-10-29 | minor | Record installed 9c6c2cb0 single-model preview, measured acceptance and remaining local-model/tool/platform limits. |
 | 2026-10-29 | minor | Record pending single-model routing, isolated turn forks with app-session compatibility proofs, and bundled background metadata/verification; live acceptance pending. |
 | 2026-10-28 | minor | Specialize assistant tools for the bound document; preserve external MCP selectors and dispatch guards. |
 | 2026-10-28 | minor | Native Codex callback continuation and mixed Codex/Ollama routing verified through installed WordCraft; shared runtime remains app-independent. |

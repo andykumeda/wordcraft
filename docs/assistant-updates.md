@@ -9,6 +9,19 @@ The owner uses `/Applications/WordCraft Assistant Preview.app`, separately from 
 Apple-silicon DMG and SHA-256 checksum. Existing profiles, conversations and credentials stay
 outside the bundle and are never copied into packages.
 
+Current installed preview is **0.12.0 (`9c6c2cb0`)**. Mounted/copied DMG apps, rollback copy and
+installed native hash were verified; launcher/View/settings/updater smoke passed. Sol/Terra
+synthetic document acceptance and external comparisons are in [benchmarks](assistant-benchmarks.md).
+WordCraft's canonical per-app choice is now Terra; other settings, credentials and chats remain.
+The exact installed Terra handbook edit passed in **11.477s** with visible background result,
+saved/reopened content/formatting and one normal Undo verified; normal quit/socket/key cleanup
+passed. Evidence: `/private/tmp/wordcraft-preview-installed-edit-receipt.json`. The main
+WordCraft 0.10 app is unchanged.
+The DMG/checksum/install notes are in `dist/assistant-preview/9c6c2cb0/` and Downloads. DMG SHA-256:
+`cea0796333f9ca009ea685a9c58a1a15184dd47546a05216b36ab8b248f288c2`.
+Ad-hoc signing, no notarization and other-Mac launch acceptance remain explicit limitations;
+no WordCraft push or public release occurred.
+
 The preview launcher passes `--disable-updates`. This blocks startup checks, manual checks and
 the standard updater's install/prompt path. Manual Check for Updates explains that updates are
 disabled. The ordinary WordCraft app retains its normal updater. Preview updates use a new
@@ -26,7 +39,8 @@ For each preview update:
    checksums and the preview launcher. Install only the preview under `/Applications`, keeping
    a rollback copy of any version replaced. Never force-quit or discard unsaved writing.
 5. Smoke the installed app with synthetic content and a disposable profile; verify its version,
-   View button, settings and disabled updater. Record actual results and remaining other-Mac
+   View button, settings and disabled updater. Run the actual selected model on a synthetic
+   document and verify the visible result, saved/reopened content and Undo. Record actual results and remaining other-Mac
    acceptance. A currently open older instance must be saved/quit and reopened at the exact
    new installation path before it uses the new code.
 
@@ -78,4 +92,5 @@ separate update channel has been implemented by this delivery.
 
 | Date | Change |
 | --- | --- |
+| 2026-10-29 | Record verified 9c6c2cb0 package/install and Terra per-app default; retain updater isolation and destination-Mac acceptance gate. |
 | 2026-10-29 | Define preview delivery and updater isolation; retain in-app UI as the requirement for future service separation. |

@@ -1,6 +1,6 @@
 # Portable assistant implementation ledger
 
-Updated 2026-10-29 (America/Los_Angeles). **Implementation: In progress for performance, MCP parity and model comparisons; Codex candidate document workflow verified.**
+Updated 2026-10-29 (America/Los_Angeles). **Core single-model implementation: Verified and Deployed at `9c6c2cb0`; full MCP capability parity and reliable local-model acceptance remain open.**
 The original shared and WordCraft automated gates passed, and a real local model completed MCP
 read/edit/read-back/Undo acceptance. The Codex live follow-up found and repaired a continuation
 defect and a long-chat-title layout defect. Corrected native Codex and mixed Codex/Ollama
@@ -17,6 +17,8 @@ The execution host is **AK's Mini**. **Local preview installation: Deployed**, f
 user's request to place the preview in `/Applications`. `/Applications/WordCraft.app` is
 unchanged. No public app release or WordCraft push has occurred. After compaction, read this ledger
 and inspect Git state; do not restart completed implementation or checks.
+
+Current delivery: **`0.12.0 (9c6c2cb0)`**, one chat/model, WordCraft-only Terra selection; installed launcher and real Terra edit/save/reopen/Undo verified. See the final delivery checkpoint and [model comparison](assistant-benchmarks.md). Earlier revision and routing entries below are historical.
 
 ## Accepted scope
 
@@ -970,3 +972,52 @@ Documentation checkpoint only: no new compilation, tests, model inference, perfo
 installation is claimed here. The prior `259ac267`/`e3ed7002` measurements remain historical baselines;
 no new latency or privacy guarantee follows from this implementation. The installed preview and
 separate main app remain unchanged. Other-Mac launch acceptance remains open.
+
+
+### 2026-10-29 — Verified and Deployed: unified chat with measured latency reduction
+
+Release source **`9c6c2cb04ae122ed0d4bcbf2838ab69c0f249531`**, shared pin
+`bf932b91643c287502d539b88f08abd5796c9447`. All eight source gates passed before the
+source commit; 4,649 ordinary tests passed and 6 opt-in tests were ignored. Release app and
+matching CLI built together successfully. No compilation ran during model timing cohorts.
+Detailed case results, failed attempts, cold/warm conditions and comparison caveats are in
+[assistant-benchmarks.md](assistant-benchmarks.md).
+
+| Workstream | State | Evidence / limits |
+| --- | --- | --- |
+| Single chat/model, settings and direct tools | Verified and Deployed | Chat-only canonical binding, preserved legacy Control data; actual installed settings and prominent View Assistant screenshots inspected |
+| Sol/Terra document and general-chat acceptance | Verified | Both 7/7 document/display cases, exact readback, saved/reopened DOCX, formatting preservation and normal Undo; same-chat general→document passed; three general repeats each passed with no document tools |
+| Panel performance | Verified for measured cases | Sol warm core median8.910s vs matched-source external12.887s; Terra7.218s vs9.937s. Fresh external clients/apps and warm native process are distinct conditions. Native cold setup13.770/11.602s; no universal or first-turn speed guarantee |
+| Qwen comparison | Verified comparison; reliable local acceptance not achieved | Local Qwen4B16K: 2/7 warm cases pass, cold handbook separately passes. Five incorrect background/display cases retained, including quoted null and wrong-setting changes/false success. No silent cloud fallback/tuning |
+| Terra default | Deployed | Only WordCraft `assistant.chat`: craft-codex/gpt-6.1-terra; previous Sol binding privately backed up. Other app/suite bindings, legacy Control, connections, credentials and histories unchanged; locked atomic update independently compared |
+| External MCP comparison | Verified for cases | Sol7/7 and Terra5/5, actual read-before/readback/files/Undo and visual invariants; all clients/apps quit normally and test keys/ports released |
+| Full capability parity | In progress | Native13/17 tools; image rendering/capture and guarded mouse/keyboard input remain unsupported. No claim of full parity |
+| Preview and portable package | Deployed | Exact /Applications preview, mounted DMG and copied bundle verified; previous preview rollback ZIP independently extracted/signature/hash verified; main WordCraft0.10.0 unchanged |
+| Installed model edit | Verified | Terra unchanged prompt “remove the dark background”, synthetic full handbook;11.477s, actual background/content/format/save/reopen/Undo checks pass. Installed before/after screenshot inspected; normal quit/key/17981 cleanup |
+| Other Mac / hosted provider / signing | Not started for this build | Other-Mac execution and live OpenRouter inference untested; ad-hoc signing only, no notarization. No public release or WordCraft source push |
+
+Delivery artifacts (Apple silicon):
+
+- Installed `/Applications/WordCraft Assistant Preview.app`, `0.12.0 (9c6c2cb0)`.
+  Packaged/installed native SHA-256 `f70fb9ddad4235e6283b40eda7f50ea8325826a86c6b8d3fc82be8d68baaf7e8`.
+  Ad-hoc re-signing changes the release binary hash; the benchmark report records the unsigned build hash separately.
+- DMG `dist/assistant-preview/9c6c2cb0/wordcraft-assistant-preview-0.12.0-9c6c2cb0-macos-aarch64.dmg`;
+  SHA-256 `cea0796333f9ca009ea685a9c58a1a15184dd47546a05216b36ab8b248f288c2`.
+- ZIP same prefix; SHA-256 `874126993ee750efaad9afc11bcc5db98206e044da82107d526033d155355992`.
+- DMG, checksum and installation instructions copied to Downloads and byte/hash verified.
+- Previous04afd95e rollback `/Users/andy/Applications/WordCraft Preview Backups/wordcraft-assistant-preview-0.12.0-04afd95e-replaced-9c6c2cb0.zip`;
+  SHA-256 `586fcf288e62da867ddd77801a335fce610a3c05189b96c181c3513505802e44`.
+- Installed launcher still passes `--disable-updates`. Main app SHA-256 remains
+  `afe3d39b6f91a747aff129c7544d202da4d1b660a5ad3278ac112573f866f1ab`.
+- Receipts `/private/tmp/wordcraft-preview-9c6c2cb0-{install,smoke}-receipt.json`,
+  `/private/tmp/wordcraft-preview-installed-edit-receipt.json`, `/private/tmp/wordcraft-terra-default-receipt.json`.
+  Temporary test profiles and the private settings rollback are not included in distributable artifacts.
+
+Privacy remains a soft preference. The selected provider receives both chat and any document
+content required by its tools. Local Ollama requests used only the verified loopback endpoint;
+no network packet/air-gap audit was performed. Switching providers in an existing chat sends
+that chat history to the newly selected provider; start a new chat to keep earlier local context
+separate. A stronger local model or LAN-hosted Ollama is an untested next candidate, not an
+installed replacement. No new model was downloaded.
+
+Final delivery-document gate: `RUST_TEST_THREADS=1 cargo xtask ci` passed all eight steps again; log `/private/tmp/wordcraft-unified-delivery-final-ci.log`. No source code changed after model acceptance. Final delivery documentation is committed separately from the packaged source revision.
