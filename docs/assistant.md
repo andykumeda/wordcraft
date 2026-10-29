@@ -1,6 +1,6 @@
 # Desktop assistant
 
-Status: desktop source verified by automated gates, 2026-10-29. The latest settings, error and View-button changes have not been installed. Earlier Codex and mixed Codex-chat/Ollama-control MCP editing
+Status: preview 0.12.0 (04afd95e) installed at `/Applications/WordCraft Assistant Preview.app` and native UI/updater-guard smoke verified, 2026-10-29. Earlier Codex and mixed Codex-chat/Ollama-control MCP editing
 and Undo passed on the Mini; hosted-provider, adversarial containment and other-platform acceptance remain open; evidence is tracked in
 [the implementation ledger](assistant-implementation.md). A separate local preview is installed
 and its native launch verified; this feature has not been publicly released.
@@ -68,9 +68,11 @@ also cancels settings operations and sign-in.
 
 ## Local preview on AK's Mini
 
-The test build is installed at `/Users/andy/Applications/WordCraft Assistant Preview.app`.
-Version `0.11.0 (ca279f8c)` includes corrected Codex continuation, compact history controls and
-document-scoped tools. This build passed Codex-chat/Qwen-control editing, read-back and normal Undo.
+The preview is installed at `/Applications/WordCraft Assistant Preview.app`.
+Version `0.12.0 (04afd95e)` includes upstream 0.12.0, simpler settings, the direct View button,
+safe context-limit diagnostics and disabled standard updates. Installed native View/settings
+and updater-guard checks passed with synthetic content. The earlier 0.11 preview passed
+Codex-chat/Qwen-control editing, read-back and normal Undo; inference was not repeated for 0.12.0.
 Open **Home → Assistant**, then configure models under
 **File → Options → Agents**. The existing `/Applications/WordCraft.app` and its MCP wrappers are
 preserved. The current WordCraft-only choices are Codex `gpt-6.1-sol` for General chat and
@@ -101,10 +103,10 @@ use `/Users/andy/Library/Application Support/WordCraft Assistant Preview`, with 
 Assistant connections and conversations still use the normal shared Craft configuration below.
 The portable launcher finds Codex on PATH, including standard Homebrew locations and `~/.local/bin`;
 `CRAFT_CODEX_BINARY` can override it. Craft sign-in and compatibility gates are still required.
-No credentials or model choices are copied. The Apple silicon ZIP, checksum and install guide are
-in `dist/assistant-preview/ca279f8c/`; see the ledger for the exact files and verification.
-Share the ZIP and checksum privately, extract it and place the preview in `~/Applications` on the
-receiving Mac. Each Mac needs its own Codex/Ollama setup. This preview is ad-hoc signed and not notarized;
+No credentials or model choices are copied. The Apple silicon DMG, ZIP, checksums and install guide are
+in `dist/assistant-preview/04afd95e/`; the DMG and notes are also in Downloads. See the ledger
+for exact files and verification. Share the DMG and checksum privately and drag the preview
+to `/Applications` on the receiving Mac. Each Mac needs its own Codex/Ollama setup. This preview is ad-hoc signed and not notarized;
 the install guide links Apple's per-app approval instructions.
 
 ## Verify a model route

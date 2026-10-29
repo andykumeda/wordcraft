@@ -142,6 +142,8 @@ Ranked, to beta (detail and remaining milestones in [docs/roadmap.md](docs/roadm
 
 ## Progress log
 
+- 2026-10-29 · A1: Integrate upstream WordCraft 0.12.0 and deploy Assistant Preview (04afd95e) under `/Applications`, separately from the main app. Standard preview updates are disabled; signed ZIP/DMG, checksums and installed native smoke pass. Background-service separation remains design only; see [ledger](docs/assistant-implementation.md).
+
 - 2026-10-29 · A1: Assistant has a leading View ribbon button and working Home toggle; shared settings prioritize model choices and hide advanced connection controls. HTTP errors identify the failed route with safe status-specific guidance. All eight CI gates pass; verification is recorded in [the ledger](docs/assistant-implementation.md); installed preview remains unchanged; context rejection reproduced with synthetic content.
 
 - 2026-10-22: View › Window › New Window opens a second window on the document (desktop). The windows are titled `Name:1` and `Name:2` and each keeps its own caret, scroll position, zoom and view; edits and Undo are the document's and show in both. Closing one of them asks nothing; the last one asks about unsaved changes, and quitting asks once per document.

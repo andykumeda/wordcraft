@@ -1,7 +1,7 @@
 # WordCraft roadmap: milestones and what's next
 
-> **Last reviewed:** 2026-10-10 · **Last updated:** 2026-10-28 · **Change:** trivial (egui 0.37 migration: 27 interface languages remain pinned by `craft-i18n.rev` (9205108…), and the input-method handling has synthetic regressions while managed CI passed and native acceptance (#155–#164) remains open; previously trivial: M6: Manage Sources imports Word's `Sources.xml`, #2640; previously minor: Czech proofing review fixes; previously minor: Portuguese proofing; previously minor: Polish interface and Polish proofing; previously trivial: M7: formatting revisions landed, #41; previously trivial: M5: Draw Table and Eraser landed, #303; previously minor: beta distance restated: ~15 points, ~150–230 h; previously: alpha gate checked: six core workflows pass; previously major: milestones moved here from ROADMAP.md; Current focus set from the re-measured gaps) · **Target:** Microsoft Word (Microsoft 365) for Mac 16.113.4
-> **Assistant update:** 2026-10-28 · Corrected preview `1692eef9` installed; Codex and mixed local-provider acceptance passed; remaining release gates tracked separately. See [implementation status](assistant-implementation.md).
+> **Last reviewed:** 2026-10-10 · **Last updated:** 2026-10-29 · **Change:** trivial (egui 0.37 migration: 27 interface languages remain pinned by `craft-i18n.rev` (9205108…), and the input-method handling has synthetic regressions while managed CI passed and native acceptance (#155–#164) remains open; previously trivial: M6: Manage Sources imports Word's `Sources.xml`, #2640; previously minor: Czech proofing review fixes; previously minor: Portuguese proofing; previously minor: Polish interface and Polish proofing; previously trivial: M7: formatting revisions landed, #41; previously trivial: M5: Draw Table and Eraser landed, #303; previously minor: beta distance restated: ~15 points, ~150–230 h; previously: alpha gate checked: six core workflows pass; previously major: milestones moved here from ROADMAP.md; Current focus set from the re-measured gaps) · **Target:** Microsoft Word (Microsoft 365) for Mac 16.113.4
+> **Assistant update:** 2026-10-29 · Preview 0.12.0 (04afd95e) installed under /Applications; DMG/ZIP signatures and native UI/updater-guard smoke pass. Background-service separation remains design only. See [ledger](assistant-implementation.md).
 
 
 Forward-looking plan. The summary is [`ROADMAP.md`](../ROADMAP.md); the ranked work list is
@@ -78,6 +78,7 @@ provider/platform acceptance remains a release gate ([ledger](assistant-implemen
 
 | Date | Change | Summary |
 |---|---|---|
+| 2026-10-29 | minor | Integrate upstream 0.12.0; deploy isolated assistant preview under /Applications with verified portable DMG; retain native pane and manual upstream-maintenance workflow. |
 | 2026-10-28 | minor | Corrected preview `1692eef9` installed; Codex and mixed local-provider acceptance passed; remaining release gates tracked separately. |
 | 2026-10-28 | minor | Shared assistant fixes published and pinned at d4641d3; Codex sign-in passed; corrected Codex and mixed Ollama acceptance pending. |
 | 2026-10-28 | minor | Portable assistant implemented in shared libraries and WordCraft; automated integration gates passed, local-model acceptance passed; Codex/hosted/platform gates pending. |

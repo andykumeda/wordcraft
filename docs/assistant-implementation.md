@@ -4,16 +4,17 @@ Updated 2026-10-29 (America/Los_Angeles). **Implementation: Verified for the loc
 The original shared and WordCraft automated gates passed, and a real local model completed MCP
 read/edit/read-back/Undo acceptance. The Codex live follow-up found and repaired a continuation
 defect and a long-chat-title layout defect. Corrected native Codex and mixed Codex/Ollama
-edit/read-back/Undo acceptance now pass; current installed source is `ca279f8c`.
+edit/read-back/Undo acceptance now pass; that earlier 0.11 acceptance used source `ca279f8c`; current delivery is recorded below.
 Hosted-provider and other-platform live acceptance remain separate release gates.
 The subsequent Qwen Instruct trial failed the original prompt without editing; a guided diagnostic
 completed with Codex correction and exact Undo. The document-scope repair checkpoint under
 Workstreams records the completed fix, unchanged-prompt acceptance and portable download.
-Latest follow-up: the October 29 settings, provider diagnostics and View discovery source changes
-passed all automated gates; their checkpoint is at the end of this ledger. The earlier MacBook
+Latest follow-up: upstream 0.12.0 plus the October 29 settings, provider diagnostics, View discovery
+and preview-updater safeguards are installed at `/Applications/WordCraft Assistant Preview.app`;
+verified DMG/ZIP delivery is recorded at the end of this ledger. The earlier MacBook
 launcher repair and provisional feedback remain recorded below.
 The execution host is **AK's Mini**. **Local preview installation: Deployed**, following the
-user's request to place a testable build in `~/Applications`. `/Applications/WordCraft.app` is
+user's request to place the preview in `/Applications`. `/Applications/WordCraft.app` is
 unchanged. No public app release or WordCraft push has occurred. After compaction, read this ledger
 and inspect Git state; do not restart completed implementation or checks.
 
@@ -714,8 +715,8 @@ design, not part of the current binary. See [update workflow/design](assistant-u
 | --- | --- | --- |
 | Upstream integration / primary | Verified | Origin/main aadb077e integrated without conflicts. Version/Cargo.lock and platform packaging changes only. Full serial CI passed all eight gates. |
 | Preview updater guard / agent | Verified | --disable-updates blocks startup/manual/install routes and shows a disabled notice. Standard app default retained. Flag passed by preview launcher; new regression passed in full CI. |
-| DMG packaging / primary | In progress | ZIP and DMG with separate hashes; verify mounted and copied signed app before publishing outputs. Bash syntax passes; assertion check rejects old binaries before output creation. Actual package verification pending release binary. |
-| Install/smoke / primary | Not started | Exact /Applications preview path; preserve main app and user writing; retain rollback copy; synthetic installed-app smoke and socket cleanup. |
+| DMG packaging / primary | Verified | ZIP extraction, mounted app and copied-from-DMG app pass strict signatures; native version/ARM64 and hashes checked. DMG, checksum and install notes delivered to Downloads. |
+| Install/smoke / primary | Deployed | /Applications/WordCraft Assistant Preview.app 0.12.0 (04afd95e) installed; main app native hash unchanged. View/settings/update-guard smoke inspected; normal quit, temporary socket/key released. Prior home preview archived/verified and duplicate retired. |
 | Service separation / deferred | Not started | Preserve native pane; typed local service interface and upstream bridge are design only. No extra chat window or service was created. |
 
 `git fetch origin` found upstream commits 65bb8b37, 3de6ff95, 9724f15c and aadb077e.
@@ -744,3 +745,50 @@ localization audit, doctests,57 assets,20-crate layer check and16-crate WASM che
 No release artifact or installed-bundle acceptance is claimed by those source checks.
 The reviewed upstream merge and preview guard/packaging/workflow are committed separately;
 release build and actual packaging/deployment verification follow from the feature commit.
+
+### Delivered 0.12.0 checkpoint
+
+Binary source: **04afd95e872e93d64a311a33c2b33f969fc7d118**, based on upstream 0.12.0
+(merge 13f0ad01). Release build passed in 3m55. Native `--version`: **wordcraft 0.12.0 (04afd95e)**;
+architecture **arm64**. Initial Bash-only packaging environment was first sourced under Zsh and
+stopped before a build; the corrected Bash invocation succeeded. No artifact from that failed
+invocation was distributed.
+
+Installed target: `/Applications/WordCraft Assistant Preview.app`. Native signed-binary SHA256:
+`d6419db1f881859112fe9943303af22edcc2d66771989e5a2724048c2affd77d`.
+Installed and packaged signatures pass strict/deep verification. The launcher passes
+--disable-updates; standard startup/manual/install updates cannot replace the custom build.
+The separate `/Applications/WordCraft.app` remains version 0.10.0 and its executable SHA256 is
+unchanged: `afe3d39b6f91a747aff129c7544d202da4d1b660a5ad3278ac112573f866f1ab`.
+
+Artifacts under `dist/assistant-preview/04afd95e/`: matching 0.12.0 ARM64 ZIP/DMG, their SHA256
+files and installation notes. DMG SHA256:
+`bc44e23543b5c90c7276001541163980b7a7953cbe63e8239007759221c8847f`.
+The DMG, its checksum and notes were also copied to `~/Downloads`. Signature checks passed on
+staging, ZIP extraction, mounted DMG and an app copied from the DMG before publication.
+Actual package log: `/private/tmp/wordcraft-preview-012-package.log`.
+
+Installed source smoke passed using a sample and isolated document/AI profiles: native Assistant
+was available, View entry and settings rendered, manual update check showed the disabled notice,
+and no document edit/inference was performed. Three screenshots were inspected. Owned PID 84591
+held 127.0.0.1:17981; installed executable and flag were verified before authentication. Normal
+`app.quit` succeeded; the listener and key were removed. Receipt:
+`/private/tmp/wordcraft-preview-012-smoke-receipt.json`; install/artifact receipt:
+`/private/tmp/wordcraft-preview-012-install-receipt.json`. The local service inventory was updated
+outside Git. A verified rollback ZIP of the prior 0.11 home-folder preview is retained in
+`~/Applications/WordCraft Preview Backups/`; the inactive duplicate app was retired after the
+new installed smoke passed. Profiles and credentials were preserved and not packaged.
+
+Signing remains **ad-hoc, not notarized**; launch on the receiving Mac is not yet verified.
+No Developer ID identity exists on this host. No public release, WordCraft source publication,
+recurring update monitor, model download, provider change or context reconfiguration occurred.
+The native in-app pane is retained. A separately updateable background service remains a
+proposal, not an implemented component. Interim editor updates use reviewed upstream merges,
+full gates and a new preview build/DMG; the existing service/runtime remains compiled into it.
+
+Deployment documentation gate: full serial `cargo xtask ci` passed all eight steps again;
+log `/private/tmp/wordcraft-preview-012-deployment-docs-ci-unrestricted.log`. The first sandboxed
+attempt could not bind test sockets and failed with Operation not permitted; rerunning with
+loopback access passed. A subsequent owner report shows App control returning empty activity
+and claiming no document access. That new document-context handoff issue is **In progress**;
+it is not covered by this delivery's UI-only smoke.
