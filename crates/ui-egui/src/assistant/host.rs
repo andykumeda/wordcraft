@@ -28,6 +28,7 @@ pub(super) struct Guard {
     selection: SelectionState,
     grants: Result<Arc<FileGrants>, String>,
     read: bool,
+    visual_read: bool,
 }
 
 #[derive(PartialEq)]
@@ -64,6 +65,7 @@ impl Guard {
             selection: SelectionState::new(&app.session),
             grants: FileGrants::new(&files).map(Arc::new),
             read: false,
+            visual_read: false,
         }
     }
 }
@@ -164,8 +166,21 @@ impl McpHost {
     }
 }
 
-const TOOLS: &[&str] =
-    &["list_commands", "execute", "batch", "open_document", "save_document", "type_text", "select_text", "get_text", "inspect_document"];
+const TOOLS: &[&str] = &[
+    "list_commands",
+    "execute",
+    "batch",
+    "new_document",
+    "open_document",
+    "list_documents",
+    "save_document",
+    "type_text",
+    "select_text",
+    "get_text",
+    "inspect_document",
+    "ui_inspect",
+    "parity",
+];
 
 /// External MCP clients can address documents, but an assistant turn already has its target.
 /// Adapt a copy of the catalog; supplied document IDs still pass through the dispatch guard.
@@ -182,16 +197,25 @@ fn bound_tool(tool: &Value) -> Option<ToolDefinition> {
     schema.insert("additionalProperties".into(), Value::Bool(false));
     let description = match name {
         "execute" => {
-            "Run a permitted document command for operations other than text replacement. First call list_commands and use its exact command id and documented params; do not guess either. To replace text, use select_text followed by type_text."
+            "Run a permitted command for operations other than text replacement. First call list_commands and use its exact command id and documented params; do not guess either. For page-display or interface-theme changes, call ui_inspect and supply an explicit value. To replace text, use select_text followed by type_text."
         }
         "batch" => {
-            "Run permitted document commands in order; stops at the first error unless keepGoing. First call list_commands and use its exact command ids and documented params; do not guess either. For text replacement, use select_text followed by type_text."
+            "Run permitted commands in order; stops at the first error unless keepGoing. First call list_commands and use its exact command ids and documented params; do not guess either. For page-display or interface-theme changes, call ui_inspect and supply explicit values. For text replacement, use select_text followed by type_text."
         }
         "select_text" => {
             "Select the n-th occurrence of exact existing text (occurrence is 1-based). To replace it, call this tool first, then type_text with only the replacement text. This replaces the selected text, preserves the rest of the document, and supports normal Undo."
         }
         "open_document" => {
             "Open a file the user explicitly named or chose. Supply its path and password if protected. After a successful open, subsequent tools operate on that document."
+        }
+        "new_document" => {
+            "Create a document from a built-in template beside the open documents, preserving their writing. Subsequent tools operate on the created document; inspect it before editing."
+        }
+        "list_documents" => {
+            "List open-document metadata without changing the active document or granting access to another document's content. To work on another file, the user must explicitly name or choose its path."
+        }
+        "ui_inspect" => {
+            "Inspect only the bound window's dark-page, reading-page-color and interface-theme state. Returns the chosen interface theme and its effective light/dark appearance; does not inspect other preferences or documents."
         }
         _ => tool.get("description").and_then(Value::as_str).unwrap_or_default(),
     };
@@ -223,13 +247,32 @@ impl ToolHost for McpHost {
         if !TOOLS.contains(&call.name.as_str()) {
             return Err(AiError::invalid("this MCP tool is not available to the assistant"));
         }
+        if call.name == "new_document" {
+            builtin_template_params(&call.arguments).map_err(AiError::invalid)?;
+        }
+        if matches!(call.name.as_str(), "list_documents" | "ui_inspect" | "parity")
+            && !call.arguments.as_object().is_some_and(serde_json::Map::is_empty)
+        {
+            return Err(AiError::invalid("this metadata tool takes no arguments or document IDs"));
+        }
         let result = self.request("tools/call", json!({"name":call.name,"arguments":call.arguments}));
         cancel.check()?;
         result
     }
 }
 
-/// Only document commands are available; app settings, macros, dialogs, and global actions stay out.
+fn builtin_template_params(params: &Value) -> Result<(), &'static str> {
+    if params.as_object().is_some_and(|params| {
+        params.keys().all(|key| key == "template")
+            && params.get("template").is_none_or(|template| matches!(template.as_str(), Some("blank" | "sample" | "letter" | "resume" | "report")))
+    }) {
+        Ok(())
+    } else {
+        Err("new_document requires only a built-in blank, sample, letter, resume or report template")
+    }
+}
+
+/// Document commands and explicit visual setters are available; other app settings and global actions stay out.
 fn allowed_command(id: &str) -> bool {
     if matches!(
         id,
@@ -272,6 +315,7 @@ fn allowed_command(id: &str) -> bool {
         || matches!(
             id,
             "file.open"
+                | "file.new"
                 | "file.save"
                 | "file.saveAs"
                 | "file.exportPdf"
@@ -280,7 +324,25 @@ fn allowed_command(id: &str) -> bool {
                 | "edit.redo"
                 | "edit.replace"
                 | "edit.replaceAll"
+                | "view.darkMode"
+                | "view.readPageColor"
+                | "view.interfaceTheme"
+                | "view.switchWindows"
         )
+}
+
+fn visual_command(id: &str) -> bool {
+    matches!(id, "view.darkMode" | "view.readPageColor" | "view.interfaceTheme")
+}
+
+fn interface_theme(app: &WordApp) -> Value {
+    json!({"setting":app.ui.theme.code(), "effective":if app.ui_is_dark() {"dark"} else {"light"}})
+}
+
+fn list_request(method: &str, params: &Value) -> bool {
+    method == "engine.execute"
+        && params.get("command").and_then(Value::as_str) == Some("view.switchWindows")
+        && params.get("params").is_none_or(|params| params.as_object().is_some_and(serde_json::Map::is_empty))
 }
 
 fn read_request(method: &str, params: &Value) -> bool {
@@ -300,35 +362,87 @@ fn admitted(app: &mut WordApp, ctx: &egui::Context, guard: &mut Guard, pending: 
         return Err("assistant request expired before execution".into());
     }
     if app.session.document_id() != guard.document || app.windows.shown() != guard.window || (guard.had_document && !app.has_document()) {
+        guard.read = false;
+        guard.visual_read = false;
         return Err("the target document changed or closed; start a new request in the intended document".into());
     }
     if pending.params.get("doc").is_some_and(|doc| doc.as_u64() != Some(guard.document)) {
         return Err("this turn is bound to the original document".into());
     }
     if SelectionState::new(&app.session) != guard.selection {
+        guard.read = false;
+        guard.visual_read = false;
         pending.cancel.cancel();
         return Err("the selection changed; start a new request for the intended selection".into());
     }
     let changed = app.session.rev() != guard.revision;
     let read = read_request(&pending.method, &pending.params);
-    if changed && !read && pending.method != "engine.commands" {
+    let list = list_request(&pending.method, &pending.params);
+    if changed {
         guard.read = false;
-        return Err("document changed; inspect_document again before editing".into());
+        guard.visual_read = false;
+        if !read && !list && !matches!(pending.method.as_str(), "engine.commands" | "ui.inspect" | "ui.parity") {
+            if pending.params.get("command").and_then(Value::as_str).is_some_and(visual_command) {
+                return Err("document changed; ui_inspect again before visual changes".into());
+            }
+            return Err("document changed; inspect_document again before editing".into());
+        }
     }
     if pending.method == "engine.commands" {
         let mut commands = app.session.registry.describe();
         if let Some(commands) = commands.as_array_mut() {
             commands.retain(|command| command.get("id").and_then(Value::as_str).is_some_and(allowed_command));
+            for command in commands {
+                let params = match command.get("id").and_then(Value::as_str) {
+                    Some("view.darkMode") => Some(r#"{"value": bool} (explicit setter; call ui_inspect first)"#),
+                    Some("view.readPageColor") => Some(r#"{"value": "none" | "sepia" | "inverse"} (explicit setter; call ui_inspect first)"#),
+                    Some("view.interfaceTheme") => Some(r#"{"value": "light" | "dark" | "system"} (explicit setter; call ui_inspect first)"#),
+                    Some("view.switchWindows") => Some(r#"{} → open-document metadata only; no switching or content access"#),
+                    _ => None,
+                };
+                if let Some(params) = params
+                    && let Some(command) = command.as_object_mut()
+                {
+                    command.insert("params".into(), json!(params));
+                }
+            }
         }
         return Ok(commands);
     }
-    if !matches!(pending.method.as_str(), "engine.execute" | "document.inspect") {
+    if pending.method == "ui.inspect" {
+        guard.visual_read = true;
+        guard.revision = app.session.rev();
+        return Ok(json!({
+            "document": guard.document,
+            "view": {"darkMode":app.session.view.dark_mode, "readPageColor":app.session.view.read_page_color},
+            "interfaceTheme": interface_theme(app),
+        }));
+    }
+    if !matches!(pending.method.as_str(), "engine.execute" | "document.inspect" | "ui.parity") {
         return Err("this control method is unavailable to the assistant".into());
     }
     if pending.method == "engine.execute" {
         let command = pending.params.get("command").and_then(Value::as_str).ok_or("missing command")?;
         if !allowed_command(command) {
             return Err("this command changes app state outside the assistant's document scope".into());
+        }
+        if command == "view.switchWindows" && !list {
+            return Err("list_documents cannot change the bound document".into());
+        }
+        if command == "file.new"
+            && let Some(params) = pending.params.get("params")
+        {
+            builtin_template_params(params).map_err(String::from)?;
+        }
+        let visual = visual_command(command);
+        if visual {
+            if !guard.read && !guard.visual_read {
+                return Err("ui_inspect before changing the page display or interface theme".into());
+            }
+            let value = pending.params.pointer("/params/value");
+            if if command == "view.darkMode" { value.and_then(Value::as_bool).is_none() } else { value.and_then(Value::as_str).is_none() } {
+                return Err("visual changes require an explicit value; inspect the current state rather than blindly toggling".into());
+            }
         }
         if (command == "review.language"
             && (pending.params.pointer("/params/detect").is_some()
@@ -344,7 +458,7 @@ fn admitted(app: &mut WordApp, ctx: &egui::Context, guard: &mut Guard, pending: 
                 return Err("clipboard replacements are outside the assistant's document scope; provide replacement text or special:false".into());
             }
         }
-        if !guard.read && !read && command != "file.open" {
+        if !guard.read && !(visual && guard.visual_read) && !read && !list && !matches!(command, "file.open" | "file.new") {
             return Err("inspect_document before changing the document".into());
         }
     }
@@ -355,8 +469,15 @@ fn admitted(app: &mut WordApp, ctx: &egui::Context, guard: &mut Guard, pending: 
         let path = pending.params.pointer("/params/path").and_then(Value::as_str).ok_or("file.open requires an explicitly authorized path")?;
         confine_files(grants, || wordcraft_engine::file_access::check_read(path))?;
     }
+    let theme_setter = pending.method == "engine.execute"
+        && pending.params.get("command").and_then(Value::as_str) == Some("view.interfaceTheme")
+        && matches!(pending.params.pointer("/params/value").and_then(Value::as_str), Some("light" | "dark" | "system"));
+    if theme_setter && !app.session.ui_requests.is_empty() {
+        return Err("wait for pending UI requests before changing the interface theme".into());
+    }
     app.assistant.requested_dialog = false;
-    app.assistant.dispatching = true;
+    // This explicit setter emits one non-dialog UI request; all other frontend requests stay blocked.
+    app.assistant.dispatching = !theme_setter;
     let response = confine_files(grants, || control::handle(app, ctx, &request));
     app.assistant.dispatching = false;
     let mut result = match response {
@@ -370,12 +491,13 @@ fn admitted(app: &mut WordApp, ctx: &egui::Context, guard: &mut Guard, pending: 
         result = Err("this command needs explicit parameters; assistant commands cannot open dialogs".into());
     }
     if app.session.document_id() != guard.document {
-        if result.is_ok() && pending.params.get("command").and_then(Value::as_str) == Some("file.open") {
-            // Only our successful, file-authorized open may change the target during a turn.
+        if result.is_ok() && matches!(pending.params.get("command").and_then(Value::as_str), Some("file.open" | "file.new")) {
+            // Only our successful authorized open or built-in creation may retarget a turn.
             guard.document = app.session.document_id();
             guard.window = app.windows.shown();
             guard.had_document = app.has_document();
             guard.read = false;
+            guard.visual_read = false;
         } else {
             pending.cancel.cancel();
         }
@@ -384,6 +506,12 @@ fn admitted(app: &mut WordApp, ctx: &egui::Context, guard: &mut Guard, pending: 
     guard.selection = SelectionState::new(&app.session);
     if read && result.is_ok() {
         guard.read = true;
+    }
+    if (pending.method == "document.inspect" || pending.params.get("command").and_then(Value::as_str) == Some("document.inspect"))
+        && let Ok(Value::Object(body)) = &mut result
+    {
+        body.insert("interfaceTheme".into(), interface_theme(app));
+        guard.visual_read = true;
     }
     result
 }

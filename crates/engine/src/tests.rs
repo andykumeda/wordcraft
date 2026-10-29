@@ -11097,3 +11097,25 @@ fn inspection_exposes_page_background_for_assistant_edit_and_undo() {
     run(&mut s, "edit.undo", json!({}));
     assert_eq!(run(&mut s, "document.inspect", json!({}))["pageBackground"]["color"], "202020");
 }
+
+#[test]
+fn inspection_distinguishes_document_background_from_screen_only_page_colors() {
+    let mut s = s();
+    run(&mut s, "design.pageColor", json!({"color":"202020"}));
+    let original = s.doc.clone();
+    let revision = s.rev();
+    let dirty = s.dirty;
+    run(&mut s, "view.darkMode", json!({"value":true}));
+    run(&mut s, "view.readPageColor", json!({"value":"inverse"}));
+    let inspection = run(&mut s, "document.inspect", json!({}));
+    assert_eq!(inspection["pageBackground"]["color"], "202020");
+    assert_eq!(inspection["view"], json!({"darkMode":true,"readPageColor":"inverse"}));
+    run(&mut s, "view.darkMode", json!({"value":false}));
+    run(&mut s, "view.readPageColor", json!({"value":"none"}));
+    let inspection = run(&mut s, "document.inspect", json!({}));
+    assert_eq!(inspection["pageBackground"]["color"], "202020");
+    assert_eq!(inspection["view"], json!({"darkMode":false,"readPageColor":"none"}));
+    assert_eq!(s.doc, original);
+    assert_eq!(s.rev(), revision);
+    assert_eq!(s.dirty, dirty);
+}

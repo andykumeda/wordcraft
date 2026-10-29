@@ -40,7 +40,7 @@ fn mcp(app: &mut WordApp, guard: &mut Guard, calls: Vec<(&'static str, Value)>) 
         let mut host = McpHost::new(sender, cancel.clone(), wake, Duration::from_secs(10));
         let tools = host.tools(&target, &cancel).unwrap();
         assert!(tools.iter().any(|tool| tool.name == "get_text"));
-        assert!(!tools.iter().any(|tool| tool.name == "new_document"));
+        assert!(tools.iter().any(|tool| tool.name == "new_document"));
         calls
             .into_iter()
             .enumerate()
@@ -79,7 +79,9 @@ fn assistant_catalog_has_a_bound_target_without_changing_external_mcp() {
         assert!(external_tool.pointer("/inputSchema/properties/doc/description").unwrap().as_str().unwrap().contains("list_documents"));
     }
     assert!(external_tools.iter().any(|tool| tool.get("name").and_then(Value::as_str) == Some("list_documents")));
-    assert!(!tools.iter().any(|tool| tool.name == "list_documents"));
+    let listing = tools.iter().find(|tool| tool.name == "list_documents").unwrap();
+    assert_eq!(listing.input_schema["properties"], json!({}));
+    assert!(listing.description.contains("metadata") && listing.description.contains("without changing the active document"));
     assert_eq!(host.request("tools/list", json!({})).unwrap(), external);
     let typing = tools.iter().find(|tool| tool.name == "type_text").unwrap();
     assert_eq!(typing.input_schema.pointer("/properties/text/type"), Some(&json!("string")));
@@ -291,7 +293,7 @@ fn protected_document_and_out_of_scope_commands_stay_protected() {
     read(&mut app, &mut guard);
     let original = text(&app);
     assert!(command(&mut app, &mut guard, "text.insert", json!({"text":"blocked"})).is_err());
-    for id in ["file.options", "macro.run", "ui.assistant.send", "view.switchWindows", "file.close"] {
+    for id in ["file.options", "macro.run", "ui.assistant.send", "file.close"] {
         assert!(command(&mut app, &mut guard, id, json!({})).is_err(), "{id}");
     }
     let commands = admitted(&mut app, &egui::Context::default(), &mut guard, &pending("engine.commands", json!({}))).unwrap();
@@ -580,4 +582,249 @@ fn initial_context_uses_the_bound_document_inspector_without_editing() {
     assert!(guard.read);
     assert_eq!(app.session.rev(), revision);
     assert_eq!(text(&app), "Original text");
+}
+
+#[test]
+fn visual_inspection_and_explicit_setters_do_not_read_or_edit_document_content() {
+    use crate::theme::Appearance;
+    let mut app = app();
+    app.execute("design.pageColor", json!({"color":"202020"})).unwrap();
+    app.execute("view.darkMode", json!({"value":true})).unwrap();
+    app.execute("view.readPageColor", json!({"value":"inverse"})).unwrap();
+    app.ui.theme = Appearance::Dark;
+    let original = app.session.doc.clone();
+    let revision = app.session.rev();
+    let dirty = app.session.dirty;
+    let undo = app.session.can_undo();
+    let mut expected_prefs = serde_json::to_value(app.prefs()).unwrap();
+    expected_prefs["theme"] = json!("light");
+    // The explicit dark-page setter is also reflected in the normal visual preferences.
+    expected_prefs["darkPage"] = json!(false);
+    let mut guard = Guard::new(&app, "Remove the screen's dark background".into(), vec![]);
+    let inspected = mcp(&mut app, &mut guard, vec![("ui_inspect", json!({}))]);
+    let body: Value = serde_json::from_str(inspected[0]["content"][0]["text"].as_str().unwrap()).unwrap();
+    assert_eq!(body.as_object().unwrap().len(), 3);
+    assert_eq!(body["document"], guard.document);
+    assert_eq!(body["interfaceTheme"], json!({"setting":"dark","effective":"dark"}));
+    assert_eq!(body["view"], json!({"darkMode":true,"readPageColor":"inverse"}));
+    assert!(guard.visual_read);
+    assert!(!guard.read, "visual metadata is not document-content authorization");
+    let results = mcp(
+        &mut app,
+        &mut guard,
+        vec![
+            ("execute", json!({"command":"view.darkMode","params":{"value":false}})),
+            ("execute", json!({"command":"view.readPageColor","params":{"value":"none"}})),
+            ("execute", json!({"command":"view.interfaceTheme","params":{"value":"light"}})),
+        ],
+    );
+    assert!(results.iter().all(|result| result["isError"] == false), "{results:?}");
+    assert!(!app.session.view.dark_mode);
+    assert_eq!(app.session.view.read_page_color, wordcraft_engine::cmd::view::ReadPageColor::None);
+    assert_eq!(app.ui.theme, Appearance::Light);
+    assert_eq!(serde_json::to_value(app.prefs()).unwrap(), expected_prefs);
+    assert_eq!(app.session.doc, original);
+    assert_eq!(app.session.rev(), revision);
+    assert_eq!(app.session.dirty, dirty);
+    assert_eq!(app.session.can_undo(), undo);
+    assert!(app.dialog.is_none() && app.file_dialog.is_none());
+    assert!(!app.assistant.requested_dialog && !app.assistant.dispatching);
+    assert!(
+        command(&mut app, &mut guard, "text.insert", json!({"text":"not authorized by visual inspection"})).unwrap_err().contains("inspect_document")
+    );
+    for id in ["view.darkMode", "view.readPageColor", "view.interfaceTheme"] {
+        assert!(command(&mut app, &mut guard, id, json!({})).unwrap_err().contains("explicit value"));
+    }
+    let inspection = mcp(&mut app, &mut guard, vec![("inspect_document", json!({}))]);
+    let body: Value = serde_json::from_str(inspection[0]["content"][0]["text"].as_str().unwrap()).unwrap();
+    assert_eq!(body["interfaceTheme"], json!({"setting":"light","effective":"light"}));
+    assert_eq!(body["pageBackground"]["color"], "202020");
+    assert!(guard.read && guard.visual_read);
+}
+
+#[test]
+fn system_theme_inspection_reports_the_effective_os_appearance() {
+    let mut app = app();
+    let ctx = egui::Context::default();
+    app.ctx = Some(ctx.clone());
+    app.ui.theme = crate::theme::Appearance::System;
+    let mut guard = Guard::new(&app, "Inspect the interface appearance".into(), vec![]);
+    for (system, effective) in [(egui::Theme::Dark, "dark"), (egui::Theme::Light, "light")] {
+        let output = ctx.run_ui(egui::RawInput { system_theme: Some(system), ..Default::default() }, |_| {});
+        output.drop_without_applying_deltas();
+        let body = admitted(&mut app, &ctx, &mut guard, &pending("ui.inspect", json!({}))).unwrap();
+        assert_eq!(body["interfaceTheme"], json!({"setting":"system","effective":effective}));
+        let external = control::inspect(&mut app, &ctx);
+        assert_eq!(body["interfaceTheme"], external["interfaceTheme"]);
+        assert_eq!(body["view"]["darkMode"], external["view"]["darkMode"]);
+        assert_eq!(body["view"]["readPageColor"], external["view"]["readPageColor"]);
+        assert!(external["view"].get("zoom").is_some(), "existing external view fields remain");
+    }
+    assert!(!guard.read);
+}
+
+#[test]
+fn visual_commands_still_refuse_stale_selection_and_foreign_document_context() {
+    let mut app = app();
+    app.session.run("view.darkMode", &json!({"value":true})).unwrap();
+    let mut guard = Guard::new(&app, "Use light pages".into(), vec![]);
+    admitted(&mut app, &egui::Context::default(), &mut guard, &pending("ui.inspect", json!({}))).unwrap();
+    app.session.run("text.insert", &json!({"text":"user edit "})).unwrap();
+    app.session.sel = guard.selection.text.clone();
+    assert!(command(&mut app, &mut guard, "view.darkMode", json!({"value":false})).unwrap_err().contains("changed"));
+    assert!(!guard.visual_read && app.session.view.dark_mode);
+    admitted(&mut app, &egui::Context::default(), &mut guard, &pending("ui.inspect", json!({}))).unwrap();
+    assert!(!guard.read && guard.visual_read);
+    let wrong = pending("engine.execute", json!({"command":"view.darkMode","params":{"value":false},"doc":u64::MAX}));
+    assert!(admitted(&mut app, &egui::Context::default(), &mut guard, &wrong).unwrap_err().contains("original document"));
+    assert!(app.session.view.dark_mode);
+    app.session.run("select.all", &json!({})).unwrap();
+    assert!(command(&mut app, &mut guard, "view.darkMode", json!({"value":false})).unwrap_err().contains("selection changed"));
+    assert!(!guard.visual_read);
+    assert!(app.session.view.dark_mode);
+    app.session = wordcraft_engine::Session::new(wordcraft_doc::Document::from_text("Other document"));
+    assert!(command(&mut app, &mut guard, "view.interfaceTheme", json!({"value":"light"})).unwrap_err().contains("changed or closed"));
+    assert_eq!(text(&app), "Other document");
+}
+
+#[test]
+fn new_document_preserves_existing_writing_and_requires_fresh_content_inspection() {
+    let mut app = app();
+    app.session.run("text.insert", &json!({"text":"Unsaved "})).unwrap();
+    let original_id = app.session.document_id();
+    let original = app.session.doc.clone();
+    assert!(app.session.dirty);
+    let mut guard = Guard::new(&app, "Create a blank document".into(), vec![]);
+    let created = mcp(&mut app, &mut guard, vec![("new_document", json!({"template":"blank"}))]);
+    assert_eq!(created[0]["isError"], false, "{created:?}");
+    assert_ne!(guard.document, original_id);
+    assert_eq!(guard.document, app.session.document_id());
+    assert!(!guard.read && !guard.visual_read);
+    assert_eq!(app.session.with_document(original_id, |session| (session.doc.clone(), session.dirty)).unwrap(), (original.clone(), true));
+    assert!(command(&mut app, &mut guard, "text.insert", json!({"text":"uninspected"})).unwrap_err().contains("inspect_document"));
+    let results =
+        mcp(&mut app, &mut guard, vec![("inspect_document", json!({})), ("type_text", json!({"text":"New writing"})), ("get_text", json!({}))]);
+    assert!(results.iter().all(|result| result["isError"] == false), "{results:?}");
+    assert_eq!(text(&app), "New writing");
+    assert_eq!(app.session.with_document(original_id, |session| session.doc.clone()).unwrap(), original);
+    let wrong = pending("engine.execute", json!({"command":"text.insert","params":{"text":"wrong document"},"doc":original_id}));
+    assert!(admitted(&mut app, &egui::Context::default(), &mut guard, &wrong).unwrap_err().contains("original document"));
+}
+
+#[test]
+fn document_listing_is_read_only_and_does_not_grant_content_or_switching_access() {
+    let mut app = app();
+    let original_id = app.session.document_id();
+    let other_id = app.session.add_document(wordcraft_doc::Document::from_text("Other writing"));
+    app.session.activate(original_id).unwrap();
+    let mut guard = Guard::new(&app, "List the open documents".into(), vec![]);
+    let listing = mcp(&mut app, &mut guard, vec![("list_documents", json!({}))]);
+    assert_eq!(listing[0]["isError"], false, "{listing:?}");
+    let body: Value = serde_json::from_str(listing[0]["content"][0]["text"].as_str().unwrap()).unwrap();
+    assert_eq!(body["documents"].as_array().unwrap().len(), 2);
+    assert_eq!(app.session.document_id(), original_id);
+    assert!(!guard.read && !guard.visual_read);
+    assert!(command(&mut app, &mut guard, "text.insert", json!({"text":"not authorized by listing"})).unwrap_err().contains("inspect_document"));
+    for params in [json!({"id":other_id}), json!({"id":null}), json!({"index":0})] {
+        assert!(command(&mut app, &mut guard, "view.switchWindows", params).unwrap_err().contains("cannot change the bound document"));
+    }
+    assert_eq!(app.session.document_id(), original_id);
+}
+
+#[test]
+fn new_document_rejects_non_builtin_templates_before_the_mcp_adapter_can_default_them() {
+    let cancel = Cancellation::new();
+    let (sender, _receiver) = mpsc::channel();
+    let mut host = McpHost::new(sender, cancel.clone(), egui::Context::default(), Duration::from_secs(10));
+    let target = Target { id: "synthetic-target".into(), revision: 0 };
+    for arguments in [
+        json!({"template":"/tmp/private-template.docx"}),
+        json!({"template":null}),
+        json!({"template":42}),
+        json!({"path":"/tmp/private-template.docx"}),
+    ] {
+        assert!(host.call(&target, &ToolCall { id: "invalid".into(), name: "new_document".into(), arguments }, &cancel).is_err());
+    }
+    let mut app = app();
+    let original_id = app.session.document_id();
+    let mut guard = Guard::new(&app, "Create a document".into(), vec![]);
+    assert!(command(&mut app, &mut guard, "file.new", json!({"template":"/tmp/private-template.docx"})).unwrap_err().contains("built-in"));
+    assert_eq!(app.session.document_id(), original_id);
+}
+
+#[test]
+fn parity_is_read_only_metadata_and_metadata_tools_reject_arguments() {
+    let mut app = app();
+    let original = app.session.doc.clone();
+    let revision = app.session.rev();
+    let mut guard = Guard::new(&app, "What features are supported?".into(), vec![]);
+    let results = mcp(&mut app, &mut guard, vec![("parity", json!({}))]);
+    assert_eq!(results[0]["isError"], false);
+    let body: Value = serde_json::from_str(results[0]["content"][0]["text"].as_str().unwrap()).unwrap();
+    assert_eq!(body, wordcraft_engine::catalog::parity(&app.session.registry));
+    assert!(!guard.read && !guard.visual_read);
+    assert_eq!(app.session.rev(), revision);
+    assert_eq!(app.session.doc, original);
+    assert!(command(&mut app, &mut guard, "text.insert", json!({"text":"not authorized by parity"})).unwrap_err().contains("inspect_document"));
+    let cancel = Cancellation::new();
+    let (sender, _receiver) = mpsc::channel();
+    let mut host = McpHost::new(sender, cancel.clone(), egui::Context::default(), Duration::from_secs(10));
+    let target = Target { id: "synthetic-target".into(), revision: 0 };
+    for name in ["parity", "list_documents", "ui_inspect"] {
+        for arguments in [json!({"doc":u64::MAX}), json!({"other":true}), json!([])] {
+            assert!(host.call(&target, &ToolCall { id: "invalid".into(), name: name.into(), arguments }, &cancel).is_err());
+        }
+    }
+}
+
+#[test]
+fn bound_command_discovery_documents_only_the_supported_visual_and_listing_parameters() {
+    let mut app = app();
+    let mut guard = Guard::new(&app, "Inspect the app's visual controls".into(), vec![]);
+    let commands = admitted(&mut app, &egui::Context::default(), &mut guard, &pending("engine.commands", json!({}))).unwrap();
+    let commands = commands.as_array().unwrap();
+    for id in ["view.darkMode", "view.readPageColor", "view.interfaceTheme"] {
+        let entry = commands.iter().find(|command| command["id"] == id).unwrap();
+        let params = entry["params"].as_str().unwrap();
+        assert!(params.contains("explicit setter") && params.contains("ui_inspect"));
+        assert!(!params.contains("?"));
+        assert!(command(&mut app, &mut guard, id, json!({"value":false})).unwrap_err().contains("ui_inspect"));
+    }
+    let listed = commands.iter().find(|command| command["id"] == "view.switchWindows").unwrap();
+    let params = listed["params"].as_str().unwrap();
+    assert!(params.starts_with("{}") && params.contains("metadata only"));
+    assert!(!params.contains("id") && !params.contains("index"));
+    let external = app.session.registry.get("view.switchWindows").unwrap();
+    assert!(external.params.contains(r#""id""#), "the external registry keeps full addressing");
+    assert!(!guard.read && !guard.visual_read);
+}
+
+#[test]
+fn interface_theme_exception_refuses_malformed_values_and_preserves_pending_ui_requests() {
+    let mut app = app();
+    app.execute("view.interfaceTheme", json!({"value":"dark"})).unwrap();
+    let original = app.session.doc.clone();
+    let prefs = serde_json::to_value(app.prefs()).unwrap();
+    let revision = app.session.rev();
+    let dirty = app.session.dirty;
+    let undo = app.session.can_undo();
+    let mut guard = Guard::new(&app, "Use a light interface".into(), vec![]);
+    admitted(&mut app, &egui::Context::default(), &mut guard, &pending("ui.inspect", json!({}))).unwrap();
+    for value in [json!(null), json!(false), json!(12), json!("sepia")] {
+        assert!(command(&mut app, &mut guard, "view.interfaceTheme", json!({"value":value})).is_err());
+        assert_eq!(serde_json::to_value(app.prefs()).unwrap(), prefs);
+        assert_eq!(app.session.doc, original);
+        assert_eq!(app.session.rev(), revision);
+        assert_eq!(app.session.dirty, dirty);
+        assert_eq!(app.session.can_undo(), undo);
+        assert!(app.dialog.is_none() && app.file_dialog.is_none());
+        assert!(!app.assistant.requested_dialog && !app.assistant.dispatching);
+    }
+    let queued = json!({"focus":"navSearch"});
+    app.session.push_ui_request(queued.clone());
+    assert!(command(&mut app, &mut guard, "view.interfaceTheme", json!({"value":"light"})).unwrap_err().contains("pending UI requests"));
+    assert_eq!(app.session.ui_requests, vec![queued]);
+    assert_eq!(serde_json::to_value(app.prefs()).unwrap(), prefs);
+    assert!(app.dialog.is_none() && app.file_dialog.is_none());
+    assert!(!app.assistant.requested_dialog && !app.assistant.dispatching);
 }

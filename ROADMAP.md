@@ -142,6 +142,8 @@ Ranked, to beta (detail and remaining milestones in [docs/roadmap.md](docs/roadm
 
 ## Progress log
 
+- 2026-10-29 · A1: Candidate uses one scoped tool loop for identical model selections and adds guarded document/view controls. All eight source gates pass; Sol/Terra live acceptance and delivery remain pending. External MCP baseline and remaining 13/17-tool parity are recorded in [the ledger](docs/assistant-implementation.md).
+
 - 2026-10-29 · A1: Integrate upstream WordCraft 0.12.0 and deploy Assistant Preview (04afd95e) under `/Applications`, separately from the main app. Standard preview updates are disabled; signed ZIP/DMG, checksums and installed native smoke pass. Background-service separation remains design only; see [ledger](docs/assistant-implementation.md).
 
 - 2026-10-29 · A1: Assistant has a leading View ribbon button and working Home toggle; shared settings prioritize model choices and hide advanced connection controls. HTTP errors identify the failed route with safe status-specific guidance. All eight CI gates pass; verification is recorded in [the ledger](docs/assistant-implementation.md); installed preview remains unchanged; context rejection reproduced with synthetic content.

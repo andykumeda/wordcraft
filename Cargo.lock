@@ -1070,7 +1070,7 @@ dependencies = [
 [[package]]
 name = "craft-ai-core"
 version = "0.1.0"
-source = "git+https://github.com/andykumeda/craft-libs?rev=b1a7edc4d7bca1038a11978512d58bdad527cfb4#b1a7edc4d7bca1038a11978512d58bdad527cfb4"
+source = "git+https://github.com/andykumeda/craft-libs?rev=c0177ca35bb5c5df77efc0dbb4e0997e3b9555a9#c0177ca35bb5c5df77efc0dbb4e0997e3b9555a9"
 dependencies = [
  "chrono",
  "serde",
@@ -1080,7 +1080,7 @@ dependencies = [
 [[package]]
 name = "craft-ai-native"
 version = "0.1.0"
-source = "git+https://github.com/andykumeda/craft-libs?rev=b1a7edc4d7bca1038a11978512d58bdad527cfb4#b1a7edc4d7bca1038a11978512d58bdad527cfb4"
+source = "git+https://github.com/andykumeda/craft-libs?rev=c0177ca35bb5c5df77efc0dbb4e0997e3b9555a9#c0177ca35bb5c5df77efc0dbb4e0997e3b9555a9"
 dependencies = [
  "chrono",
  "craft-ai-core",
@@ -1097,7 +1097,7 @@ dependencies = [
 [[package]]
 name = "craft-atomic"
 version = "0.1.0"
-source = "git+https://github.com/andykumeda/craft-libs?rev=b1a7edc4d7bca1038a11978512d58bdad527cfb4#b1a7edc4d7bca1038a11978512d58bdad527cfb4"
+source = "git+https://github.com/andykumeda/craft-libs?rev=c0177ca35bb5c5df77efc0dbb4e0997e3b9555a9#c0177ca35bb5c5df77efc0dbb4e0997e3b9555a9"
 dependencies = [
  "rustix 1.1.5",
 ]
@@ -1105,12 +1105,12 @@ dependencies = [
 [[package]]
 name = "craft-fonts-build"
 version = "0.1.0"
-source = "git+https://github.com/andykumeda/craft-libs?rev=b1a7edc4d7bca1038a11978512d58bdad527cfb4#b1a7edc4d7bca1038a11978512d58bdad527cfb4"
+source = "git+https://github.com/andykumeda/craft-libs?rev=c0177ca35bb5c5df77efc0dbb4e0997e3b9555a9#c0177ca35bb5c5df77efc0dbb4e0997e3b9555a9"
 
 [[package]]
 name = "craft-i18n"
 version = "0.1.0"
-source = "git+https://github.com/andykumeda/craft-libs?rev=b1a7edc4d7bca1038a11978512d58bdad527cfb4#b1a7edc4d7bca1038a11978512d58bdad527cfb4"
+source = "git+https://github.com/andykumeda/craft-libs?rev=c0177ca35bb5c5df77efc0dbb4e0997e3b9555a9#c0177ca35bb5c5df77efc0dbb4e0997e3b9555a9"
 dependencies = [
  "fixed_decimal",
  "icu_decimal",
@@ -1133,7 +1133,7 @@ dependencies = [
 [[package]]
 name = "craft-pdf"
 version = "0.1.0"
-source = "git+https://github.com/andykumeda/craft-libs?rev=b1a7edc4d7bca1038a11978512d58bdad527cfb4#b1a7edc4d7bca1038a11978512d58bdad527cfb4"
+source = "git+https://github.com/andykumeda/craft-libs?rev=c0177ca35bb5c5df77efc0dbb4e0997e3b9555a9#c0177ca35bb5c5df77efc0dbb4e0997e3b9555a9"
 dependencies = [
  "krilla",
  "thiserror 2.0.21",
@@ -1142,7 +1142,7 @@ dependencies = [
 [[package]]
 name = "craft-print"
 version = "0.1.0"
-source = "git+https://github.com/andykumeda/craft-libs?rev=b1a7edc4d7bca1038a11978512d58bdad527cfb4#b1a7edc4d7bca1038a11978512d58bdad527cfb4"
+source = "git+https://github.com/andykumeda/craft-libs?rev=c0177ca35bb5c5df77efc0dbb4e0997e3b9555a9#c0177ca35bb5c5df77efc0dbb4e0997e3b9555a9"
 dependencies = [
  "craft-winprint-gdi",
  "miniz_oxide 0.9.1",
@@ -1155,7 +1155,7 @@ dependencies = [
 [[package]]
 name = "craft-ui"
 version = "0.1.0"
-source = "git+https://github.com/andykumeda/craft-libs?rev=b1a7edc4d7bca1038a11978512d58bdad527cfb4#b1a7edc4d7bca1038a11978512d58bdad527cfb4"
+source = "git+https://github.com/andykumeda/craft-libs?rev=c0177ca35bb5c5df77efc0dbb4e0997e3b9555a9#c0177ca35bb5c5df77efc0dbb4e0997e3b9555a9"
 dependencies = [
  "craft-ai-core",
  "craft-fonts-build",
@@ -1176,7 +1176,7 @@ dependencies = [
 [[package]]
 name = "craft-update"
 version = "0.1.0"
-source = "git+https://github.com/andykumeda/craft-libs?rev=b1a7edc4d7bca1038a11978512d58bdad527cfb4#b1a7edc4d7bca1038a11978512d58bdad527cfb4"
+source = "git+https://github.com/andykumeda/craft-libs?rev=c0177ca35bb5c5df77efc0dbb4e0997e3b9555a9#c0177ca35bb5c5df77efc0dbb4e0997e3b9555a9"
 dependencies = [
  "chrono",
  "dunce",
@@ -1201,7 +1201,7 @@ dependencies = [
 [[package]]
 name = "craft-window"
 version = "0.1.0"
-source = "git+https://github.com/andykumeda/craft-libs?rev=b1a7edc4d7bca1038a11978512d58bdad527cfb4#b1a7edc4d7bca1038a11978512d58bdad527cfb4"
+source = "git+https://github.com/andykumeda/craft-libs?rev=c0177ca35bb5c5df77efc0dbb4e0997e3b9555a9#c0177ca35bb5c5df77efc0dbb4e0997e3b9555a9"
 dependencies = [
  "egui",
  "objc2 0.6.5",
@@ -3042,7 +3042,7 @@ dependencies = [
 [[package]]
 name = "krilla"
 version = "0.8.2"
-source = "git+https://github.com/andykumeda/craft-libs?rev=b1a7edc4d7bca1038a11978512d58bdad527cfb4#b1a7edc4d7bca1038a11978512d58bdad527cfb4"
+source = "git+https://github.com/andykumeda/craft-libs?rev=c0177ca35bb5c5df77efc0dbb4e0997e3b9555a9#c0177ca35bb5c5df77efc0dbb4e0997e3b9555a9"
 dependencies = [
  "base64 0.22.1",
  "bumpalo",

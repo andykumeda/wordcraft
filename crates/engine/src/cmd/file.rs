@@ -580,6 +580,7 @@ fn inspect(s: &mut Session, v: &Value) -> CmdResult {
         "trackChanges": s.doc.settings.track_changes,
         "properties": s.doc.core,
         "pageBackground": {"color": s.doc.settings.page_color.map(|color| color.hex()), "hasPicture": s.doc.settings.page_picture.is_some()},
+        "view": {"darkMode": s.view.dark_mode, "readPageColor": s.view.read_page_color},
         "canUndo": s.can_undo(),
         "canRedo": s.can_redo(),
     }))

@@ -17,9 +17,14 @@ fn err(e: impl std::fmt::Display) -> Outcome {
 pub fn inspect(app: &mut WordApp, ctx: &egui::Context) -> Value {
     let r = ctx.input_for(app.active_viewport(), |i| i.content_rect());
     let caret = crate::canvas::caret_screen(app).map(|(p, h)| json!({"x": p.x, "y": p.y, "h": h}));
+    let mut view = serde_json::to_value(&app.session.view).unwrap_or_default();
+    if let Some(view) = view.as_object_mut() {
+        view.insert("readPageColor".into(), json!(app.session.view.read_page_color));
+    }
     json!({
         "ui": app.prefs(),
-        "view": app.session.view,
+        "view": view,
+        "interfaceTheme": {"setting":app.ui.theme.code(), "effective":if app.ui_is_dark() {"dark"} else {"light"}},
         "dialog": app.dialog.as_ref().map(|d| serde_json::to_value(d).unwrap_or_default()),
         "window": [r.width(), r.height()],
         "canvasRect": app.canvas.canvas_rect.map(|c| [c.left(), c.top(), c.width(), c.height()]),

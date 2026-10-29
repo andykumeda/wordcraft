@@ -9,8 +9,10 @@ Open **View → Assistant** (the first ribbon button) or **Home → Assistant** 
 resize like the other task panes. **File → Options → Agents** contains its connection and model
 settings. Browser inference is not available.
 
-Settings start with two model choices. Choose them independently: **General chat** answers ordinary prompts and delegates document
-work; **App control** reads and edits through WordCraft's MCP server. Fresh settings leave both
+Settings start with two model choices. Choose them independently: **General chat** answers ordinary prompts;
+**App control** reads and edits through WordCraft's MCP server. In the current candidate, identical
+connection and model selections use one tool loop; different selections delegate document work
+between the two roles. The installed build above predates this performance change. Fresh settings leave both
 choices unset. Configure both roles with models that support streaming and tools before sending.
 The conversation shows which connection and model is being used. A missing connection, unavailable
 model or unsupported capability is an error; WordCraft never chooses another provider for you.
@@ -47,10 +49,18 @@ be undone; an uncertain command outcome is never replayed automatically.
 A turn captures its document, window, selection and file grants. Switching documents or windows,
 closing the document, or changing the selection stops edits for that turn. A changed document
 revision must be read again before editing. The assistant's own selection commands remain usable.
-An explicitly authorized Open may continue in the opened document after reading it.
-Assistant tool schemas target that bound document without a document-ID parameter. External MCP
+An explicitly authorized Open or a built-in document creation may continue in that document after
+reading it, preserving the previously open writing. Listing open documents gives metadata, not
+permission to edit another document. Assistant tool schemas target that bound document without a document-ID parameter. External MCP
 clients retain explicit document targeting; the assistant still rejects foreign document IDs if
 a model sends one despite the restricted schema.
+
+The current candidate distinguishes saved page fill, dark-page display and interface appearance.
+Visual inspection exposes only those settings; it does not grant access to document content.
+Screen-only changes leave writing and its normal Undo history unchanged. These controls, built-in
+document creation, listing and feature metadata are under acceptance testing; the installed build
+above predates them. Page-image rendering, screenshots and simulated mouse/keyboard input remain
+external-client capabilities; full MCP parity is not established.
 
 For file operations, choose individual files in the pane or include an exact absolute path in your
 prompt. Quote paths containing spaces, for example `Save to "/Users/me/Documents/New report.docx"`.

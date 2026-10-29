@@ -1186,6 +1186,7 @@ mod tests {
         saved.messages = messages.clone();
         saved.interrupted = true;
         history.save(&saved).unwrap();
+        let shared_choice = chat.connection == control.connection && chat.model == control.model;
         let request = TurnRequest { app: app_id, messages, target, chat, control, config };
         let expected_original = original.clone();
         let worker = std::thread::spawn(move || {
@@ -1275,7 +1276,7 @@ mod tests {
         if let Err((kind, message)) = outcome {
             panic!("configured live turn failed ({kind:?}): {message}");
         }
-        assert!(chat_used && control_used, "live acceptance must use both independently selected model roles");
+        assert!(chat_used && (control_used || shared_choice), "live acceptance must use each distinct selected model route");
         assert!(read_before && read_after, "the control model must read the original and verify its edit through MCP");
         assert!(app.session.doc.plain_text(wordcraft_doc::StoryRef::Body) == EXPECTED, "the synthetic document differs from the requested result");
         assert!(app.session.can_undo(), "the assistant edit must be in the normal Undo history");

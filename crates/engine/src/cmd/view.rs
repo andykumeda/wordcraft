@@ -87,7 +87,9 @@ pub fn specs() -> Vec<CommandSpec> {
         CommandSpec::new("view.onePage", "One Page", "View › Zoom", |s, _| zoom(s, &json!({"value": "onePage"}))).pure(),
         CommandSpec::new("view.multiplePages", "Multiple Pages", "View › Zoom", |s, _| zoom(s, &json!({"value": "multiplePages"}))).pure(),
         CommandSpec::new("view.pageWidth", "Page Width", "View › Zoom", |s, _| zoom(s, &json!({"value": "pageWidth"}))).pure(),
-        CommandSpec::new("view.darkMode", "Switch Modes", "View › Dark Mode", |s, v| toggle(s, v, |x| &mut x.dark_mode)).pure(),
+        CommandSpec::new("view.darkMode", "Switch Modes", "View › Dark Mode", |s, v| toggle(s, v, |x| &mut x.dark_mode))
+            .params(r#"{"value"?: bool}"#)
+            .pure(),
         // The interface theme itself (light, dark, or follow the OS), next to dark pages (#1861).
         // The session can't paint: like split and new windows, this queues a request the front
         // end applies to its theme setting (which persists per user). Without a value it toggles

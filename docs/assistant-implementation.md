@@ -1,6 +1,6 @@
 # Portable assistant implementation ledger
 
-Updated 2026-10-29 (America/Los_Angeles). **Implementation: Verified for the local preview; broader release gates remain open.**
+Updated 2026-10-29 (America/Los_Angeles). **Implementation: In progress for performance, MCP parity and model comparisons; Codex candidate document workflow verified.**
 The original shared and WordCraft automated gates passed, and a real local model completed MCP
 read/edit/read-back/Undo acceptance. The Codex live follow-up found and repaired a continuation
 defect and a long-chat-title layout defect. Corrected native Codex and mixed Codex/Ollama
@@ -849,3 +849,73 @@ still requires full Codex app acceptance before deployment. After Codex passes, 
 will hold General chat on Codex and vary only App control (Codex vs Qwen), matching the owner's
 setup and avoiding a two-variable comparison. Earlier all-local Qwen non-delegation remains an
 ancillary finding; no Qwen changes or further tests were made during the Codex-first stage.
+
+### Codex app acceptance and external MCP comparison
+
+Candidate **259ac26797f45cbf84fd92ddc2df61e37682431c** passed the five actual Codex app tasks:
+short background removal twice, full sample-handbook background removal, selective editing and
+ignoring an embedded document instruction. End-to-end seconds: **23.665, 46.159, 20.431,
+21.825, 20.605**; median **21.825**. Each run checked actual edits, saved/reopened DOCX, unchanged
+text/formatting and one normal Undo, then normal quit/socket cleanup. Before/after exported
+sample pages were visually inspected by the primary agent. Source CI passed all eight gates;
+release build passed in3m07. This candidate is **not installed yet**.
+
+Evidence: `/private/tmp/wordcraft-ab-259ac267-codex/results.json`. The sample oracle initially
+flagged automatically updated core modified-time/revision metadata; the correction ignores
+only those fields. Original receipt and stdout are retained. Blocks, parts, sections, styles,
+text and normalized DOCX main XML were unchanged except the requested background.
+
+New owner requirement: compare the native panel to an external Codex MCP client, expecting
+at-worst-identical functionality and performance. **In progress**: matching release CLI bridge
+and isolated external client, same model/fixtures/oracles, separate raw MCP versus model-task
+latencies. Static catalog inspection finds **17 external tools vs 9 native tools**; native
+lacks new_document, render_page, list_documents, parity, screenshot, click, key and ui_inspect,
+and deliberately binds the turn's document and file grants. Full functional parity is **not
+established**. No broad tool/guard changes have been made merely to claim parity.
+
+Qwen inference remains deferred until the Codex external comparison completes; the main
+subsequent A/B holds General chat on Codex and varies only App control. No user model bindings,
+credentials, global context or real documents changed. No replacement deployment occurred.
+
+### Current integration: performance, visual parity and Terra condition
+
+The owner expects the panel to match the external MCP path at worst. Measured baseline
+259ac267: both paths passed5/5document tasks, but native median21.825s vs external12.793s
+(~1.71xobservednative). Bridge overhead was noise-scale (50alternatingreads:16.623msMCP
+vs16.565msdirectcontrol); this is a small ordered sample, not a universal speed claim.
+External17tools/655commands vs native9/363also exposed capability gaps, including visual
+background commands. Source and artifacts are in
+`/private/tmp/wordcraft-external-259ac267-report/comparison.md` and comparison.json.
+
+Sharedc0177ca now uses one bounded MCP tool loop when both selected connection+model choices
+are identical. Different choices retain their explicit two-role routing. Existing validation,
+file/target guards, checkpointing, cancellation and no-replay handling remain; general chat
+does not automatically read document content. Native52tests/4ignored/0failed and a read-only
+live Codex direct-tool probe passed (15.837s); actual app latency must be remeasured.
+
+The consumer visual parity slice adds document/view/interface background inspection, explicit
+visual setters, safely scoped document creation/listing and read-only UI metadata. Full
+image/UI-input parity is not claimed. Integration gates and model tests remain pending.
+
+Owner also requested GPT6.1Terra: run identical Sol/Terra functional and latency tests; switch
+WordCraft's per-app default only if Terra matches task quality and is no slower on the measured
+workload. No other app's defaults should change. Official[Codex pricing](https://learn.chatgpt.com/docs/pricing)
+checked2026-10-29 lists Standard-speed per-million-token credits Sol50input/2.5cached/250output
+and Terra25/1.25/125; Terra's per-token rates are half, while actual cost depends on tokens used.
+No model binding has been changed yet. Qwen remains a later comparison with General chat held
+fixed so only App control differs. All inference uses synthetic documents.
+
+Integration checkpoint: all eight serial `cargo xtask ci` gates passed: **4,641 ordinary tests
+passed / 6 ignored / 0 failed**, separate localization audit, doctests, assets/layers and 16 WASM
+crates. Focused host tests passed **34 / 1 ignored**. Logs:
+`/private/tmp/wordcraft-direct-parity-ci.log`,
+`/private/tmp/wordcraft-direct-parity-host-tests-verified.log`. Initial focused failures were
+fixed before these passes: accurate listing expectation, explicit interface-theme frontend
+dispatch, and the test's expected dark-page preference for its own requested visual change.
+Malformed theme values and unrelated pending UI requests are explicitly covered.
+
+Native scoped tools now number **13 of 17**. Page rendering, screenshots, click and key remain
+external-client capabilities; broader app/macro/settings and arbitrary cross-document access
+remain guarded. No full capability-parity or new live-performance claim is made by source
+gates. Next release candidate will test Sol and Terra on seven identical fresh-chat cases; all
+three background sources use the exact original prompt. No replacement installation yet.
