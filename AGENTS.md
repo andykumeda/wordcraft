@@ -100,5 +100,12 @@ Progress docs follow [`craftrules/standards/progress-docs.md`](https://github.co
 - Never force-quit an instance or discard writing to install a build. Retain a rollback copy of
   any replaced preview. If an old instance remains open, explain that the new build takes effect
   after saving/quitting it and opening the exact `/Applications` path.
+- Before handing off or deploying assistant changes, run the actual configured models on
+  synthetic documents, verify the requested visible edit, saved/reopened content and Undo.
+  UI-only smoke and assistant success narration are insufficient. Record model, latency,
+  instruction adherence and any failed acceptance; do not claim those failures are complete.
+- Local document inference is a soft preference for now; general chat may use cloud models.
+  The integrated two-role handoff can send document tasks/results to the chat provider. State
+  that limitation; do not claim local-only privacy or add routing modes without agreement.
 - Record the deployed source, artifact checksums, updater policy, smoke checks and remaining
   destination-Mac acceptance in the implementation ledger and local handoff.

@@ -210,6 +210,9 @@ fn bound_tool(tool: &Value) -> Option<ToolDefinition> {
 }
 
 impl ToolHost for McpHost {
+    fn initial_read(&self) -> Option<(String, Value)> {
+        Some(("inspect_document".into(), json!({})))
+    }
     fn tools(&mut self, _target: &Target, cancel: &Cancellation) -> Result<Vec<ToolDefinition>, AiError> {
         cancel.check()?;
         let result = self.request("tools/list", json!({}))?;

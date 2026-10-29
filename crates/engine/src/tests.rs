@@ -11086,3 +11086,14 @@ fn scale_font_sizes_reaches_char_table_and_cs_sizes_and_unset_default() {
     assert_eq!(grid.header_chr.size, Some(16.0));
     assert_eq!(grid.regions.get(&TablePart::Band2Horz).unwrap().chr.size, Some(10.0));
 }
+
+#[test]
+fn inspection_exposes_page_background_for_assistant_edit_and_undo() {
+    let mut s = s();
+    run(&mut s, "design.pageColor", json!({"color":"202020"}));
+    assert_eq!(run(&mut s, "document.inspect", json!({}))["pageBackground"]["color"], "202020");
+    run(&mut s, "design.pageColor", json!({"color":null}));
+    assert!(run(&mut s, "document.inspect", json!({}))["pageBackground"]["color"].is_null());
+    run(&mut s, "edit.undo", json!({}));
+    assert_eq!(run(&mut s, "document.inspect", json!({}))["pageBackground"]["color"], "202020");
+}

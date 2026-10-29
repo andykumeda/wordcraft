@@ -579,6 +579,7 @@ fn inspect(s: &mut Session, v: &Value) -> CmdResult {
         "comments": s.doc.comments.len(),
         "trackChanges": s.doc.settings.track_changes,
         "properties": s.doc.core,
+        "pageBackground": {"color": s.doc.settings.page_color.map(|color| color.hex()), "hasPicture": s.doc.settings.page_picture.is_some()},
         "canUndo": s.can_undo(),
         "canRedo": s.can_redo(),
     }))

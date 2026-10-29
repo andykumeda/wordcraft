@@ -565,3 +565,19 @@ fn capture_wordcraft_assistant_pane() {
     harness.render().unwrap().save(&path).unwrap();
     eprintln!("{}", path.display());
 }
+
+#[test]
+fn initial_context_uses_the_bound_document_inspector_without_editing() {
+    let (sender, _receiver) = mpsc::channel();
+    let host = McpHost::new(sender, Cancellation::new(), egui::Context::default(), Duration::from_secs(10));
+    let (name, arguments) = host.initial_read().unwrap();
+    assert_eq!(name, "inspect_document");
+    let mut app = app();
+    let mut guard = Guard::new(&app, "remove the dark background".into(), vec![]);
+    let revision = app.session.rev();
+    let results = mcp(&mut app, &mut guard, vec![("inspect_document", arguments)]);
+    assert!(results[0].to_string().contains("Original text"));
+    assert!(guard.read);
+    assert_eq!(app.session.rev(), revision);
+    assert_eq!(text(&app), "Original text");
+}

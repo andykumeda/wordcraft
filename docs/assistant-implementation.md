@@ -792,3 +792,25 @@ attempt could not bind test sockets and failed with Operation not permitted; rer
 loopback access passed. A subsequent owner report shows App control returning empty activity
 and claiming no document access. That new document-context handoff issue is **In progress**;
 it is not covered by this delivery's UI-only smoke.
+
+## Document context and model comparison follow-up
+
+Updated 2026-10-29. Owner requires real end-to-end edit/read-back/saved-document/Undo acceptance
+before a replacement delivery; UI-only smoke is insufficient. Privacy separation is a soft
+requirement for now. General chat may be cloud-based; document instructions/content should
+ideally remain local, but the current two-role route sends the task and control results through
+General chat and is **not local-only**. No new routing mode is in scope.
+
+| Workstream / owner | State | Acceptance / dependency |
+| --- | --- | --- |
+| Initial document context / primary | In progress | Shared 80d4fc6 supplies host-selected read before control inference; WordCraft bound inspector opts in; no document read for unrelated chat. Runtime red/green regression passed; consumer gate pending. |
+| Background visibility / primary | In progress | Inspector must expose page color/picture presence so the model can identify and verify removal. Engine regression reproduced missing field; consumer gate pending. |
+| Model A/B / test agent | In progress | Synthetic identical prompts/docs, Codex gpt-6.1-sol versus local Qwen Instruct; actual edit, selective instruction adherence, read-back/save-reopen/Undo, timing and failure evidence. No deployment until acceptance. |
+| Delivery / primary | Not started | After source gates and live acceptance, commit/build/package/mount/copy verify/install exact preview target with rollback and DMG/checksum. Installed 04afd95e remains the earlier UI-smoked build. |
+
+Source checkpoint: full serial `cargo xtask ci` passed all eight gates with **4,631 ordinary
+tests passed / 6 ignored / 0 failed**, separate localization audit, doctests, assets/layers and
+16 WASM crates. Log `/private/tmp/wordcraft-initial-context-ci.log`. Both the initial-read
+regression and missing-page-background regression were first observed failing and now pass.
+The candidate is ready for release compilation and model A/B acceptance; no replacement
+deployment or model-success claim is made by this automated checkpoint.
