@@ -697,3 +697,36 @@ fn shape_and_chart_formats_leave_out_of_range_sizes_alone() {
     assert_eq!(before.0, Some((20.0, 2500.0)));
     assert_eq!(shown(a), before, "Chart Design shown, the chart untouched");
 }
+
+/// Assistant is a visible View control, including at a narrow desktop width; it opens and
+/// closes the same side panel as command search without changing the document.
+#[test]
+fn view_assistant_button_is_visible_and_toggles_the_panel() {
+    use egui_kittest::kittest::Queryable;
+    for (tab, width) in [("View", 800.0), ("View", 1440.0), ("Home", 2600.0)] {
+        let mut app = WordApp::new(Session::new(wordcraft_doc::Document::from_text("Keep this text")), crate::Services::default());
+        app.run("ui.tab", json!({"tab": tab})).unwrap();
+        let mut harness = egui_kittest::Harness::builder().with_size(vec2(width, 900.0)).build_ui_state(
+            |ui, app: &mut WordApp| {
+                let ctx = ui.ctx().clone();
+                app.logic(&ctx);
+                app.ui(ui);
+            },
+            app,
+        );
+        harness.run_steps(6);
+        let button = harness.get_by_role_and_label(egui::Role::Button, "Assistant");
+        assert!(button.rect().right() <= width, "Assistant is visible without scrolling at {width}");
+        button.click();
+        harness.run_steps(3);
+        assert!(harness.state().assistant.open, "{tab} at {width}: button must open pane; tab = {}", harness.state().ui.tab);
+        harness.get_by_role_and_label(egui::Role::Button, "Assistant").click();
+        harness.run_steps(3);
+        assert!(!harness.state().assistant.open);
+        assert_eq!(harness.state().session.doc.plain_text(wordcraft_doc::StoryRef::Body), "Keep this text");
+        harness.state_mut().run("tools.customizeRibbon", json!({"newTab": {"name": "Mine"}})).unwrap();
+        harness.state_mut().run("ui.tab", json!({"tab": "Mine"})).unwrap();
+        harness.run_steps(4);
+        assert!(crate::ribbon_fit::planned(&harness.ctx, "New Group").is_some(), "custom tabs own their fit plan");
+    }
+}

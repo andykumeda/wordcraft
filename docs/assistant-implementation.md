@@ -1,6 +1,6 @@
 # Portable assistant implementation ledger
 
-Updated 2026-10-28 (America/Los_Angeles). **Implementation: Verified for the local preview; broader release gates remain open.**
+Updated 2026-10-29 (America/Los_Angeles). **Implementation: Verified for the local preview; broader release gates remain open.**
 The original shared and WordCraft automated gates passed, and a real local model completed MCP
 read/edit/read-back/Undo acceptance. The Codex live follow-up found and repaired a continuation
 defect and a long-chat-title layout defect. Corrected native Codex and mixed Codex/Ollama
@@ -9,8 +9,9 @@ Hosted-provider and other-platform live acceptance remain separate release gates
 The subsequent Qwen Instruct trial failed the original prompt without editing; a guided diagnostic
 completed with Codex correction and exact Undo. The document-scope repair checkpoint under
 Workstreams records the completed fix, unchanged-prompt acceptance and portable download.
-Latest follow-up: the MacBook's Codex lives in `~/.local/bin`; the launcher repair and corrected
-DMG are recorded at the end of this ledger. All automated checks passed; MacBook feedback is provisional.
+Latest follow-up: the October 29 settings, provider diagnostics and View discovery source changes
+passed all automated gates; their checkpoint is at the end of this ledger. The earlier MacBook
+launcher repair and provisional feedback remain recorded below.
 The execution host is **AK's Mini**. **Local preview installation: Deployed**, following the
 user's request to place a testable build in `~/Applications`. `/Applications/WordCraft.app` is
 unchanged. No public app release or WordCraft push has occurred. After compaction, read this ledger
@@ -567,3 +568,136 @@ changes only the launcher and three help/ledger documents. No Rust rebuild, repe
 Mini reinstall, public publication or provider/model substitution was performed. The native
 binary remains source ca279f8c; this packaging revision is identified by the latest commit touching
 `packaging/macos/assistant-preview.sh`. Do not repeat completed validation after compaction.
+
+## 2026-10-29 — settings, provider errors and panel discovery
+
+Current source improvements are verified by automated/synthetic checks; the installed preview remains unchanged.
+
+| Workstream / owner | State | Acceptance and verification |
+| --- | --- | --- |
+| Shared settings / primary | Verified | Full-width model choices first; advanced IDs/scope and connection setup expandable; explicit save scope. Full UI tests 464 passed / 2 ignored; final focused assistant tests 9 passed / 2 ignored; UI Clippy, core/UI WASM and synthetic screenshot export passed, inspected visually. |
+| HTTP diagnostics / provider agent | Verified | Selected connection/model and status-specific guidance; known Ollama context rejection reports validated counts. Six HTTP tests and all-target native Clippy pass; bounded bodies, cancellation and privacy covered. |
+| View discovery / UI agent | Verified | Focused click/geometry regression passes: direct View button at 800/1440, Home toggle, unchanged document and custom-tab fitting. Four final screenshots inspected; valid existing speech-bubble icon and selected state. |
+| Consumer integration / primary | Verified | Shared fork published and WordCraft pinned at be59354; only 11 shared Git source lines changed in Cargo.lock, no package versions changed. Final serial `cargo xtask ci` passed all eight gates: 4,628 ordinary tests / 6 ignored / zero failures plus the localization audit, doctests, assets, layers and WASM. Installed preview remains unchanged. |
+
+The screenshot reports HTTP 400 from the OpenAI-compatible HTTP adapter. Its old error discards
+provider bodies by design because they may echo private prompts or credentials. The exact rejected
+field was initially unknown; the reproduction below identifies the context limit. Current local
+settings use Codex for chat and Ollama/Qwen for document control. No private document content
+was printed and no provider/model was changed; the later structural review of failing local
+chats is recorded below. A network probe from the default sandbox did not reach the configured IPv4 endpoint;
+that does not establish a live outage and does not explain an HTTP 400 response.
+
+Provider workstream: focused native HTTP tests passed **4/4** (eight HTTP status cases,
+secret redaction/body omission, existing streaming/timeout behavior); native all-target Clippy
+and shared fmt passed. An authorized read-only/synthetic loopback check confirmed Ollama
+**0.40.13**, current Qwen Instruct tool metadata, and a streaming/tool request **HTTP 200** with
+one tool fragment and a completed response. No private content was sent and the failing turn
+was not replayed. This verifies basic current compatibility, not the screenshot's rejection cause.
+Log: `/private/tmp/craft-provider-error-clippy.log`.
+
+The referenced `../../craftrules` checkout is absent. Both the public raw URLs and the connected
+GitHub repository API return 404 for its instructions; the supplied WordCraft/craft-libs rules
+and locally available docs are followed.
+
+### Reproduced cause (Mini, new chat, remove dark background)
+
+The user confirmed the Mini and a new chat. Structural metadata from the failed local chats
+shows one successful `inspect_document` with an **11,552-byte** result, followed by HTTP 400
+on the control-model continuation. No private document/result content was printed.
+Replaying the same history shape against the app's synthetic sample reproduced Ollama's
+context rejection: **4,432 input tokens exceed the configured 4,096-token context**.
+The initial connection/tool request succeeds; this is not a credential failure. A new chat
+can still fail because tool definitions and document inspection consume context too.
+
+The HTTP adapter now recognizes only the exact known Ollama context-overflow form, extracts
+validated numeric counts and shows owned guidance; arbitrary response text stays hidden.
+Error-body reading is bounded by the existing configured response limit and cancellable.
+Ollama's OpenAI-compatible API cannot change model context per request. Its documented
+remedy is an explicitly configured model variant with `PARAMETER num_ctx` in a Modelfile,
+or a server context setting. No model alias, binding change, download, service restart or
+provider switch was made as part of this diagnosis.
+Source: https://github.com/ollama/ollama/blob/main/docs/api/openai-compatibility.mdx#setting-the-local-context-size
+
+Root-diagnostic evidence (synthetic content only):
+`/private/tmp/wordcraft-synthetic-context-reproduction.json`,
+`/private/tmp/wordcraft-synthetic-continuation.py` and its adjacent `.json`.
+The **4,432** count belongs to the reproduced continuation; the discarded original response
+body cannot establish the original request's exact count. Final native checks:
+`/private/tmp/craft-provider-context-tests.log` (**6 passed**) and
+`/private/tmp/craft-provider-context-clippy.log` (all-target Clippy passed).
+
+Shared source commits: native diagnostics `4bf8fa4`, settings `be59354ae98b5c45c8c5d8062885fef697bc13d4`.
+An initial push was rejected by automatic approval review because historical approval existed
+only in repository documentation. The user then directly authorized these commits/destination
+with “Proceed”; the retry succeeded and `git ls-remote` confirmed the exact final SHA at
+`https://github.com/andykumeda/craft-libs`, branch `codex/portable-assistant`. No unresolved
+publication rejection remains. WordCraft's three manifests and lockfile now use that revision;
+no sibling-path overrides were introduced.
+
+Shared evidence: `/private/tmp/craft-settings-ui-all.log` (464/2),
+`/private/tmp/craft-settings-final-tests.log` (9/2),
+`/private/tmp/craft-settings-ui-final-clippy.log`,
+`/private/tmp/craft-settings-final-wasm.log`, and
+`/private/tmp/craft-settings-final-screenshots.log` (one manual capture passed).
+Inspected final screenshot: `$TMPDIR/craft-assistant-settings.png`; synthetic content only.
+
+The initial narrow View click regression caught the generic ribbon fitter collapsing the
+same-named group into a dropdown. The final implementation reserves a direct leading View
+button before fitting the remaining groups, keeps fitting initialized for custom/hidden tabs,
+and reuses the same toggle for Home. The 800/1440-width click test remains strict.
+
+The shared target `/private/tmp/craft-settings-target` was removed after its checks completed
+to recover disk space. Logs and inspected screenshots remain outside that cache.
+
+### Final View capture and serial CI checkpoint
+
+Four final synthetic captures passed and were inspected:
+`/private/tmp/wordcraft-view-assistant-final-{800,1440}.png` and
+`/private/tmp/wordcraft-view-assistant-final-open-{800,1440}.png`.
+The final helper uses the existing original `comment` icon. Earlier captures of the collapsed
+group and the fallback C icon are diagnostic evidence only, not final verification.
+The first sandboxed capture could not obtain a graphics adapter; the permitted rerun succeeded.
+No live window was driven and no user document was modified.
+
+The first full CI passed fmt and workspace all-target Clippy, then stopped at the pre-existing
+layout timing regression `a_word_with_alternating_advances_lays_out_in_linear_time` while the
+example was still compiling (30.6x time for 8x input). It skipped subsequent gates. Log:
+`/private/tmp/wordcraft-settings-view-ci.log`. After all example compilation stopped, the exact
+built layout test passed in isolation (18.3x; log `/private/tmp/wordcraft-layout-timing-isolated.log`).
+This is consistent with resource contention; no layout code or timing threshold changed.
+A final exact-source `RUST_TEST_THREADS=1 cargo xtask ci` is running without overlapping builds,
+log `/private/tmp/wordcraft-settings-view-final-ci.log`. All gates remain enabled.
+
+The first serial run passed all **559 layout tests**, then failed the existing Full Screen
+UI fixture's initial lookup. A settled synthetic capture confirms the collapsed Window menu
+opens normally. The fixture interacts after only three post-tab frames while fitted group
+widths/IDs are still settling; its wait is being corrected without changing toggle assertions.
+Independent prechecks: all **57 assets** attributed; all **20 crates** obey layers;
+all **16 WASM crates** checked successfully. The initial direct layering invocation lacked
+Cargo on PATH; the corrected invocation with `/Users/andy/.cargo/bin` passed.
+Logs: `/private/tmp/wordcraft-settings-assets.log`, `wordcraft-settings-layers.log`,
+`wordcraft-settings-wasm-precheck.log` (all under `/private/tmp`).
+
+### Completed source verification — not installed
+
+The Full Screen fixture now uses the same six settling frames after switching tabs as at startup,
+with all original enter/exit viewport-command and state assertions preserved. Both focused
+Fullscreen and Assistant regressions passed; no Full Screen production behavior changed.
+Final `RUST_TEST_THREADS=1 cargo xtask ci` completed with **exit 0** and **all eight gates passed**:
+fmt, workspace all-target Clippy, **4,628 ordinary tests passed / 6 ignored / zero failures**,
+separate localization audit (**one passed**), doctests, **57 attributed assets**,
+**20 crates** with no layer violations and **16 WASM crates** checked.
+Final log: `/private/tmp/wordcraft-settings-view-verified-ci.log`.
+All task-owned compilation and captures were serialized for this final run. The earlier failed
+runs remain recorded above and are not represented as passing runs.
+
+Shared changes are committed and published to the user-approved `andykumeda/craft-libs` branch;
+WordCraft integration is recorded by this checkpoint's focused local commit
+(`git log -1 -- docs/assistant-implementation.md`). No WordCraft remote publication, app
+replacement, download/model alias, binding change or Ollama reconfiguration was performed.
+The installed preview still uses its earlier UI. The existing 4,096-token Ollama setting can
+still reject document work until explicitly increased outside WordCraft's OpenAI-compatible API.
+Native installed-app acceptance, physical interaction, other platforms and a live repeat of the
+user's document request were not performed for this source revision. Synthetic screenshots,
+HTTP reproduction and regression tests are the evidence for this increment.

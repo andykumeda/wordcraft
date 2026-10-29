@@ -326,7 +326,7 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
             let bg = ui.interact(ui.max_rect(), ui.scope_id().with("ribbon_background"), Sense::click());
             bg.context_menu(|ui| crate::widgets::customize_menu_items(ui, app));
             let entry = user_tabs.iter().find(|e| e.name == app.ui.tab);
-            crate::ribbon_fit::begin(ui.ctx(), &app.ui.tab, ui.available_width() - 4.0);
+            let ribbon_width = ui.available_width() - 4.0;
             // 0.37 keeps the scroll offset private: an edge-chevron click leaves a one-frame
             // request here and the next scroll area is built at that offset.
             let pending_id = ui.scope_id().with("ribbon_scroll_pending");
@@ -338,6 +338,12 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
             let scroll = area.show(ui, |ui| {
                 ui.horizontal_top(|ui| {
                     ui.spacing_mut().item_spacing = vec2(2.0, 2.0);
+                    let start = ui.cursor().min.x;
+                    if app.ui.tab == "View" && entry.is_none_or(|entry| !entry.hidden && !entry.custom) {
+                        common::assistant_button(app, ui);
+                        ui.add_space(10.0);
+                    }
+                    crate::ribbon_fit::begin(ui.ctx(), &app.ui.tab, ribbon_width - (ui.cursor().min.x - start));
                     match entry {
                         // Every tab hidden: nothing to show.
                         Some(e) if e.hidden => return,

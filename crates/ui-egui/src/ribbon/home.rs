@@ -350,7 +350,7 @@ pub(super) fn home(app: &mut WordApp, ui: &mut Ui) {
         big(ui, app, "dictate", "Dictate", "tools.dictate", json!({}), false);
     });
     group(ui, "Assistant", None, app, |ui, app| {
-        big(ui, app, "comments", "Assistant", "ui.assistant", json!({}), app.assistant.open);
+        super::common::assistant_button(app, ui);
     });
     group(ui, "Editor", None, app, |ui, app| {
         big(ui, app, "editor", "Editor", "review.spelling", json!({}), false);

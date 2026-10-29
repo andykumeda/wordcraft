@@ -5290,7 +5290,8 @@ fn the_full_screen_button_toggles_out() {
         h.step();
     }
     h.state_mut().run("ui.tab", json!({ "tab": "View" })).unwrap();
-    for _ in 0..3 {
+    // Fit the View groups before clicking: changing preceding groups' layout changes popup IDs.
+    for _ in 0..6 {
         h.step();
     }
     // The View tab's Window group folds into a drop-down when the window is narrow (#662),

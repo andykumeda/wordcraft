@@ -1,31 +1,32 @@
 # Desktop assistant
 
-Status: desktop implementation verified by automated gates, 2026-10-28. Codex and mixed Codex-chat/Ollama-control MCP editing
+Status: desktop source verified by automated gates, 2026-10-29. The latest settings, error and View-button changes have not been installed. Earlier Codex and mixed Codex-chat/Ollama-control MCP editing
 and Undo passed on the Mini; hosted-provider, adversarial containment and other-platform acceptance remain open; evidence is tracked in
 [the implementation ledger](assistant-implementation.md). A separate local preview is installed
 and its native launch verified; this feature has not been publicly released.
 
-Open **Home → Assistant**, or find **Assistant** in command search. The pane can dock, float and
+Open **View → Assistant** (the first ribbon button) or **Home → Assistant** to show or hide the pane. The pane can dock, float and
 resize like the other task panes. **File → Options → Agents** contains its connection and model
 settings. Browser inference is not available.
 
-Choose two models independently: **General chat** answers ordinary prompts and delegates document
+Settings start with two model choices. Choose them independently: **General chat** answers ordinary prompts and delegates document
 work; **App control** reads and edits through WordCraft's MCP server. Fresh settings leave both
 choices unset. Configure both roles with models that support streaming and tools before sending.
 The conversation shows which connection and model is being used. A missing connection, unavailable
 model or unsupported capability is an error; WordCraft never chooses another provider for you.
 
-Add an OpenAI-compatible connection using the OpenAI, OpenRouter, Ollama, LM Studio or custom
+Expand **Add or edit a connection → API or local server** to add an OpenAI-compatible connection using the OpenAI, OpenRouter, Ollama, LM Studio or custom
 endpoint preset. The endpoint is the API base, including its version path. Discover models, or enter
-a model ID manually. Automatic delegation requires tool support: use the capability check or
-explicitly confirm that a manually selected model supports tools. **Verify tool support** sends
+a model ID under **Advanced model options**. Automatic delegation requires tool support: use the capability check or
+explicitly confirm that a manually selected model supports tools. **Check model tool support → Verify tool support** sends
 synthetic prompts, which can incur normal provider usage charges.
 **Test connection** only requests the provider's model catalog. Save the connection, choose a
-connection and model for each role, then select **Apply model**. API keys go into the platform credential
+connection and model for each role, then select the Apply button, which names whether the change affects this app or all Craft apps.
+**Advanced model options** contains the app override switch and **Use suite default**. API keys go into the platform credential
 store, separate from settings and chats. If that store is unavailable, saving the key fails visibly.
 
 Codex uses a separate Craft-managed sign-in. It does not reuse your coding assistant's credentials,
-history, settings or MCP registrations. Under **Codex account**, choose **Sign in to Codex**, then
+history, settings or MCP registrations. Under **Add or edit a connection → Codex account**, choose **Sign in to Codex**, then
 enter the one-time code shown in WordCraft on the browser page. Keep WordCraft open until it shows
 **Codex connection saved**, then choose and apply a model for each role. Signing into the browser
 account alone does not complete the device connection.
@@ -163,3 +164,17 @@ app integrations are deferred, as is browser inference.
 | --- | --- |
 | 2026-10-28 | Record installed ARM64 preview, separate document profile, native launch checks and standard-release updater caveat |
 | 2026-10-28 | Document settings, two-model routing, local history, document/file boundaries and current release gates |
+
+## Provider request errors
+
+HTTP failures name the selected connection/model and provide status-specific next steps.
+HTTP 400 means the provider rejected the request; it does not by itself identify the rejected
+field. Check the model's streaming/tool support and conversation context limit. Connection tests
+only check the catalog; use the separate synthetic tool-support check to test model capability.
+Provider error bodies remain hidden because they may echo private prompts or credentials.
+For Ollama's known context-overflow error, WordCraft displays only the validated token counts
+and guidance. A new chat can exceed a small context after reading the document. Ollama's
+OpenAI-compatible API cannot change this setting; configure a larger context in Ollama
+(for example, `PARAMETER num_ctx` in a model's Modelfile). See
+[Ollama's context configuration](https://github.com/ollama/ollama/blob/main/docs/api/openai-compatibility.mdx#setting-the-local-context-size).
+No automatic retry or provider substitution occurs; completed edits can still be undone.
