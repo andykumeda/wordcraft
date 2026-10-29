@@ -814,3 +814,38 @@ tests passed / 6 ignored / 0 failed**, separate localization audit, doctests, as
 regression and missing-page-background regression were first observed failing and now pass.
 The candidate is ready for release compilation and model A/B acceptance; no replacement
 deployment or model-success claim is made by this automated checkpoint.
+
+### Live candidate failure and Codex-first correction
+
+Candidate **5ae79758** was built and tested before installation. The live matrix found real
+failures: Codex delegated and completed the host inspection but its first control request hit
+a continuation mismatch; Qwen often did not delegate at all. Neither case counts as a successful
+document edit or a valid model speed comparison. That candidate was **not installed**.
+The initial matrix also exposed a harness startup-readiness race before any inference; those
+receipts remain labeled invalid setup, separately from the actual model failures.
+
+The Codex cause is now repaired in shared revision **b1a7edc**: host context is followed by the
+actual user task so the first control inference starts a new exchange; genuine provider tool
+results still resume the exact existing exchange. Native deterministic regressions passed,
+and the live read-only Codex transport check passed in20.310s with2reads. Full consumer
+edit/read-back/save/reopen/Undo acceptance remains pending.
+
+User priority: **Codex first; proceed to Qwen only after the app works as expected**. All further
+Qwen probes and routing changes are deferred. The in-flight mixed/Qwen turn was cancelled via
+normal assistant Stop, then normal quit/socket cleanup; it is excluded from latency rankings.
+Next acceptance is five Codex-only fresh turns: two short background tasks, the full sample
+handbook background task, a selective edit and an embedded-document-instruction case.
+
+Evidence: `/private/tmp/wordcraft-ab-5ae79758-ready/baseline-summary.md` and per-run synthetic
+receipts; `/private/tmp/craft-host-context-codex-live.log`. The benchmark folders contain an
+auth-home symlink and configuration references: never package them recursively. Only synthetic
+DOCX/page images/redacted receipts or a report are shareable. Native window capture can be
+occluded on this shared machine; engine page exports remain the document-visual oracle.
+
+Codex correction consumer checkpoint: all eight serial `cargo xtask ci` gates passed again,
+4,631 ordinary tests / 6 ignored / 0 failed, separate localization audit, doctests, assets/layers
+and 16 WASM crates. Log `/private/tmp/wordcraft-codex-context-start-ci.log`. The new candidate
+still requires full Codex app acceptance before deployment. After Codex passes, the main A/B
+will hold General chat on Codex and vary only App control (Codex vs Qwen), matching the owner's
+setup and avoiding a two-variable comparison. Earlier all-local Qwen non-delegation remains an
+ancillary finding; no Qwen changes or further tests were made during the Codex-first stage.
