@@ -71,16 +71,24 @@ checks the originating window/document/selection and revision, and confines exac
 the engine I/O boundary. The assistant catalog omits external MCP's document selector because the
 turn already owns its target; supplied foreign IDs still fail the dispatch guard. External MCP
 retains its document selectors. Provider workers have no WordCraft
-document dependency. Each active Codex role keeps its bounded ephemeral exchange alive while
-Craft dispatches tools; matching identified results return over the native protocol. WordCraft
-owns providers per turn (and separately for standalone probes), so all workers close on every
-exit. Craft remains the canonical history owner. Native services are excluded on WASM. See [assistant help](assistant.md) and
+document dependency. In the pending single-model candidate, the selected `assistant.chat` choice
+handles conversation and MCP tools directly; legacy Control bindings remain stored but do not
+route WordCraft turns. An app-wide Codex template retains only successful compatibility proofs
+in memory. Each turn forks fresh pending exchanges and authentication-verification state, checks
+the account before private context, and closes its exchanges on exit. Executable/model/runtime
+changes invalidate proofs; settings reload, sign-in and configuration-root changes clear the
+template. Document/window changes retain it. HTTP providers and standalone probes keep separate
+lifetimes. Craft remains the canonical history owner. Native services are excluded on WASM.
+Background tool metadata and authoritative post-setter verification are bundled without granting
+visual inspection access to writing. These changes remain under integration/live acceptance;
+the installed `04afd95e` preview predates them. See [assistant help](assistant.md) and
 [the implementation ledger](assistant-implementation.md) for configuration, portability and gates.
 
 ## Revision history
 
 | Date | Change | Summary |
 |---|---|---|
+| 2026-10-29 | minor | Record pending single-model routing, isolated turn forks with app-session compatibility proofs, and bundled background metadata/verification; live acceptance pending. |
 | 2026-10-28 | minor | Specialize assistant tools for the bound document; preserve external MCP selectors and dispatch guards. |
 | 2026-10-28 | minor | Native Codex callback continuation and mixed Codex/Ollama routing verified through installed WordCraft; shared runtime remains app-independent. |
 | 2026-10-28 | minor | Codex returns actual tool results to bounded ephemeral exchanges while Craft keeps canonical history; provider lifetime is scoped to each turn or standalone probe. |

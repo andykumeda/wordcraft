@@ -11,7 +11,7 @@ use craft_ai_core::{
 use craft_ai_native::codex::{CodexOptions, CodexProvider};
 use craft_ai_native::secrets::{KeyringStore, SecretStore};
 use craft_ai_native::storage::{HistoryStore, SharedStore};
-use craft_ai_native::{Cancellation, ChatProvider, HttpProvider, ModelRequest, TurnEvent, TurnRequest, resolve_choices, run_turn};
+use craft_ai_native::{Cancellation, ChatProvider, HttpProvider, ModelRequest, TurnEvent, TurnRequest, resolve_choice, run_turn};
 use craft_ui::assistant::{Action, Activity, ChatSummary};
 use serde_json::Value;
 
@@ -22,6 +22,7 @@ use crate::WordApp;
 pub(super) struct Native {
     initialized: bool,
     root: Option<PathBuf>,
+    codex_template: Option<(PathBuf, Arc<CodexProvider>)>,
     conversation: Option<Conversation>,
     job: Option<mpsc::Receiver<Result<Update, String>>>,
     job_cancel: Cancellation,
@@ -39,6 +40,24 @@ struct Turn {
 }
 
 impl Native {
+    fn codex_for_turn(&mut self, root: &std::path::Path) -> CodexProvider {
+        if let Some((cached_root, template)) = &self.codex_template
+            && cached_root == root
+        {
+            return template.fork_turn();
+        }
+        let template = Arc::new(CodexProvider::new(CodexOptions::in_shared_root(root)));
+        let turn = template.fork_turn();
+        self.codex_template = Some((root.to_owned(), template));
+        turn
+    }
+
+    fn invalidate_codex_on(&mut self, action: &Action) {
+        if matches!(action, Action::ReloadSettings | Action::BeginCodexSignIn) {
+            self.codex_template = None;
+        }
+    }
+
     pub(super) fn cancel(&self) {
         self.job_cancel.cancel();
         if let Some(turn) = &self.turn {
@@ -160,6 +179,7 @@ pub(super) fn action(app: &mut WordApp, requested: Action) -> Result<(), String>
     if app.assistant.widget.busy {
         return Err("stop or finish the current assistant turn first".into());
     }
+    app.assistant.native.invalidate_codex_on(&requested);
     if matches!(requested, Action::ReloadSettings) {
         if app.assistant.native.job.is_some() {
             return Err("wait for the current assistant settings operation".into());
@@ -223,6 +243,12 @@ fn add_file(app: &mut WordApp, path: String) -> Result<(), String> {
     Ok(())
 }
 
+fn turn_request(shared: &SharedStore, app: AppId, messages: Vec<Message>, target: Target) -> Result<TurnRequest, String> {
+    let config = shared.config().map_err(fail)?;
+    let choice = resolve_choice(&shared.load().map_err(fail)?, &app).map_err(fail)?;
+    Ok(TurnRequest { app, messages, target, chat: choice.clone(), control: choice, config })
+}
+
 fn send(app: &mut WordApp, root: PathBuf, prompt: String) -> Result<(), String> {
     if app.assistant.native.job.is_some() {
         return Err("wait for assistant settings to finish loading".into());
@@ -240,6 +266,7 @@ fn send(app: &mut WordApp, root: PathBuf, prompt: String) -> Result<(), String> 
     let thread_messages = messages.clone();
     let title: String = prompt.chars().take(80).collect();
     let guard = Guard::new(app, prompt, app.assistant.widget.authorized_files.clone());
+    let codex = app.assistant.native.codex_for_turn(&root);
     std::thread::Builder::new()
         .name("craft-assistant".into())
         .spawn(move || {
@@ -256,11 +283,9 @@ fn send(app: &mut WordApp, root: PathBuf, prompt: String) -> Result<(), String> 
                 saved.interrupted = true;
                 history.save(&saved).map_err(fail)?;
                 let _ = events_tx.send(WorkerEvent::Saved(saved.clone()));
-                let config = shared.config().map_err(fail)?;
-                let (chat, control) = resolve_choices(&shared.load().map_err(fail)?, &app_id).map_err(fail)?;
-                let provider = Providers::new(&root, Arc::new(KeyringStore));
-                let mut host = McpHost::new(call_tx, worker_cancel.clone(), wake.clone(), Duration::from_secs(config.request_timeout_secs));
-                let request = TurnRequest { app: app_id, messages: thread_messages, target, chat, control, config };
+                let request = turn_request(&shared, app_id, thread_messages, target)?;
+                let provider = Providers { http: HttpProvider::new(Arc::new(KeyringStore)), codex };
+                let mut host = McpHost::new(call_tx, worker_cancel.clone(), wake.clone(), Duration::from_secs(request.config.request_timeout_secs));
                 let mut partial = String::new();
                 let mut persistence_error = None;
                 let outcome = run_turn(request, &provider, &mut host, &worker_cancel, |event| {
@@ -335,6 +360,9 @@ fn save_checkpoint(history: &HistoryStore, saved: &mut Conversation, messages: &
 fn settings_action(store: &SharedStore, app: &AppId, requested: Action, cancel: &Cancellation) -> Result<Update, String> {
     cancel.check().map_err(fail)?;
     match requested {
+        Action::SaveBinding { role: AssistantRole::Control, .. } | Action::UseSuiteDefault { role: AssistantRole::Control } => {
+            Err("WordCraft uses one assistant model. Change the Model selection instead.".into())
+        }
         Action::SaveConnection(prepared) => {
             let id = prepared.connection.id.clone();
             save_connection(store, prepared, &KeyringStore).map(|change| Update::ConnectionSaved { change, id })
@@ -626,12 +654,10 @@ pub(super) fn poll(app: &mut WordApp, ctx: &egui::Context) {
 fn apply_event(app: &mut WordApp, turn: &mut Turn, event: TurnEvent) {
     let state = &mut app.assistant.widget;
     match event {
-        TurnEvent::Routed { role, connection, model } => {
+        TurnEvent::Routed { connection, model, .. } => {
             let route = format!("{connection} / {model}");
-            match role {
-                AssistantRole::Chat => state.chat_route = route.clone(),
-                AssistantRole::Control => state.control_route = route.clone(),
-            }
+            state.chat_route = route.clone();
+            state.control_route = route.clone();
             state.status = Some(route);
             turn.fresh_text = true;
         }
@@ -687,14 +713,11 @@ fn set_chat(app: &mut WordApp, conversation: Conversation) {
 
 fn set_store(app: &mut WordApp, store: StoreFile) {
     if let Ok(id) = app_id() {
-        let route = |role: AssistantRole| -> String {
-            let selected = role.declaration().map_err(fail).and_then(|declaration| {
-                store.resolve(&id, &declaration).map(|resolved| format!("{} / {}", resolved.connection.label, resolved.model.id)).map_err(fail)
-            });
-            selected.unwrap_or_else(|error| format!("{}: {error}", tl!("Unavailable")))
-        };
-        app.assistant.widget.chat_route = route(AssistantRole::Chat);
-        app.assistant.widget.control_route = route(AssistantRole::Control);
+        let route = resolve_choice(&store, &id)
+            .map(|choice| format!("{} / {}", choice.connection.label, choice.model))
+            .unwrap_or_else(|error| format!("{}: {error}", tl!("Unavailable")));
+        app.assistant.widget.chat_route = route.clone();
+        app.assistant.widget.control_route = route;
         app.assistant.widget.settings.codex_status = if store.connections.iter().any(|connection| connection.provider == "codex") {
             tl!("Codex connection saved.").into()
         } else {
@@ -710,6 +733,9 @@ fn poll_job(app: &mut WordApp, ctx: &egui::Context) {
         match receiver.try_recv() {
             Ok(Ok(update)) => match update {
                 Update::Loaded { root, store, history } => {
+                    if app.assistant.native.root.as_ref() != Some(&root) {
+                        app.assistant.native.codex_template = None;
+                    }
                     app.assistant.native.root = Some(root);
                     app.assistant.widget.history = history;
                     set_store(app, store);
@@ -1031,6 +1057,196 @@ mod tests {
         assert!(app.assistant.widget.chat_route.contains("Unavailable"));
     }
 
+    fn model_store(shared: &SharedStore, legacy_control: bool) -> StoreFile {
+        let connection = save(shared, &Secrets::default());
+        let selected = ModelId::new("selected-model").unwrap();
+        let legacy = ModelId::new("legacy-control-model").unwrap();
+        shared
+            .update(|stored| {
+                stored.connections.iter_mut().find(|item| item.id == connection.id).unwrap().models =
+                    vec![tool_model(selected.clone()).unwrap(), tool_model(legacy.clone()).unwrap()];
+                let mut bindings =
+                    vec![Binding { role: AssistantRole::Chat.declaration().unwrap().id, connection: connection.id.clone(), model: selected }];
+                if legacy_control {
+                    bindings.push(Binding {
+                        role: AssistantRole::Control.declaration().unwrap().id,
+                        connection: connection.id.clone(),
+                        model: legacy,
+                    });
+                }
+                stored.apps.entry(app_id().unwrap()).or_default().overrides = bindings;
+                Ok(())
+            })
+            .unwrap()
+    }
+
+    #[test]
+    fn unified_model_request_uses_one_choice_and_preserves_existing_history() {
+        for legacy_control in [false, true] {
+            let temporary = Temp::new();
+            let shared = temporary.store();
+            let stored = model_store(&shared, legacy_control);
+            let history = history(&shared, &app_id().unwrap()).unwrap();
+            let mut saved = history.create("Existing conversation").unwrap();
+            saved.messages = vec![Message::text(MessageRole::User, "Keep this existing conversation.")];
+            history.save(&saved).unwrap();
+            let mut app = app();
+            enable_without_profile(&mut app);
+            set_chat(&mut app, saved.clone());
+            set_store(&mut app, stored.clone());
+            let mut messages = saved.messages.clone();
+            messages.push(Message::text(MessageRole::User, "Update this document."));
+            let request = turn_request(
+                &shared,
+                app_id().unwrap(),
+                messages.clone(),
+                Target { id: app.session.document_id().to_string(), revision: app.session.rev() },
+            )
+            .unwrap();
+            assert_eq!(request.chat.model.as_str(), "selected-model");
+            assert_eq!(request.chat.model, request.control.model);
+            assert_eq!(request.chat.connection, request.control.connection);
+            assert_eq!(request.messages, messages);
+            assert!(app.assistant.widget.chat_route.ends_with(" / selected-model"));
+            assert_eq!(app.assistant.widget.chat_route, app.assistant.widget.control_route);
+            let status = crate::assistant::command(&mut app, "ui.assistant.status", &json!({})).unwrap().unwrap();
+            assert_eq!(status["model"], status["chatModel"]);
+            assert_eq!(status["model"], status["controlModel"]);
+            assert_eq!(shared.load().unwrap(), stored, "legacy bindings must not be deleted or rewritten");
+            assert_eq!(history.load(&saved.id).unwrap().messages, saved.messages);
+            assert_eq!(app.assistant.widget.messages, saved.messages);
+            assert_eq!(app.assistant.native.conversation.as_ref().unwrap().id, saved.id);
+        }
+    }
+
+    #[test]
+    fn clearing_the_unified_choice_does_not_fall_back_to_legacy_control() {
+        let temporary = Temp::new();
+        let shared = temporary.store();
+        model_store(&shared, true);
+        let Ok(Update::Store(stored)) =
+            settings_action(&shared, &app_id().unwrap(), Action::UseSuiteDefault { role: AssistantRole::Chat }, &Cancellation::new())
+        else {
+            panic!("the canonical app override should be removable");
+        };
+        assert!(stored.apps.get(&app_id().unwrap()).unwrap().overrides.iter().any(|binding| binding.role.as_str() == AssistantRole::Control.id()));
+        let mut app = app();
+        enable_without_profile(&mut app);
+        set_store(&mut app, stored);
+        assert!(app.assistant.widget.chat_route.contains("Unavailable"));
+        assert_eq!(app.assistant.widget.chat_route, app.assistant.widget.control_route);
+        assert!(turn_request(&shared, app_id().unwrap(), vec![], Target { id: "synthetic".into(), revision: 0 }).is_err());
+    }
+
+    #[test]
+    fn obsolete_control_binding_actions_leave_saved_choices_unchanged() {
+        let temporary = Temp::new();
+        let shared = temporary.store();
+        let stored = model_store(&shared, true);
+        for requested in [
+            Action::SaveBinding {
+                role: AssistantRole::Control,
+                connection: "unused-connection".into(),
+                model: "unused-model".into(),
+                app_override: true,
+                manual_tools: false,
+            },
+            Action::UseSuiteDefault { role: AssistantRole::Control },
+        ] {
+            let Err(error) = settings_action(&shared, &app_id().unwrap(), requested, &Cancellation::new()) else {
+                panic!("obsolete split-model actions must be refused");
+            };
+            assert!(error.contains("one assistant model"));
+            assert_eq!(shared.load().unwrap(), stored);
+        }
+    }
+
+    #[test]
+    fn codex_session_template_survives_document_changes_and_refreshes_for_a_new_root() {
+        let first_root = Temp::new();
+        let second_root = Temp::new();
+        let mut app = app();
+        enable_without_profile(&mut app);
+        app.assistant.native.root = Some(first_root.0.clone());
+        drop(app.assistant.native.codex_for_turn(&first_root.0));
+        let template = Arc::clone(&app.assistant.native.codex_template.as_ref().unwrap().1);
+        drop(app.assistant.native.codex_for_turn(&first_root.0));
+        assert!(Arc::ptr_eq(&template, &app.assistant.native.codex_template.as_ref().unwrap().1));
+        let original_document = app.session.document_id();
+        app.execute("file.new", json!({"template":"blank"})).unwrap();
+        app.execute("view.switchWindows", json!({"id":original_document})).unwrap();
+        let path = first_root.0.join("opened.docx");
+        let mut other = wordcraft_engine::Session::new(wordcraft_doc::Document::from_text("Another synthetic document"));
+        other.run("file.saveAs", &json!({"path":path})).unwrap();
+        app.execute("file.open", json!({"path":path})).unwrap();
+        drop(app.assistant.native.codex_for_turn(&first_root.0));
+        assert!(Arc::ptr_eq(&template, &app.assistant.native.codex_template.as_ref().unwrap().1));
+        let (sender, receiver) = mpsc::channel();
+        sender.send(Ok(Update::Loaded { root: second_root.0.clone(), store: StoreFile::default(), history: vec![] })).unwrap();
+        drop(sender);
+        app.assistant.native.job = Some(receiver);
+        poll_job(&mut app, &egui::Context::default());
+        assert_eq!(app.assistant.native.root, Some(second_root.0.clone()));
+        assert!(app.assistant.native.codex_template.is_none());
+        drop(app.assistant.native.codex_for_turn(&second_root.0));
+        assert!(!Arc::ptr_eq(&template, &app.assistant.native.codex_template.as_ref().unwrap().1));
+        assert_eq!(app.assistant.native.codex_template.as_ref().unwrap().0, second_root.0);
+    }
+
+    #[test]
+    fn codex_session_template_resets_for_authentication_and_reload_only() {
+        let temporary = Temp::new();
+        let mut native = Native::default();
+        for reset in [Action::ReloadSettings, Action::BeginCodexSignIn] {
+            drop(native.codex_for_turn(&temporary.0));
+            let template = Arc::clone(&native.codex_template.as_ref().unwrap().1);
+            native.invalidate_codex_on(&Action::NewChat);
+            native.cancel();
+            assert!(Arc::ptr_eq(&template, &native.codex_template.as_ref().unwrap().1));
+            native.invalidate_codex_on(&reset);
+            assert!(native.codex_template.is_none());
+        }
+    }
+
+    #[test]
+    fn new_chat_control_preserves_history_and_reuses_session_template() {
+        let temporary = Temp::new();
+        let shared = temporary.store();
+        let history = history(&shared, &app_id().unwrap()).unwrap();
+        let mut original = history.create("Keep this conversation").unwrap();
+        original.messages = vec![Message::text(MessageRole::User, "Synthetic previous conversation.")];
+        history.save(&original).unwrap();
+        let mut app = app();
+        enable_without_profile(&mut app);
+        app.assistant.native.root = Some(temporary.0.clone());
+        set_chat(&mut app, original.clone());
+        drop(app.assistant.native.codex_for_turn(&temporary.0));
+        let template = Arc::clone(&app.assistant.native.codex_template.as_ref().unwrap().1);
+        app.assistant.widget.busy = true;
+        assert!(crate::assistant::command(&mut app, "ui.assistant.newChat", &json!({})).unwrap().is_err());
+        assert_eq!(history.list().unwrap().len(), 1);
+        assert_eq!(app.assistant.widget.active_chat.as_deref(), Some(original.id.as_str()));
+        app.assistant.widget.busy = false;
+        let started = crate::assistant::command(&mut app, "ui.assistant.newChat", &json!({})).unwrap().unwrap();
+        assert_eq!(started["started"], true);
+        assert!(app.assistant.widget.settings.busy);
+        let deadline = std::time::Instant::now() + Duration::from_secs(5);
+        while app.assistant.native.job.is_some() && std::time::Instant::now() < deadline {
+            poll_job(&mut app, &egui::Context::default());
+            std::thread::yield_now();
+        }
+        assert!(app.assistant.native.job.is_none(), "the synthetic new-chat operation must finish");
+        let status = crate::assistant::command(&mut app, "ui.assistant.status", &json!({})).unwrap().unwrap();
+        assert_ne!(status["chatId"], original.id);
+        assert!(status["chatId"].as_str().is_some());
+        assert_eq!(status["settingsBusy"], false);
+        assert_eq!(status["busy"], false);
+        assert!(app.assistant.widget.messages.is_empty());
+        assert_eq!(history.load(&original.id).unwrap().messages, original.messages);
+        assert_eq!(history.list().unwrap().len(), 2);
+        assert!(Arc::ptr_eq(&template, &app.assistant.native.codex_template.as_ref().unwrap().1));
+    }
+
     /// Decode actual MCP read results, never model summaries or mutation result echoes.
     fn live_mcp_read_results(call: &craft_ai_core::assistant::ToolCall, result: &Value) -> Vec<String> {
         fn read_body(command: &str, value: &Value) -> Option<String> {
@@ -1121,8 +1337,8 @@ mod tests {
         assert!(live_mcp_read_results(&call("get_text", json!({})), &ToolResult::text("{bad json").to_value()).is_empty());
     }
 
-    /// Opt in with an isolated, explicitly configured CRAFT_AI_CONFIG_DIR. Both role bindings
-    /// and runtime.json must already exist; credentials/sign-in are prepared outside this test.
+    /// Opt in with an isolated, explicitly configured CRAFT_AI_CONFIG_DIR. The assistant model
+    /// binding and runtime.json must exist; credentials/sign-in are prepared outside this test.
     /// This sends only synthetic text, opens no listener and writes history only under Temp.
     #[test]
     #[ignore = "live provider acceptance requires an explicit isolated CRAFT_AI_CONFIG_DIR"]
@@ -1145,18 +1361,14 @@ mod tests {
         let store = shared.load().unwrap_or_else(|_| panic!("the explicit live test connection store could not be loaded"));
         let config = shared.config().unwrap_or_else(|_| panic!("the explicit live test runtime limits could not be loaded"));
         let app_id = app_id().unwrap();
-        let (chat, control) = resolve_choices(&store, &app_id).unwrap_or_else(|_| panic!("configure both WordCraft assistant role bindings"));
+        let choice = resolve_choice(&store, &app_id).unwrap_or_else(|_| panic!("configure the WordCraft assistant model"));
         let cancel = Cancellation::new();
-        for (index, choice) in [&chat, &control].into_iter().enumerate() {
-            if index == 1 && choice.connection.id == chat.connection.id && choice.model == chat.model {
-                continue;
-            }
-            // A standalone capability probe leaves its callback pending until its provider drops.
-            let probe = Providers::new(&root, Arc::new(KeyringStore));
-            if let Err(error) = verify_model(&probe, &choice.connection, &choice.model, &config, &cancel) {
-                panic!("configured model failed the synthetic tool-capability probe ({:?}): {}", error.kind, diagnostic(&error.message));
-            }
+        // A standalone capability probe leaves its callback pending until its provider drops.
+        let probe = Providers::new(&root, Arc::new(KeyringStore));
+        if let Err(error) = verify_model(&probe, &choice.connection, &choice.model, &config, &cancel) {
+            panic!("configured model failed the synthetic tool-capability probe ({:?}): {}", error.kind, diagnostic(&error.message));
         }
+        drop(probe);
         let providers = Providers::new(&root, Arc::new(KeyringStore));
 
         let mut app = app();
@@ -1186,8 +1398,7 @@ mod tests {
         saved.messages = messages.clone();
         saved.interrupted = true;
         history.save(&saved).unwrap();
-        let shared_choice = chat.connection == control.connection && chat.model == control.model;
-        let request = TurnRequest { app: app_id, messages, target, chat, control, config };
+        let request = TurnRequest { app: app_id, messages, target, chat: choice.clone(), control: choice, config };
         let expected_original = original.clone();
         let worker = std::thread::spawn(move || {
             let mut host = McpHost::new(sender, worker_cancel.clone(), wake, timeout);
@@ -1276,8 +1487,8 @@ mod tests {
         if let Err((kind, message)) = outcome {
             panic!("configured live turn failed ({kind:?}): {message}");
         }
-        assert!(chat_used && (control_used || shared_choice), "live acceptance must use each distinct selected model route");
-        assert!(read_before && read_after, "the control model must read the original and verify its edit through MCP");
+        assert!(chat_used && !control_used, "live acceptance must use one selected model without delegation");
+        assert!(read_before && read_after, "the selected model must read the original and verify its edit through MCP");
         assert!(app.session.doc.plain_text(wordcraft_doc::StoryRef::Body) == EXPECTED, "the synthetic document differs from the requested result");
         assert!(app.session.can_undo(), "the assistant edit must be in the normal Undo history");
         assert!(app.session.run("edit.undo", &json!({})).is_ok(), "normal Undo failed");

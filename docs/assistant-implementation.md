@@ -20,6 +20,10 @@ and inspect Git state; do not restart completed implementation or checks.
 
 ## Accepted scope
 
+The latest 2026-10-29 owner decision supersedes the original two-role routing below: keep one
+conversation and one model selector for Codex, Ollama or OpenRouter/API. The pending checkpoint
+at the end records this candidate; the original scope and measured evidence remain historical.
+
 - A Rust native assistant pane with one conversation and independently selected **General chat**
   and **App control** models. Chat delegates document work to control through WordCraft's existing
   MCP server; unrelated chat does not automatically read the document. Relevant document content
@@ -919,3 +923,50 @@ external-client capabilities; broader app/macro/settings and arbitrary cross-doc
 remain guarded. No full capability-parity or new live-performance claim is made by source
 gates. Next release candidate will test Sol and Terra on seven identical fresh-chat cases; all
 three background sources use the exact original prompt. No replacement installation yet.
+
+
+### 2026-10-29 — In progress: one model and bounded warm-session setup
+
+Shared source `bf932b91643c287502d539b88f08abd5796c9447` was committed and published to the owner-approved fork/branch; remote SHA verified. WordCraft pins that exact revision in all manifests and Cargo.lock. Shared native tests passed 56 with 5 ignored; UI passed 465 with 2 ignored; Clippy and core/UI WASM passed. The final native recheck required loopback permission for synthetic HTTP tests and passed after rerunning with that permission.
+
+The owner requested one conversation and one model selector. The pending WordCraft candidate
+resolves only `assistant.chat` and uses that selected connection/model for the direct MCP tool
+loop. A Chat-only binding works without Control. Legacy Control bindings, credentials and chat
+history are preserved but cannot reroute a request or serve as fallback. The visible route and
+canonical status `model` describe the single choice; legacy status route fields are aliases.
+OpenAI subscription through Codex, Ollama and OpenRouter/API remain the supported connection
+paths; this checkpoint does not establish new hosted-provider live acceptance.
+
+The candidate keeps one Codex provider template per app session/configuration root, sharing only
+successful compatibility proofs in memory. Each turn forks fresh authentication-verification
+state and pending callback exchanges; it still checks the account before private context.
+Executable identity, model and runtime configuration changes invalidate compatibility proofs.
+Sign-in, settings reload and root changes clear the template. Creating/opening documents and
+switching windows do not clear it. HTTP providers still receive a fresh secret store per turn.
+The cache shares no conversations or pending tool exchanges; compatibility proofs never reach disk.
+
+Background inspection bundles saved page fill, dark-page display and interface appearance with
+registry-backed command metadata. Successful explicit background setters include authoritative
+post-change state in their tool result, reducing separate discovery/readback requests. Visual
+inspection does not authorize reading writing; bound-target, selection, revision and file-grant
+checks remain. Full external-MCP parity remains open: native exposes 13/17 tools, while page
+rendering, screenshots, click and key remain external capabilities.
+
+The candidate also adds `ui.assistant.newChat` through the existing asynchronous New chat action,
+preserving previous chats and busy/cancel guards. Warm-session automation must wait for changed
+opaque `chatId`, `settingsBusy:false` and `busy:false` before sending. This allows fresh chat
+history while retaining app-session compatibility proofs; it does not reuse a Codex conversation.
+
+| Workstream | State | Verification / next gate |
+| --- | --- | --- |
+| Single model, template isolation and bundled background metadata/verification | Verified (source) | Full `RUST_TEST_THREADS=1 cargo xtask ci` passed all eight gates; ordinary test stage: 4,649 passed, 6 opt-in tests ignored. Log `/private/tmp/wordcraft-unified-ci.log`. Shared pin `bf932b91643c287502d539b88f08abd5796c9447`; release build and live acceptance remain pending. |
+| Codex Sol/Terra comparison | Not started for this candidate | Identical seven-case functional/latency cohort, fresh chats, cold and warm setup distinguished; exact original background prompt across all three background sources; visible/saved/reopened results and Undo |
+| Conditional Terra default | Not started | Change only if task quality matches Sol and measured latency is no slower; no binding changed by this checkpoint |
+| Qwen comparison | Not started for this candidate | Follow successful Codex acceptance; same selected-model path and synthetic-document oracles |
+| Preview replacement and portable DMG | Not started for this candidate | Package/verify/install only after required source and actual-model acceptance |
+| Existing preview delivery | Deployed | `/Applications/WordCraft Assistant Preview.app`,0.12.0 source `04afd95e`; earlier delivery evidence remains above |
+
+Documentation checkpoint only: no new compilation, tests, model inference, performance result or
+installation is claimed here. The prior `259ac267`/`e3ed7002` measurements remain historical baselines;
+no new latency or privacy guarantee follows from this implementation. The installed preview and
+separate main app remain unchanged. Other-Mac launch acceptance remains open.

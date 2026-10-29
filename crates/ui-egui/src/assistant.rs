@@ -32,6 +32,7 @@ pub fn commands() -> Vec<Value> {
     vec![
         json!({"id":"ui.assistant","label":"Assistant","location":"View › Assistant","params":"value?: bool","enabled":true}),
         json!({"id":"ui.assistant.send","label":"Send assistant prompt","location":"Agents","params":"text: string; files?: array of exact paths","enabled":cfg!(not(target_arch="wasm32"))}),
+        json!({"id":"ui.assistant.newChat","label":"New assistant chat","location":"Agents","params":"{}","enabled":cfg!(not(target_arch="wasm32"))}),
         json!({"id":"ui.assistant.stop","label":"Stop assistant","location":"Agents","params":"{}","enabled":true}),
         json!({"id":"ui.assistant.status","label":"Assistant status","location":"Agents","params":"{}","enabled":true}),
     ]
@@ -63,9 +64,10 @@ pub(crate) fn command(app: &mut WordApp, id: &str, params: &Value) -> Option<Res
             app.assistant.open = true;
             action(app, Action::Send(text.into())).map(|()| json!({"started":true}))
         }
+        "ui.assistant.newChat" => action(app, Action::NewChat).map(|()| json!({"started":true})),
         "ui.assistant.stop" => action(app, Action::Stop).map(|()| json!({"stopped":true})),
         "ui.assistant.status" => Ok(
-            json!({"open":app.assistant.open,"busy":app.assistant.widget.busy,"available":app.assistant.enabled,"chatModel":app.assistant.widget.chat_route,"controlModel":app.assistant.widget.control_route,"status":app.assistant.widget.status,"error":app.assistant.widget.error}),
+            json!({"open":app.assistant.open,"busy":app.assistant.widget.busy,"available":app.assistant.enabled,"settingsBusy":app.assistant.widget.settings.busy,"chatId":app.assistant.widget.active_chat,"model":app.assistant.widget.chat_route,"chatModel":app.assistant.widget.chat_route,"controlModel":app.assistant.widget.chat_route,"status":app.assistant.widget.status,"error":app.assistant.widget.error}),
         ),
         _ => Err("unknown assistant command".into()),
     };

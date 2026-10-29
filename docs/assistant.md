@@ -9,28 +9,29 @@ Open **View → Assistant** (the first ribbon button) or **Home → Assistant** 
 resize like the other task panes. **File → Options → Agents** contains its connection and model
 settings. Browser inference is not available.
 
-Settings start with two model choices. Choose them independently: **General chat** answers ordinary prompts;
-**App control** reads and edits through WordCraft's MCP server. In the current candidate, identical
-connection and model selections use one tool loop; different selections delegate document work
-between the two roles. The installed build above predates this performance change. Fresh settings leave both
-choices unset. Configure both roles with models that support streaming and tools before sending.
-The conversation shows which connection and model is being used. A missing connection, unavailable
-model or unsupported capability is an error; WordCraft never chooses another provider for you.
+The current source candidate uses **one model choice** for general conversation and document work.
+Choose an OpenAI subscription through Codex, a local Ollama connection, or an OpenRouter/API
+connection. The selected model calls WordCraft's MCP tools directly in the same conversation;
+there is no General chat/App control handoff. Fresh settings leave the choice unset. Select a
+model with streaming and tool support before sending. The pane shows its effective connection
+and model. Missing connections, unavailable models and unsupported capabilities fail visibly;
+WordCraft never chooses another provider for you. This candidate is **not installed or live-verified**;
+the installed revision above still uses two choices.
 
 Expand **Add or edit a connection → API or local server** to add an OpenAI-compatible connection using the OpenAI, OpenRouter, Ollama, LM Studio or custom
 endpoint preset. The endpoint is the API base, including its version path. Discover models, or enter
-a model ID under **Advanced model options**. Automatic delegation requires tool support: use the capability check or
+a model ID under **Advanced model options**. Document work requires tool support: use the capability check or
 explicitly confirm that a manually selected model supports tools. **Check model tool support → Verify tool support** sends
 synthetic prompts, which can incur normal provider usage charges.
 **Test connection** only requests the provider's model catalog. Save the connection, choose a
-connection and model for each role, then select the Apply button, which names whether the change affects this app or all Craft apps.
+connection and model, then select the Apply button, which names whether the change affects this app or all Craft apps.
 **Advanced model options** contains the app override switch and **Use suite default**. API keys go into the platform credential
 store, separate from settings and chats. If that store is unavailable, saving the key fails visibly.
 
 Codex uses a separate Craft-managed sign-in. It does not reuse your coding assistant's credentials,
 history, settings or MCP registrations. Under **Add or edit a connection → Codex account**, choose **Sign in to Codex**, then
 enter the one-time code shown in WordCraft on the browser page. Keep WordCraft open until it shows
-**Codex connection saved**, then choose and apply a model for each role. Signing into the browser
+**Codex connection saved**, then choose and apply the model. Signing into the browser
 account alone does not complete the device connection.
 
 The installed Codex executable must pass compatibility and
@@ -38,11 +39,20 @@ containment checks before document context is supplied. Failures remain visible 
 providers. Set `CRAFT_CODEX_BINARY` to an absolute executable path when Codex is not on the
 desktop app's PATH. Sign-in and discovery alone do not confirm readiness: a synthetic callback
 and result-continuation check must succeed for the selected model before document context is sent.
-The installed Codex basic edit/read-back/Undo test passed; broader adversarial containment remains a release gate. See the ledger.
+Earlier Codex basic edit/read-back/Undo acceptance passed; broader adversarial containment remains
+a release gate. The pending performance change retains successful compatibility proofs in memory
+for the app session. Every turn gets fresh callback exchanges and checks the signed-in account
+before private context; conversations and pending tool exchanges are never shared between turns.
+Changing the executable, model or runtime limits invalidates the proof. Reloading settings,
+starting sign-in or changing the configuration root clears the template. Ordinary document or
+window changes keep it. No proof is saved to disk. These changes still need integrated acceptance;
+see the ledger.
 
 Ask for document work in the same conversation as general chat. Requested edits apply directly and
-use normal **Undo**. Relevant document text is read when the task needs it and may be sent to **both**
-configured providers. Tool activity and results appear in the pane. **Stop** cancels inference and
+use normal **Undo**. In the single-model candidate, relevant document text and tool results go to
+the selected provider when the task needs them. Selecting Ollama removes the two-provider handoff;
+this is not a network privacy audit. The installed two-role build can send document context to
+both configured providers. Tool activity and results appear in the pane. **Stop** cancels inference and
 invalidates commands that have not been dispatched. Completed edits remain in the document and can
 be undone; an uncertain command outcome is never replayed automatically.
 
@@ -56,7 +66,10 @@ clients retain explicit document targeting; the assistant still rejects foreign 
 a model sends one despite the restricted schema.
 
 The current candidate distinguishes saved page fill, dark-page display and interface appearance.
-Visual inspection exposes only those settings; it does not grant access to document content.
+Visual inspection exposes only those settings and the registry-backed commands needed to change
+them; it does not grant access to document content. Successful background setters return the
+actual post-change state with their result, avoiding a separate verification request. Explicit
+setter values and existing target/selection/revision guards still apply.
 Screen-only changes leave writing and its normal Undo history unchanged. These controls, built-in
 document creation, listing and feature metadata are under acceptance testing; the installed build
 above predates them. Page-image rendering, screenshots and simulated mouse/keyboard input remain
@@ -85,7 +98,7 @@ and updater-guard checks passed with synthetic content. The earlier 0.11 preview
 Codex-chat/Qwen-control editing, read-back and normal Undo; inference was not repeated for 0.12.0.
 Open **Home → Assistant**, then configure models under
 **File → Options → Agents**. The existing `/Applications/WordCraft.app` and its MCP wrappers are
-preserved. The current WordCraft-only choices are Codex `gpt-6.1-sol` for General chat and
+preserved. The saved pre-migration WordCraft-only choices are Codex `gpt-6.1-sol` for General chat and
 Ollama `qwen3:4b-instruct-2507-q4_K_M` for App control, selected for the user-requested trial.
 Ollama uses the configured loopback endpoint. This task added no reboot autostart.
 
@@ -121,17 +134,17 @@ the install guide links Apple's per-app approval instructions.
 
 ## Verify a model route
 
-The pane shows the effective **General chat** and **App control** models. During a document request,
-its status changes to the active provider/model. Expand `control_app` and the individual MCP actions
-to inspect delegation, reads, edits and returned results. Check the actual document, then use normal
-Undo to confirm the edit belongs to its undo history.
+The single-model candidate shows one effective provider/model. Expand the individual MCP actions
+to inspect reads, edits and returned results. Check the actual document, saved/reopened content
+and normal Undo; a model's success message alone does not verify an edit.
 
-Model labels describe the selected route. For independent local execution evidence, also check the
-Ollama server request log and `ollama ps` while the turn runs. A successful request after the handoff,
-the expected loaded model, the completed MCP results and exact document read-back together verify
-that route. Saved chat files preserve tool calls/results but do not currently persist model provenance;
-capture the effective settings and live status alongside a test transcript. Relevant document context
-can still reach Codex when General chat uses Codex and App control uses Ollama.
+For independent local execution evidence, check the Ollama server request log and `ollama ps`
+while the turn runs. The expected loaded model, successful MCP results and exact document
+read-back together verify that route. Saved chat files preserve tool calls/results but do not
+currently persist model provenance; capture effective settings and live status with each test.
+The installed two-role revision shows both routes and can still send document tasks/results to
+Codex when its App control choice is Ollama. The unified candidate's live routing and performance
+acceptance remain pending.
 
 ## Shared configuration
 
@@ -146,8 +159,11 @@ directory followed by `Craft/ai` (on macOS, `~/Library/Application Support/Craft
 | Platform credential store | API credentials; never embedded in documents or transcript files |
 | `codex/` under the shared root | Craft account state and restricted runtime configuration; child HOME, USERPROFILE and CODEX_HOME all use this isolated home |
 
-The roles are `assistant.chat` and `assistant.control`. A WordCraft override takes precedence over
-the suite default; an invalid override fails explicitly. Runtime defaults are defined once in
+The single-model candidate uses the existing `assistant.chat` binding as its canonical model
+choice. Legacy `assistant.control` bindings, credentials and conversations are preserved but do
+not route WordCraft requests. An unset or invalid chat binding never falls back to that legacy
+control choice. A WordCraft override takes precedence over the suite default; an invalid override
+fails explicitly. The installed revision still uses both roles. Runtime defaults are defined once in
 `craft-ai-core::assistant::RuntimeConfig` and documented in the shared `craft-ai-native` README.
 Changes to connections and runtime settings are locked and atomically saved. Never put API keys
 in either JSON file.
@@ -164,8 +180,13 @@ channel to the same MCP server and executes permitted commands on the UI thread,
 protection and Undo handling. No additional TCP listener is started.
 
 The UI commands are `ui.assistant {value?}`, `ui.assistant.send {text, files?}`,
-`ui.assistant.stop {}` and `ui.assistant.status {}`. Status reports routing, busy state and errors without
-returning credentials or chat contents. Sending a prompt requires configured desktop services.
+`ui.assistant.stop {}` and `ui.assistant.status {}`. The candidate adds
+`ui.assistant.newChat {}` using the pane's normal New chat action and busy guards; it starts an
+asynchronous operation and returns `{"started":true}`. Wait for a changed opaque `chatId`,
+`settingsBusy:false` and `busy:false` before sending to the new chat. Status reports canonical
+`model`, busy state and errors without credentials or chat contents. Legacy `chatModel` and
+`controlModel` fields alias the same selected route. Sending requires configured desktop services.
+These candidate automation additions are not in the installed revision.
 
 Connections, provider adapters, routing, persistence and widgets live in `craft-libs`. WordCraft's
 adapter supplies app identity, the opaque target and permitted MCP handling. Other Craft apps can
@@ -176,6 +197,7 @@ app integrations are deferred, as is browser inference.
 
 | Date | Change |
 | --- | --- |
+| 2026-10-29 | Document pending single-model routing, app-session compatibility proofs and background metadata/verification bundling; installed revision and live acceptance unchanged |
 | 2026-10-28 | Record installed ARM64 preview, separate document profile, native launch checks and standard-release updater caveat |
 | 2026-10-28 | Document settings, two-model routing, local history, document/file boundaries and current release gates |
 

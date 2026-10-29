@@ -603,8 +603,9 @@ fn visual_inspection_and_explicit_setters_do_not_read_or_edit_document_content()
     let mut guard = Guard::new(&app, "Remove the screen's dark background".into(), vec![]);
     let inspected = mcp(&mut app, &mut guard, vec![("ui_inspect", json!({}))]);
     let body: Value = serde_json::from_str(inspected[0]["content"][0]["text"].as_str().unwrap()).unwrap();
-    assert_eq!(body.as_object().unwrap().len(), 3);
+    assert_eq!(body.as_object().unwrap().len(), 5);
     assert_eq!(body["document"], guard.document);
+    assert_eq!(body["pageBackground"], json!({"color":"202020","hasPicture":false}));
     assert_eq!(body["interfaceTheme"], json!({"setting":"dark","effective":"dark"}));
     assert_eq!(body["view"], json!({"darkMode":true,"readPageColor":"inverse"}));
     assert!(guard.visual_read);
@@ -619,6 +620,11 @@ fn visual_inspection_and_explicit_setters_do_not_read_or_edit_document_content()
         ],
     );
     assert!(results.iter().all(|result| result["isError"] == false), "{results:?}");
+    let verified: Vec<Value> = results.iter().map(|result| serde_json::from_str(result["content"][0]["text"].as_str().unwrap()).unwrap()).collect();
+    assert_eq!(verified[0]["verification"]["view"]["darkMode"], false);
+    assert_eq!(verified[1]["verification"]["view"]["readPageColor"], "none");
+    assert_eq!(verified[2]["verification"]["interfaceTheme"], json!({"setting":"light","effective":"light"}));
+    assert!(verified.iter().all(|result| result.get("result").is_some() && result["verification"]["pageBackground"]["color"] == "202020"));
     assert!(!app.session.view.dark_mode);
     assert_eq!(app.session.view.read_page_color, wordcraft_engine::cmd::view::ReadPageColor::None);
     assert_eq!(app.ui.theme, Appearance::Light);
@@ -827,4 +833,76 @@ fn interface_theme_exception_refuses_malformed_values_and_preserves_pending_ui_r
     assert_eq!(serde_json::to_value(app.prefs()).unwrap(), prefs);
     assert!(app.dialog.is_none() && app.file_dialog.is_none());
     assert!(!app.assistant.requested_dialog && !app.assistant.dispatching);
+}
+
+#[test]
+fn background_metadata_discovers_commands_and_authorizes_only_the_inspected_property() {
+    let mut app = app();
+    app.execute("design.pageColor", json!({"color":"202020"})).unwrap();
+    let original = app.session.doc.clone();
+    let mut guard = Guard::new(&app, "Remove the document's dark background".into(), vec![]);
+    let inspected = mcp(&mut app, &mut guard, vec![("ui_inspect", json!({}))]);
+    let body: Value = serde_json::from_str(inspected[0]["content"][0]["text"].as_str().unwrap()).unwrap();
+    assert_eq!(body["pageBackground"], json!({"color":"202020","hasPicture":false}));
+    let hints = body["commands"].as_array().unwrap();
+    assert_eq!(hints.len(), 4);
+    let commands = bound_commands(&app);
+    for hint in hints {
+        assert!(background_command(hint["id"].as_str().unwrap()));
+        assert_eq!(Some(hint), commands.as_array().unwrap().iter().find(|command| command["id"] == hint["id"]));
+    }
+    assert!(guard.visual_read && !guard.read);
+    for (id, params) in [
+        ("text.insert", json!({"text":"not authorized"})),
+        ("table.insert", json!({"rows":2,"cols":2})),
+        ("design.watermark", json!({"remove":true})),
+    ] {
+        assert!(command(&mut app, &mut guard, id, params).unwrap_err().contains("inspect_document"));
+    }
+    let results = mcp(&mut app, &mut guard, vec![("execute", json!({"command":"design.pageColor","params":{"color":null}}))]);
+    assert_eq!(results[0]["isError"], false, "{results:?}");
+    let result: Value = serde_json::from_str(results[0]["content"][0]["text"].as_str().unwrap()).unwrap();
+    assert_eq!(result["verification"]["pageBackground"], json!({"color":null,"hasPicture":false}));
+    assert_eq!(result["verification"], background_state(&app));
+    assert!(result.get("result").is_some());
+    let mut cleared = original.clone();
+    cleared.settings.page_color = None;
+    cleared.settings.page_picture = None;
+    assert_eq!(app.session.doc, cleared, "only the inspected background property changes");
+    assert!(guard.visual_read && !guard.read);
+    app.execute("edit.undo", json!({})).unwrap();
+    assert_eq!(app.session.doc, original, "one normal Undo restores the complete background edit");
+}
+
+#[test]
+fn background_color_validation_and_context_guards_prevent_uninspected_or_malformed_clears() {
+    let mut app = app();
+    app.execute("design.pageColor", json!({"color":"202020"})).unwrap();
+    let mut guard = Guard::new(&app, "Change page background".into(), vec![]);
+    assert!(command(&mut app, &mut guard, "design.pageColor", json!({"color":null})).unwrap_err().contains("ui_inspect"));
+    admitted(&mut app, &egui::Context::default(), &mut guard, &pending("ui.inspect", json!({}))).unwrap();
+    let original = app.session.doc.clone();
+    let revision = app.session.rev();
+    let dirty = app.session.dirty;
+    let undo = app.session.can_undo();
+    for params in [json!({}), json!({"color":false}), json!({"color":12}), json!({"color":"red"}), json!({"color":"20202"}), json!({"color":{}})] {
+        assert!(command(&mut app, &mut guard, "design.pageColor", params).unwrap_err().contains("explicit color"));
+        assert_eq!(app.session.doc, original);
+        assert_eq!(app.session.rev(), revision);
+        assert_eq!(app.session.dirty, dirty);
+        assert_eq!(app.session.can_undo(), undo);
+    }
+    let set = command(&mut app, &mut guard, "design.pageColor", json!({"color":"#aBcDef"})).unwrap();
+    assert_eq!(set["verification"]["pageBackground"]["color"], "ABCDEF", "verification reads normalized actual state, not the input");
+    app.execute("text.insert", json!({"text":"user changed writing"})).unwrap();
+    app.session.sel = guard.selection.text.clone();
+    assert!(command(&mut app, &mut guard, "design.pageColor", json!({"color":null})).unwrap_err().contains("ui_inspect again"));
+    assert!(!guard.visual_read && !guard.read);
+    admitted(&mut app, &egui::Context::default(), &mut guard, &pending("ui.inspect", json!({}))).unwrap();
+    let forged = pending("engine.execute", json!({"doc":guard.document.saturating_add(1),"command":"design.pageColor","params":{"color":null}}));
+    assert!(admitted(&mut app, &egui::Context::default(), &mut guard, &forged).unwrap_err().contains("original document"));
+    app.session.doc.settings.protection = Some("readOnly".into());
+    let protected = app.session.doc.clone();
+    assert!(command(&mut app, &mut guard, "design.pageColor", json!({"color":null})).is_err());
+    assert_eq!(app.session.doc, protected);
 }
