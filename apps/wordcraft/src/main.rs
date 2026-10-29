@@ -301,6 +301,7 @@ OPTIONS:
   --sample            open the sample document
   --control PORT      start the localhost control server on PORT, for agents and scripts
                       (or set WORDCRAFT_CONTROL_PORT); see docs/control-protocol.md
+  --disable-updates   disable software updates for this launch (for separately packaged builds)
   --version           print the version
   -h, --help          print this help
 ";
@@ -348,9 +349,12 @@ fn open_non_unicode(app: &mut WordApp, path: &std::path::Path) {
 /// geometry, opens requested documents or the Start screen, starts the control server when
 /// asked, and runs the eframe event loop.
 fn main() -> eframe::Result {
+    let disable_updates = std::env::args_os().any(|arg| arg == "--disable-updates");
     // Windows: the update helper is a copy of this program started with `--finish-update`.
     #[cfg(windows)]
-    if let Some(result) = craft_update::self_update::finish(&craft_update::suite::WORDCRAFT, &std::env::args_os().skip(1).collect::<Vec<_>>()) {
+    if !disable_updates
+        && let Some(result) = craft_update::self_update::finish(&craft_update::suite::WORDCRAFT, &std::env::args_os().skip(1).collect::<Vec<_>>())
+    {
         std::process::exit(i32::from(result.is_err()));
     }
     // First, so the panic hook and every start-up warning are recorded (`logging`).
@@ -373,6 +377,7 @@ fn main() -> eframe::Result {
                 }
             }
             "--sample" => sample = true,
+            "--disable-updates" => {}
             "--version" => {
                 println!("wordcraft {} ({})", env!("CARGO_PKG_VERSION"), build_sha());
                 return Ok(());
@@ -464,6 +469,9 @@ fn main() -> eframe::Result {
             session.system_region = region;
             let mut app = WordApp::new(session, services(file_dialog, &cc.egui_ctx));
             app.set_startup_update_check(true);
+            if disable_updates {
+                app.disable_updates();
+            }
             load_prefs(&mut app);
             app.assistant.enabled = true;
             load_user_dictionary(&mut app);

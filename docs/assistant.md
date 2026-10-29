@@ -89,8 +89,10 @@ a reliability rate, and the earlier guided run is not the same-prompt speed benc
 actual tool results and the document rather than relying on a model's
 summary. The full evidence and exact model identity are in the implementation ledger.
 
-**Choose Later on update prompts while testing.** The existing updater offers the standard
-WordCraft release. Updating this custom preview bundle has not been verified.
+**Preview update policy:** newly packaged previews pass `--disable-updates`; the standard
+updater cannot replace them. Install a newer preview DMG into `/Applications`, preserving the
+separate main WordCraft app. Earlier previews may still offer official updates: choose **Later**.
+See [update maintenance and future service separation](assistant-updates.md).
 
 This preview uses an ARM64 release build with local ad-hoc signing, an English interface and the
 existing bundled/system-font defaults, without the optional shared translation/font build inputs.

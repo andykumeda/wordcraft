@@ -6,6 +6,7 @@ use crate::WordApp;
 use craft_update::updater::{Action, Status, Updater};
 
 pub(crate) struct Runtime {
+    disabled: bool,
     #[cfg(not(target_arch = "wasm32"))]
     updater: Updater,
     /// The desktop app turns the check at start on; tests and the web build leave it off.
@@ -23,6 +24,7 @@ pub(crate) struct Runtime {
 impl Default for Runtime {
     fn default() -> Self {
         Self {
+            disabled: false,
             #[cfg(not(target_arch = "wasm32"))]
             updater: Updater::new(&craft_update::suite::WORDCRAFT, env!("CARGO_PKG_VERSION")),
             #[cfg(not(target_arch = "wasm32"))]
@@ -38,6 +40,16 @@ impl Default for Runtime {
 }
 
 impl WordApp {
+    /// Separately packaged builds must not install a standard WordCraft release over themselves.
+    pub fn disable_updates(&mut self) {
+        self.updates_rt.disabled = true;
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            self.updates_rt.startup_check = false;
+            self.updates_rt.check_requested = false;
+        }
+    }
+
     /// Whether the app asks for a newer release when it starts (off until the desktop app turns it on).
     #[cfg(not(target_arch = "wasm32"))]
     pub fn set_startup_update_check(&mut self, on: bool) {
@@ -46,6 +58,12 @@ impl WordApp {
 }
 
 pub(crate) fn check(app: &mut WordApp) {
+    if app.updates_rt.disabled {
+        app.updates_rt.manual_window_open = true;
+        app.updates_rt.status_message =
+            Some(tl!("Software updates are disabled for this launch. Install an updated app package to update this build.").to_string());
+        return;
+    }
     #[cfg(not(target_arch = "wasm32"))]
     {
         app.updates_rt.check_requested = true;
@@ -65,6 +83,9 @@ pub(crate) fn tick(app: &mut WordApp, ctx: &egui::Context) {
     {
         let rt = &mut app.updates_rt;
         rt.repaint = Some(ctx.clone());
+        if rt.disabled {
+            return;
+        }
         if std::mem::take(&mut rt.check_requested) {
             rt.updater.check_now(ctx);
         } else if rt.startup_check {
@@ -78,7 +99,7 @@ pub(crate) fn tick(app: &mut WordApp, ctx: &egui::Context) {
 
 pub(crate) fn show(app: &mut WordApp, ctx: &egui::Context) {
     #[cfg(not(target_arch = "wasm32"))]
-    {
+    if !app.updates_rt.disabled {
         // The restart helper is scheduled before the app closes, so no update starts over unsaved work.
         let clean = !(app.session.dirty || app.save_unconfirmed() || app.printing.busy() || crate::panes::has_comment_drafts(app));
         match app.updates_rt.updater.show_if(ctx, clean) {
@@ -129,5 +150,35 @@ pub(crate) fn show(app: &mut WordApp, ctx: &egui::Context) {
     #[cfg(not(target_arch = "wasm32"))]
     if !app.updates_rt.manual_window_open {
         app.updates_rt.updater.dismiss_status();
+    }
+}
+
+#[cfg(all(test, not(target_arch = "wasm32")))]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn packaged_build_opt_out_blocks_startup_and_manual_updater_work() {
+        let mut app = WordApp::new(wordcraft_engine::Session::new(wordcraft_doc::Document::new()), Default::default());
+        assert!(!app.updates_rt.disabled, "standard builds retain their updater");
+        app.set_startup_update_check(true);
+        check(&mut app);
+        assert!(app.updates_rt.check_requested);
+        app.disable_updates();
+        assert!(!app.updates_rt.startup_check);
+        assert!(!app.updates_rt.check_requested);
+        let ctx = egui::Context::default();
+        for command in ["ui.checkForUpdates", "help.checkForUpdates"] {
+            app.run(command, serde_json::json!({})).unwrap();
+            ctx.run_ui(egui::RawInput::default(), |ui| {
+                tick(&mut app, ui.ctx());
+                show(&mut app, ui.ctx());
+            })
+            .drop_without_applying_deltas();
+            assert!(!app.updates_rt.check_requested);
+            assert!(matches!(app.updates_rt.updater.status(), Status::Idle));
+            assert!(app.updates_rt.manual_window_open);
+            assert!(app.updates_rt.status_message.as_deref().is_some_and(|s| s.contains("disabled")));
+        }
     }
 }

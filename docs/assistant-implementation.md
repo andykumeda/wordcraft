@@ -701,3 +701,46 @@ still reject document work until explicitly increased outside WordCraft's OpenAI
 Native installed-app acceptance, physical interaction, other platforms and a live repeat of the
 user's document request were not performed for this source revision. Synthetic screenshots,
 HTTP reproduction and regression tests are the evidence for this increment.
+
+## 2026-10-29 — upstream maintenance, /Applications delivery and DMG
+
+The owner requested all future preview builds at
+`/Applications/WordCraft Assistant Preview.app`, keeping the main WordCraft app separate,
+and an Apple-silicon DMG for the other Mac. The in-app pane remains required: another chat/MCP
+client window does not meet the goal. Independent background-service updates are a future
+design, not part of the current binary. See [update workflow/design](assistant-updates.md).
+
+| Workstream / owner | State | Acceptance and current evidence |
+| --- | --- | --- |
+| Upstream integration / primary | Verified | Origin/main aadb077e integrated without conflicts. Version/Cargo.lock and platform packaging changes only. Full serial CI passed all eight gates. |
+| Preview updater guard / agent | Verified | --disable-updates blocks startup/manual/install routes and shows a disabled notice. Standard app default retained. Flag passed by preview launcher; new regression passed in full CI. |
+| DMG packaging / primary | In progress | ZIP and DMG with separate hashes; verify mounted and copied signed app before publishing outputs. Bash syntax passes; assertion check rejects old binaries before output creation. Actual package verification pending release binary. |
+| Install/smoke / primary | Not started | Exact /Applications preview path; preserve main app and user writing; retain rollback copy; synthetic installed-app smoke and socket cleanup. |
+| Service separation / deferred | Not started | Preserve native pane; typed local service interface and upstream bridge are design only. No extra chat window or service was created. |
+
+`git fetch origin` found upstream commits 65bb8b37, 3de6ff95, 9724f15c and aadb077e.
+The current preview was based on 0.11.0; the merge brings it to 0.12.0 while retaining assistant
+commits and craft-libs be59354. The initial 0.11 release compilation was stopped via SIGINT
+only after identifying its cargo process through this task's private cache lock; it exited130.
+No partial 0.11 binary will be distributed as the new source.
+
+Full serial gate log: `/private/tmp/wordcraft-preview-012-ci.log`; unified parent cache
+`/private/tmp/wordcraft-preview-delivery-build`. No parallel compilation during timing tests.
+Syntax: `bash -n` passes for changed macOS preview/main and upstream FreeBSD packaging scripts.
+A synthetic metadata-only check confirms the preview packager rejects an old binary without
+--disable-updates support (exit2) before creating output files. No real app window was launched
+for that check. Actual code/version, artifact hashes and deployment outcomes will follow below.
+
+The machine is an M1 Mini with 16 GB RAM. Existing Qwen3 4B Instruct metadata advertises 262,144
+maximum context, while the earlier failing server allocation was 4,096. The context slider in
+the installed Ollama app can increase allocation; 16K was suggested as a starting point, not
+verified as a universal document budget. Qwen3.5:4b is a candidate for a future benchmark, not
+a demonstrated better WordCraft model. No model or context setting was changed by this work.
+
+Source checkpoint: final `RUST_TEST_THREADS=1 cargo xtask ci` for the merged0.12.0 source
+completed with exit0: all eight gates passed, **4,629 ordinary tests / 6 ignored / zero failures**,
+localization audit, doctests,57 assets,20-crate layer check and16-crate WASM check. The new
+`packaged_build_opt_out_blocks_startup_and_manual_updater_work` regression passed.
+No release artifact or installed-bundle acceptance is claimed by those source checks.
+The reviewed upstream merge and preview guard/packaging/workflow are committed separately;
+release build and actual packaging/deployment verification follow from the feature commit.

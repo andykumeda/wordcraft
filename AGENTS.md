@@ -82,3 +82,23 @@ Progress docs follow [`craftrules/standards/progress-docs.md`](https://github.co
   GitHub profiles). Never hand-edit `contributors.json`.
 - Maintainers refresh the stats with `python3 ../../craftrules/scripts/contributors.py .` (it also
   re-verifies who wrote each `people.toml` entry; `--check` only verifies).
+
+## Owner's assistant-preview delivery workflow
+
+- New preview builds are installed at `/Applications/WordCraft Assistant Preview.app`; keep
+  `/Applications/WordCraft.app` separate and unchanged. This replaces the earlier `~/Applications`
+  delivery location. Preserve existing profiles, credentials and conversations.
+- Every delivered preview build also gets a version/commit-named Apple-silicon DMG and SHA-256
+  checksum for the other Mac. Use `packaging/macos/assistant-preview.sh`; verify the mounted
+  app and a copy extracted from the DMG before installation. No public release is implied.
+- The preview launcher passes `--disable-updates` so the standard WordCraft updater cannot replace
+  the custom preview. Bring upstream WordCraft changes into the preview source deliberately,
+  retain assistant changes, run the quality gates, then rebuild/install/package together.
+- Keep the assistant in the WordCraft window. A background service may eventually separate its
+  update lifecycle, but a second chat/MCP-client window does not meet the owner's goal. The
+  service split is design work until explicitly implemented; do not claim it already exists.
+- Never force-quit an instance or discard writing to install a build. Retain a rollback copy of
+  any replaced preview. If an old instance remains open, explain that the new build takes effect
+  after saving/quitting it and opening the exact `/Applications` path.
+- Record the deployed source, artifact checksums, updater policy, smoke checks and remaining
+  destination-Mac acceptance in the implementation ledger and local handoff.

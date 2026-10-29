@@ -2,6 +2,7 @@
 # Package an already-built assistant preview; never builds, installs or publishes it.
 # Usage: assistant-preview.sh --binary PATH --version VERSION --build-sha COMMIT
 #        [--arch aarch64|x86_64|universal] [--output-dir DIR]
+# Outputs a ZIP and drag-to-Applications DMG, each with a checksum.
 # MACOS_SIGN_IDENTITY defaults to ad-hoc (-). This script does not notarize.
 set -euo pipefail
 
@@ -37,6 +38,10 @@ fi
 if [[ "$BINARY_VERSION" != "wordcraft $PREVIEW_VERSION (${BUILD_SHA:0:8})" ]]; then
   echo "error: supplied version/commit do not match binary --version: $BINARY_VERSION" >&2; exit 2;
 fi
+case "$("$BINARY" --help)" in
+  *--disable-updates*) ;;
+  *) echo "error: binary must support --disable-updates for preview isolation" >&2; exit 2 ;;
+esac
 export WORDCRAFT_VERSION="$PREVIEW_VERSION" WORDCRAFT_BUILD_SHA="$BUILD_SHA"
 # shellcheck source=../env.sh
 . "$(dirname "${BASH_SOURCE[0]}")/../env.sh"
@@ -65,11 +70,21 @@ NAME="wordcraft-assistant-preview-$VERSION-${BUILD_SHA:0:8}-macos-$ARCH"
 ZIP="$DIST/$NAME.zip"
 CHECKSUM="$ZIP.sha256"
 README="$DIST/$NAME-INSTALL.md"
-for output in "$ZIP" "$CHECKSUM" "$README"; do
+DMG="$DIST/$NAME.dmg"
+DMG_CHECKSUM="$DMG.sha256"
+for output in "$ZIP" "$CHECKSUM" "$README" "$DMG" "$DMG_CHECKSUM"; do
   [[ ! -e "$output" ]] || { echo "error: output already exists: $output" >&2; exit 2; }
 done
 WORK="$(mktemp -d "${TMPDIR:-/tmp}/wordcraft-assistant-package.XXXXXX")"
-trap 'rm -rf "$WORK"' EXIT
+DMG_MOUNT=""
+cleanup() {
+  if [[ -n "$DMG_MOUNT" ]] && ! hdiutil detach "$DMG_MOUNT" >/dev/null 2>&1; then
+    echo "error: could not detach $DMG_MOUNT; retained $WORK for cleanup" >&2
+    return
+  fi
+  rm -rf "$WORK"
+}
+trap cleanup EXIT
 PACKAGE="$WORK/$NAME"
 APP="$PACKAGE/WordCraft Assistant Preview.app"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
@@ -89,7 +104,7 @@ export WORDCRAFT_PROFILE_DIR
 PATH="${PATH:-/usr/bin:/bin:/usr/sbin:/sbin}:/opt/homebrew/bin:/usr/local/bin${HOME:+:$HOME/.local/bin}"
 export PATH
 PREVIEW_BIN_DIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
-exec "$PREVIEW_BIN_DIR/WordCraft-native" "$@"
+exec "$PREVIEW_BIN_DIR/WordCraft-native" --disable-updates "$@"
 LAUNCHER
 chmod 755 "$APP/Contents/MacOS/WordCraft" "$APP/Contents/MacOS/WordCraft-native"
 
@@ -128,10 +143,12 @@ Source commit: $BUILD_SHA (version and short commit verified against binary --ve
 Architecture: $MACHINE. Requires macOS $MIN_MACOS or newer.
 Signing: $SIGNING
 
-1. Verify the downloaded ZIP against its adjacent .sha256 file with
-   shasum -a 256 -c $NAME.zip.sha256 in the download directory.
-2. Extract the ZIP and move **WordCraft Assistant Preview.app** to your
-   **~/Applications** folder (create that folder if needed).
+1. Verify the downloaded DMG against its adjacent .sha256 file with
+   shasum -a 256 -c $NAME.dmg.sha256 in the download directory.
+   For the ZIP alternative, use $NAME.zip.sha256 instead.
+2. Open the DMG and drag **WordCraft Assistant Preview.app** to **Applications**.
+   Alternatively, extract the ZIP and move that app to **/Applications**.
+   Replace only the preview; keep the main **WordCraft.app** separate.
 3. Open the preview. Keep your existing **WordCraft.app**; this is a separate app.
    If macOS blocks it, follow [Apple's per-app approval instructions](https://support.apple.com/en-us/102445)
    after verifying its source and checksum. Do not disable Gatekeeper globally.
@@ -151,9 +168,10 @@ WORDCRAFT_PROFILE_DIR can override that location. Assistant connections and chat
 use the destination user's shared Craft AI store; CRAFT_AI_CONFIG_DIR can override
 it. Relevant document content may reach both configured model providers.
 
-If the updater offers a standard WordCraft release, choose **Later**: updating this
-preview through the standard release channel has not been verified. Install a
-newer preview by quitting this one and replacing only **WordCraft Assistant Preview.app**.
+The preview launcher disables the standard WordCraft updater, including manual
+Check for Updates. Preview updates arrive as new preview DMGs. Save your documents
+and quit the preview before replacing it. The separate main WordCraft app keeps
+its normal updater. Neither installation method copies your settings or credentials.
 
 This archive contains the supplied binary, original app icon and project licences.
 Optional font licences must accompany binaries built with CRAFT_FONTS_DIR. Packaging
@@ -164,8 +182,29 @@ ditto -c -k --keepParent "$PACKAGE" "$WORK/$NAME.zip"
 # Verify the delivered bytes after extraction, not just the staging bundle.
 ditto -x -k "$WORK/$NAME.zip" "$WORK/check"
 codesign --verify --strict --deep --verbose=2 "$WORK/check/$NAME/WordCraft Assistant Preview.app"
+# Use the same srcfolder method as package.sh; do not change the signed app's metadata.
+DMG_STAGE="$WORK/dmg"
+DMG_BUILD="$WORK/$NAME.dmg"
+mkdir -p "$DMG_STAGE"
+ditto "$APP" "$DMG_STAGE/WordCraft Assistant Preview.app"
+ln -s /Applications "$DMG_STAGE/Applications"
+cp "$PACKAGE/INSTALL.md" "$DMG_STAGE/INSTALL.md"
+hdiutil create -srcfolder "$DMG_STAGE" -volname "WordCraft Assistant Preview" \
+  -fs HFS+ -format UDZO -imagekey zlib-level=9 "$DMG_BUILD"
+DMG_MOUNT="$WORK/dmg-check"
+mkdir -p "$DMG_MOUNT"
+hdiutil attach -readonly -nobrowse -noautoopen -mountpoint "$DMG_MOUNT" "$DMG_BUILD" >/dev/null
+codesign --verify --strict --deep --verbose=2 "$DMG_MOUNT/WordCraft Assistant Preview.app"
+ditto "$DMG_MOUNT/WordCraft Assistant Preview.app" "$WORK/dmg-copy/WordCraft Assistant Preview.app"
+codesign --verify --strict --deep --verbose=2 "$WORK/dmg-copy/WordCraft Assistant Preview.app"
+hdiutil detach "$DMG_MOUNT" >/dev/null
+DMG_MOUNT=""
+# Publish only after both package formats have passed extraction/mount verification.
 cp "$PACKAGE/INSTALL.md" "$README"
 cp "$WORK/$NAME.zip" "$ZIP"
+cp "$DMG_BUILD" "$DMG"
 printf '%s  %s\n' "$(sha256 "$ZIP")" "$NAME.zip" >"$CHECKSUM"
 echo "==> packaged $ZIP ($ACTUAL_ARCH; $SIGNING)"
-ls -lh "$ZIP" "$CHECKSUM" "$README"
+printf '%s  %s\n' "$(sha256 "$DMG")" "$NAME.dmg" >"$DMG_CHECKSUM"
+echo "==> packaged $DMG (bundle $SIGNING)"
+ls -lh "$ZIP" "$CHECKSUM" "$DMG" "$DMG_CHECKSUM" "$README"

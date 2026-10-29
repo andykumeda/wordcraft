@@ -153,6 +153,15 @@ wordcraft-cli run --script job.json                 # the same from a file: comm
 
 Web: `cd apps/wordcraft-web && trunk serve`, then open <http://127.0.0.1:8771/?sample>.
 
+## Assistant preview builds
+
+This branch includes an integrated assistant preview. It is installed as
+`/Applications/WordCraft Assistant Preview.app`, separately from the normal app, and delivered
+as a versioned Apple-silicon DMG. Its launcher disables the standard updater so an official
+release cannot replace the custom preview. Upstream changes are integrated and verified before
+new preview builds. Models/providers remain externally configurable; a separate background
+Assistant service is design work, not an implemented feature. See [preview updates](docs/assistant-updates.md).
+
 ## For agents: CLI and MCP
 
 The desktop [Assistant pane](docs/assistant.md) provides one conversation with independent general
