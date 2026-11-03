@@ -35,8 +35,9 @@ they never select upstream or another publisher.
 For an explicitly approved local-only signed distribution, the same entry may additionally
 set `local_certificate_sha1` to the signing certificate's exact 40-character hexadecimal SHA-1
 identity. This opts into that certificate instead of Apple's Developer ID/notarization trust
-requirement; cryptographic signature verification, the configured team identity, bundle/source
-metadata and package checksum still apply. Omitting it keeps the ordinary Apple-trusted policy.
+requirement; cryptographic signature verification, exact bundle/source metadata and package
+checksum still apply. The certificate pin is the publisher identity in this explicit mode;
+the existing team-ID field remains required by configuration validation. Omitting it keeps the ordinary Apple-trusted policy.
 Unsigned and ad-hoc packages remain refused.
 
 ## Release contract

@@ -14,8 +14,8 @@ interface and file-format fixes. The original assistant checkout remains separat
 | Reconcile upstream source | Verified | Preserve assistant hooks, all MCP tools, proofing pane, inspection fields and updater opt-out; resolve source and documentation conflicts. |
 | Update shared dependencies | Verified | Use the compatible committed shared fork revision; keep upstream proof/font-store dependencies and registry versions. Temporary verification path patches must never enter the committed lockfile. |
 | Scoped verification | Verified | Check desktop, CLI and UI; run assistant, control and MCP regressions plus relevant Clippy. Record actual results below. |
-| Native/model acceptance | Not started | No installed-app, real-provider, VoiceOver or other-Mac acceptance is implied by compilation and synthetic tests. |
-| Candidate packaging | In progress | Build release app and CLI with the exact required font/translation inputs; sign both app variants locally, verify notices/metadata/signatures and report hashes; no installation. |
+| Native/model acceptance | In progress | No installed-app, real-provider, VoiceOver or other-Mac acceptance is implied by compilation and synthetic tests. |
+| Candidate packaging | Verified | Build release app and CLI with the exact required font/translation inputs; sign both app variants locally, verify notices/metadata/signatures and report hashes; no installation. |
 | Public release | Not started | No public release or main-branch push. |
 
 ## Resolution decisions
@@ -82,3 +82,14 @@ Clippy and the web-target check passed. Shared accessor tests: **23 passed**, in
 new regressions, with all-target Clippy. No wire contract changes or installed app changes.
 The earlier 97f3e512 release build succeeded with required font/translation inputs; final
 candidate binaries are rebuilt from the guard follow-up commit before signing.
+
+
+## Local candidate and installed smoke evidence
+
+Signed standard/preview bundles and the matching CLI are prepared from `8762d986`; both
+installed variants and the versioned CLI matched the candidate signer/hashes on the Mini and
+MacBook. Four isolated background installed-app runs passed MCP edit/read/Undo/Redo,
+save/reopen, page rendering and helper 0.1.0 readiness, with all temporary listeners/keys
+cleaned up. No inference or deployment edits were performed by these checks. Exact artifacts,
+hashes, report references and qualification limits are in
+[the local qualification record](wordcraft-015-local-qualification.md).
