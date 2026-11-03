@@ -62,3 +62,23 @@ were not run; these are scoped source checks, not an installed release claim.
 
 The earlier v0.12 assistant parity results are recorded separately and are not evidence that
 this merged source passes. No installed-app or native/model acceptance has been performed here.
+
+## App restart guard follow-up
+
+The initial v0.15 integration's app updater guarded document/save/print state but could still
+restart a clean app during an assistant turn. The follow-up pins shared
+`986cb16234cfdac1ee1337fb4cdf00945cad4e5a` and also requires assistant restart safety.
+Native turns, settings jobs, file choice, reentrant dispatch, drafts and unsaved settings block
+restart without cancelling them. Shared mode additionally guards host turn/dispatch/chooser
+state and uses `Controller::restart_safe()` for queued helper requests and unacknowledged input.
+Missing or failed helpers do not permanently block updates with stale busy flags.
+
+The controller is conservative about pending render-only frames: finish or stop the chat, save
+assistant settings and close the panel before restarting if an update remains deferred.
+
+Verification against the new exact Git pin: assistant filter **36 passed / 2 explicitly
+ignored**, including all three new app-update guard regressions; all-target UI/MCP/app/CLI
+Clippy and the web-target check passed. Shared accessor tests: **23 passed**, including its two
+new regressions, with all-target Clippy. No wire contract changes or installed app changes.
+The earlier 97f3e512 release build succeeded with required font/translation inputs; final
+candidate binaries are rebuilt from the guard follow-up commit before signing.

@@ -47,6 +47,9 @@ impl Remote {
             turn.proxy.cancel();
         }
     }
+    pub(super) fn restart_safe(&self) -> bool {
+        self.turn.is_none() && !self.dispatching && self.chooser.is_none() && self.controller.as_ref().is_none_or(Controller::restart_safe)
+    }
     pub(super) fn owns_keyboard(&self) -> bool {
         self.keyboard_visible && self.controller.as_ref().is_some_and(Controller::owns_keyboard)
     }
@@ -408,5 +411,30 @@ mod tests {
         assert!(app.assistant.remote.turn.is_none());
         assert!(!app.assistant.widget.busy);
         assert!(app.assistant.remote.controller.is_none());
+    }
+}
+
+#[cfg(test)]
+mod restart_tests {
+    use super::*;
+    #[test]
+    fn app_update_waits_for_shared_dispatch_and_ignores_failed_helper_status() {
+        let mut app = WordApp::new(wordcraft_engine::Session::new(wordcraft_doc::Document::new()), Default::default());
+        app.assistant.remote.enabled = true;
+        ensure_loaded(&mut app);
+        assert!(crate::assistant::can_restart_for_update(&app), "missing helper must not block app updates");
+        app.assistant.remote.dispatching = true;
+        assert!(!crate::assistant::can_restart_for_update(&app), "turn may be temporarily taken while GUI dispatch runs");
+        app.assistant.remote.dispatching = false;
+        let (_sender, receiver) = mpsc::channel();
+        app.assistant.remote.chooser = Some(receiver);
+        assert!(!crate::assistant::can_restart_for_update(&app));
+        app.assistant.remote.chooser = None;
+        let controller = app.assistant.remote.controller.as_mut().unwrap();
+        controller.status.busy = true;
+        controller.status.settings_busy = true;
+        app.assistant.widget.busy = true;
+        app.assistant.widget.settings.busy = true;
+        assert!(crate::assistant::can_restart_for_update(&app), "stale failed-helper flags must not hold the app hostage");
     }
 }

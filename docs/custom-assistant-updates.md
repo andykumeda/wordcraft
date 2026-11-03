@@ -66,7 +66,9 @@ configured local certificate identity under that opt-in policy). A release-side
 manifest alone cannot establish compatibility or publisher identity.
 
 Updates retain the existing save-before-restart safeguard. No app update starts over unsaved
-work. App updates are macOS-only for this first delivery; no unsigned/ad-hoc package or other
+work or an active/pending assistant operation. The host also preserves assistant drafts and
+settings edits. If a pending frame keeps an update deferred, finish or stop the chat, save its
+settings and close the assistant panel before restarting. App updates are macOS-only for this first delivery; no unsigned/ad-hoc package or other
 publisher is accepted. The assistant's own update remains independent of this flow.
 
 ## Delivery state

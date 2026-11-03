@@ -116,11 +116,17 @@ pub(crate) fn tick(app: &mut WordApp, ctx: &egui::Context) {
     let _ = (app, ctx);
 }
 
+#[cfg(not(target_arch = "wasm32"))]
+fn can_restart(app: &WordApp) -> bool {
+    !(app.session.dirty || app.save_unconfirmed() || app.printing.busy() || crate::panes::has_comment_drafts(app))
+        && crate::assistant::can_restart_for_update(app)
+}
+
 pub(crate) fn show(app: &mut WordApp, ctx: &egui::Context) {
     #[cfg(not(target_arch = "wasm32"))]
     if !app.updates_rt.disabled {
         // The restart helper is scheduled before the app closes, so no update starts over unsaved work.
-        let clean = !(app.session.dirty || app.save_unconfirmed() || app.printing.busy() || crate::panes::has_comment_drafts(app));
+        let clean = can_restart(app);
         match app.updates_rt.updater.show_if(ctx, clean) {
             Action::OpenUrl(url) => ctx.open_url(egui::OpenUrl::new_tab(url)),
             Action::Close => ctx.send_viewport_cmd(egui::ViewportCommand::Close),
@@ -223,6 +229,27 @@ mod tests {
         assert!(!text.contains("All releases are listed"), "{text}");
         assert!(app.updates_rt.manual_window_open);
         output.drop_without_applying_deltas();
+    }
+
+    #[test]
+    fn clean_document_does_not_allow_updates_over_active_assistant_work() {
+        let mut app = WordApp::new(wordcraft_engine::Session::new(wordcraft_doc::Document::new()), Default::default());
+        assert!(can_restart(&app));
+        app.assistant.widget.busy = true;
+        assert!(!can_restart(&app));
+        app.assistant.widget.busy = false;
+        app.assistant.widget.settings.busy = true;
+        assert!(!can_restart(&app));
+        app.assistant.widget.settings.busy = false;
+        app.assistant.widget.draft = "synthetic unsent prompt".into();
+        assert!(!can_restart(&app));
+        app.assistant.widget.draft.clear();
+        app.assistant.widget.settings.connection.label = "synthetic unsaved connection".into();
+        assert!(!can_restart(&app));
+        app.assistant.widget.settings = Default::default();
+        assert!(can_restart(&app));
+        app.session.run("text.insert", &serde_json::json!({"text":"synthetic edit"})).unwrap();
+        assert!(!can_restart(&app), "existing dirty-document guard remains authoritative");
     }
 
     #[test]

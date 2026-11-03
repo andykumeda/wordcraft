@@ -47,6 +47,19 @@ impl WordApp {
     }
 }
 
+/// App updates must preserve chat handoff, document-tool dispatch and unsaved assistant work.
+#[cfg(not(target_arch = "wasm32"))]
+pub(crate) fn can_restart_for_update(app: &WordApp) -> bool {
+    if app.assistant.dispatching {
+        return false;
+    }
+    if app.assistant.remote.enabled {
+        return app.assistant.remote.restart_safe();
+    }
+    let widget = &app.assistant.widget;
+    !widget.busy && !widget.settings.busy && widget.draft.is_empty() && !widget.settings.has_unsaved_edits() && app.assistant.native.restart_safe()
+}
+
 pub(crate) fn owns_keyboard(app: &WordApp) -> bool {
     #[cfg(not(target_arch = "wasm32"))]
     {

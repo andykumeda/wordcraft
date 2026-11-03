@@ -59,6 +59,9 @@ impl Native {
         }
     }
 
+    pub(super) fn restart_safe(&self) -> bool {
+        self.turn.is_none() && self.dispatch_cancel.is_none() && self.job.is_none() && self.chooser.is_none()
+    }
     pub(super) fn cancel(&self) {
         self.job_cancel.cancel();
         if let Some(cancel) = &self.dispatch_cancel {
@@ -1512,5 +1515,32 @@ mod tests {
         app.assistant.native.dispatch_cancel = Some(cancel.clone());
         action(&mut app, Action::Stop).unwrap();
         assert!(cancel.is_cancelled());
+    }
+}
+
+#[cfg(test)]
+mod restart_tests {
+    use super::*;
+    #[test]
+    fn app_update_waits_for_native_turn_job_and_reentrant_dispatch_without_cancelling() {
+        let mut app = WordApp::new(wordcraft_engine::Session::new(wordcraft_doc::Document::new()), Default::default());
+        let (event_sender, events) = mpsc::channel();
+        let (call_sender, calls) = mpsc::channel();
+        let cancel = Cancellation::default();
+        let guard = Guard::new(&app, String::new(), vec![]);
+        app.assistant.native.turn = Some(Turn { events, calls, cancel: cancel.clone(), guard, fresh_text: false, pending_activity: vec![] });
+        assert!(!crate::assistant::can_restart_for_update(&app));
+        assert!(!cancel.is_cancelled());
+        app.assistant.native.turn = None;
+        drop((event_sender, call_sender));
+        let (_sender, receiver) = mpsc::channel();
+        app.assistant.native.job = Some(receiver);
+        assert!(!crate::assistant::can_restart_for_update(&app));
+        app.assistant.native.job = None;
+        app.assistant.native.dispatch_cancel = Some(cancel.clone());
+        assert!(!crate::assistant::can_restart_for_update(&app));
+        assert!(!cancel.is_cancelled());
+        app.assistant.native.dispatch_cancel = None;
+        assert!(crate::assistant::can_restart_for_update(&app));
     }
 }
