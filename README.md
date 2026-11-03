@@ -159,8 +159,9 @@ This branch includes an integrated assistant preview. It is installed as
 `/Applications/WordCraft Assistant Preview.app`, separately from the normal app, and delivered
 as a versioned Apple-silicon DMG. Its launcher disables the standard updater so an official
 release cannot replace the custom preview. Upstream changes are integrated and verified before
-new preview builds. Models/providers remain externally configurable; a separate background
-Assistant service is design work, not an implemented feature. See [preview updates](docs/assistant-updates.md).
+new preview builds. Models/providers remain externally configurable. This installed preview
+predates the independently updated helper implemented in the current source below; it has not
+been replaced by this task. See [preview updates](docs/assistant-updates.md).
 
 ## For agents: CLI and MCP
 
@@ -413,5 +414,7 @@ Forks and modified versions must remove them.
 ## Independently updated assistant (custom desktop builds)
 
 The desktop entry point uses a separately installed shared assistant for its embedded sidebar. Model/provider defaults and authentication are shared across PDFCraft, WordCraft and GridCraft; chats and document permissions remain separate. Initial app builds must include the bridge. Compatible assistant releases then update once for all three apps without rebuilding their binaries.
+
+The panel uses all 17 tools from the same live MCP server as external clients, with unchanged schemas, descriptor metadata, image/results and normal permissions. See [MCP parity evidence](docs/mcp-assistant-parity.md).
 
 See [custom assistant and app updates](docs/custom-assistant-updates.md) for configuration, approved updates and compatibility safeguards. This implementation is not an installed release: native accessibility/input acceptance and signed update installation remain pending.

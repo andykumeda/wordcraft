@@ -11,9 +11,9 @@ rust-version = "1.95"
 repository = "https://github.com/storytold/wordcraft"
 
 [workspace.dependencies]
-craft-assistant = { git = "https://github.com/andykumeda/craft-libs", rev = "17c5ea725866fa2e8f7f89a6cb3bec269ad8d571", version = "0.1.0" }
-craft-ai-core = { git = "https://github.com/andykumeda/craft-libs", rev = "17c5ea725866fa2e8f7f89a6cb3bec269ad8d571" }
-craft-ai-native = { git = "https://github.com/andykumeda/craft-libs", rev = "17c5ea725866fa2e8f7f89a6cb3bec269ad8d571" }
+craft-assistant = { git = "https://github.com/andykumeda/craft-libs", rev = "c28f430ee4e932e7cbfa9e149b92f24e0f0bc202", version = "0.1.0" }
+craft-ai-core = { git = "https://github.com/andykumeda/craft-libs", rev = "c28f430ee4e932e7cbfa9e149b92f24e0f0bc202" }
+craft-ai-native = { git = "https://github.com/andykumeda/craft-libs", rev = "c28f430ee4e932e7cbfa9e149b92f24e0f0bc202" }
 # internal
 wordcraft-geom = { path = "crates/geom" }
 wordcraft-doc = { path = "crates/doc" }
@@ -61,8 +61,8 @@ wuff = "0.2.9"
 brotli-decompressor = "5"
 vello_cpu = "0.2"
 image = { version = "0.25", default-features = false, features = ["png", "jpeg", "webp", "gif", "bmp", "tiff"] }
-craft-pdf = { git = "https://github.com/andykumeda/craft-libs", rev = "17c5ea725866fa2e8f7f89a6cb3bec269ad8d571", version = "=0.1.0", default-features = false, features = ["write"] }
-craft-update = { git = "https://github.com/andykumeda/craft-libs", version = "=0.1.0", rev = "17c5ea725866fa2e8f7f89a6cb3bec269ad8d571", features = ["egui"] }
+craft-pdf = { git = "https://github.com/andykumeda/craft-libs", rev = "c28f430ee4e932e7cbfa9e149b92f24e0f0bc202", version = "=0.1.0", default-features = false, features = ["write"] }
+craft-update = { git = "https://github.com/andykumeda/craft-libs", version = "=0.1.0", rev = "c28f430ee4e932e7cbfa9e149b92f24e0f0bc202", features = ["egui"] }
 quick-xml = "0.41"
 zip = { version = "3", default-features = false, features = ["deflate"] }
 # zlib streams (compressed metafile pictures in `.doc` drawings); already in the lock as a dependency of other crates.
@@ -125,7 +125,7 @@ debug = 0
 
 # Required by craft-pdf: the backend rejects writers that failed during unwinding.
 [patch.crates-io]
-krilla = { git = "https://github.com/andykumeda/craft-libs", rev = "17c5ea725866fa2e8f7f89a6cb3bec269ad8d571" }
+krilla = { git = "https://github.com/andykumeda/craft-libs", rev = "c28f430ee4e932e7cbfa9e149b92f24e0f0bc202" }
 ecolor = { git = "https://github.com/storytold/egui.git", rev = "6d518fc799681571963842f95b55a6b68431b15a" }
 emath = { git = "https://github.com/storytold/egui.git", rev = "6d518fc799681571963842f95b55a6b68431b15a" }
 epaint = { git = "https://github.com/storytold/egui.git", rev = "6d518fc799681571963842f95b55a6b68431b15a" }

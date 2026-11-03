@@ -1,5 +1,7 @@
 # Portable assistant implementation ledger
 
+Current source (2026-11-02): full side-panel and external MCP capability parity is verified by focused automated tests. The [full MCP parity change](mcp-assistant-parity.md) supersedes the assistant-only document, command and exact-file restrictions described in earlier historical entries below. This increment is not yet an installed release.
+
 Updated 2026-10-29 (America/Los_Angeles). **Core single-model implementation: Verified and Deployed at `9c6c2cb0`; full MCP capability parity and reliable local-model acceptance remain open.**
 The original shared and WordCraft automated gates passed, and a real local model completed MCP
 read/edit/read-back/Undo acceptance. The Codex live follow-up found and repaired a continuation

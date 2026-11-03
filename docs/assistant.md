@@ -1,5 +1,7 @@
 # Desktop assistant
 
+Current source uses the independently updated shared helper and the [complete external MCP interface](mcp-assistant-parity.md). The installed preview described below is an earlier build; this task has not replaced it.
+
 Status: preview **0.12.0 (`9c6c2cb0`)** installed at
 `/Applications/WordCraft Assistant Preview.app`, 2026-10-29. Single-model settings, View discovery
 and disabled-updater smoke passed. Sol/Terra actual document/readback/save/reopen/Undo checks and
