@@ -468,6 +468,7 @@ fn main() -> eframe::Result {
             let mut session = Session::new(doc);
             session.system_region = region;
             let mut app = WordApp::new(session, services(file_dialog, &cc.egui_ctx));
+            app.enable_shared_assistant();
             app.set_startup_update_check(true);
             if disable_updates {
                 app.disable_updates();

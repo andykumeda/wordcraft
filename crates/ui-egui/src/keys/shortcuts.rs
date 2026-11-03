@@ -248,6 +248,9 @@ pub(super) fn is_global_shortcut(key: Key, m: Modifiers) -> bool {
 /// keyboard, or a button or a pane's title bar does. A focused widget in an open dialog or popup
 /// keeps the keys, so Ctrl+Z on a dialog button can't undo the document behind it.
 pub fn global_shortcuts(app: &mut WordApp, ctx: &egui::Context) {
+    if crate::assistant::owns_keyboard(app) {
+        return;
+    }
     // Customize Keyboard records the keys pressed; they never run commands meanwhile.
     if app.canvas.focused
         || ctx.text_edit_focused()

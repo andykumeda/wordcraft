@@ -12,6 +12,9 @@ use super::{Key, Modifiers, WordApp, json};
 /// Events for the focused canvas: text, editing keys, clipboard, IME. While keytips are showing
 /// every key belongs to them (letters pick badges, Escape cancels), so nothing here runs.
 pub fn canvas_events(app: &mut WordApp, ctx: &egui::Context) {
+    if crate::assistant::owns_keyboard(app) {
+        return;
+    }
     if app.ui.keytips != crate::keytips::Phase::Off {
         return;
     }

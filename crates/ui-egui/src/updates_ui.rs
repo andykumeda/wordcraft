@@ -40,6 +40,15 @@ impl Default for Runtime {
 }
 
 impl WordApp {
+    /// Uses only explicitly configured assistant-enabled releases; never falls back upstream.
+    /// Call when attaching the independently installed assistant bridge. An explicit update
+    /// opt-out remains in force.
+    #[cfg(not(target_arch = "wasm32"))]
+    pub fn configure_assistant_updates(&mut self, bridge_protocol: u32) {
+        let root = craft_ai_native::storage::SharedStore::default_root().map_err(|error| error.to_string());
+        self.updates_rt.updater = craft_update::custom::updater(&craft_update::suite::WORDCRAFT, env!("CARGO_PKG_VERSION"), root, bridge_protocol);
+    }
+
     /// Separately packaged builds must not install a standard WordCraft release over themselves.
     pub fn disable_updates(&mut self) {
         self.updates_rt.disabled = true;
@@ -128,6 +137,10 @@ pub(crate) fn show(app: &mut WordApp, ctx: &egui::Context) {
             .collapsible(false)
             .anchor(egui::Align2::CENTER_CENTER, egui::vec2(0.0, 0.0))
             .show(ctx, |ui| {
+                #[cfg(not(target_arch = "wasm32"))]
+                if let Some(repo) = app.updates_rt.updater.repository() {
+                    ui.label(tl!("Update source: {repo}").replace("{repo}", repo));
+                }
                 if let Some(msg) = &app.updates_rt.status_message {
                     ui.label(msg);
                 } else {
@@ -165,6 +178,7 @@ mod tests {
         check(&mut app);
         assert!(app.updates_rt.check_requested);
         app.disable_updates();
+        app.configure_assistant_updates(1);
         assert!(!app.updates_rt.startup_check);
         assert!(!app.updates_rt.check_requested);
         let ctx = egui::Context::default();

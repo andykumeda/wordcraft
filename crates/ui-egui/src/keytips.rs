@@ -732,6 +732,9 @@ fn alt_transition(app: &mut WordApp, pressed: bool, modifiers: egui::Modifiers) 
 /// uses. On macOS they never arm from Alt at all, because Option is how you type accented
 /// characters there and hijacking it would swallow the next letter.
 pub fn logic(app: &mut WordApp, ctx: &egui::Context) {
+    if crate::assistant::owns_keyboard(app) {
+        return;
+    }
     if suppressed(app, ctx) || !ctx.input(|i| i.focused) {
         app.ui.keytips = Phase::Off;
         app.ui.keytip_prefix.clear();

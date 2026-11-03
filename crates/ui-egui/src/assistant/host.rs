@@ -53,6 +53,10 @@ impl SelectionState {
 }
 
 impl Guard {
+    pub(super) fn target(&self) -> Target {
+        Target { id: self.document.to_string(), revision: self.revision }
+    }
+
     pub(super) fn new(app: &WordApp, prompt: String, mut files: Vec<String>) -> Self {
         files.extend(named_files(&prompt));
         files.sort();

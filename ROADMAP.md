@@ -1021,3 +1021,5 @@ Footer page-table height and body wrapping are corrected. Other pagination gaps 
 | 2026-10-23 | trivial | Progress log: justified lines ending in a manual line break reach the margin (#3924) |
 | 2026-10-23 | trivial | Progress log: "NaN" in the Font dialog's Size box no longer closes the app (#3663) |
 | 2026-10-23 | trivial | Progress log: a table cell span from a `.json` file no longer overflows (#3637) |
+
+- 2026-11-02 — A2: desktop adapter for an independently installed embedded assistant; shared global model/auth, app-owned guarded tools, explicit update/reload automation and customized source checks. Shared tests: 228 passed / 4 ignored. Consumer UI compilation passed; native linked/installed acceptance remains pending. See `docs/custom-assistant-updates.md`.

@@ -9,6 +9,8 @@ use crate::WordApp;
 mod host;
 #[cfg(not(target_arch = "wasm32"))]
 mod native;
+#[cfg(not(target_arch = "wasm32"))]
+mod remote;
 
 #[derive(Default)]
 pub struct Assistant {
@@ -19,12 +21,41 @@ pub struct Assistant {
     pub(crate) requested_dialog: bool,
     #[cfg(not(target_arch = "wasm32"))]
     native: native::Native,
+    #[cfg(not(target_arch = "wasm32"))]
+    remote: remote::Remote,
 }
 
 impl Drop for Assistant {
     fn drop(&mut self) {
         #[cfg(not(target_arch = "wasm32"))]
         self.native.cancel();
+        #[cfg(not(target_arch = "wasm32"))]
+        self.remote.cancel();
+    }
+}
+
+impl WordApp {
+    /// Attaches the independently installed assistant and its explicit app-update source.
+    /// Desktop entry points call this once before startup update checks.
+    #[cfg(not(target_arch = "wasm32"))]
+    pub fn enable_shared_assistant(&mut self) {
+        self.assistant.native.cancel();
+        self.assistant.remote.enabled = true;
+        self.assistant.enabled = true;
+        self.assistant.widget.available = true;
+        self.configure_assistant_updates(craft_assistant::config::compatibility().protocol);
+    }
+}
+
+pub(crate) fn owns_keyboard(app: &WordApp) -> bool {
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        app.assistant.remote.enabled && app.assistant.remote.owns_keyboard()
+    }
+    #[cfg(target_arch = "wasm32")]
+    {
+        let _ = app;
+        false
     }
 }
 
@@ -35,12 +66,25 @@ pub fn commands() -> Vec<Value> {
         json!({"id":"ui.assistant.newChat","label":"New assistant chat","location":"Agents","params":"{}","enabled":cfg!(not(target_arch="wasm32"))}),
         json!({"id":"ui.assistant.stop","label":"Stop assistant","location":"Agents","params":"{}","enabled":true}),
         json!({"id":"ui.assistant.status","label":"Assistant status","location":"Agents","params":"{}","enabled":true}),
+        json!({"id":"ui.assistant.updateCheck","label":"Check shared assistant updates","location":"Agents","params":"{}","enabled":cfg!(not(target_arch="wasm32"))}),
+        json!({"id":"ui.assistant.updateInstall","label":"Install offered shared assistant update","location":"Agents","params":"{}","enabled":cfg!(not(target_arch="wasm32"))}),
+        json!({"id":"ui.assistant.updateStatus","label":"Shared assistant update status","location":"Agents","params":"{}","enabled":cfg!(not(target_arch="wasm32"))}),
+        json!({"id":"ui.assistant.reloadComponent","label":"Reload shared assistant component","location":"Agents","params":"{}","enabled":cfg!(not(target_arch="wasm32"))}),
     ]
 }
 
 pub(crate) fn command(app: &mut WordApp, id: &str, params: &Value) -> Option<Result<Value, String>> {
     if !id.starts_with("ui.assistant") {
         return None;
+    }
+    if matches!(id, "ui.assistant.updateCheck" | "ui.assistant.updateInstall" | "ui.assistant.updateStatus" | "ui.assistant.reloadComponent") {
+        if !params.as_object().is_some_and(serde_json::Map::is_empty) {
+            return Some(Err("This assistant service command takes an empty parameter object.".into()));
+        }
+        #[cfg(not(target_arch = "wasm32"))]
+        return Some(remote::service_command(app, id));
+        #[cfg(target_arch = "wasm32")]
+        return Some(Err("The shared assistant is available in the desktop app.".into()));
     }
     let result = match id {
         "ui.assistant" => {
@@ -75,6 +119,11 @@ pub(crate) fn command(app: &mut WordApp, id: &str, params: &Value) -> Option<Res
 }
 
 pub fn pane(app: &mut WordApp, ui: &mut egui::Ui) {
+    #[cfg(not(target_arch = "wasm32"))]
+    if app.assistant.remote.enabled {
+        remote::show(app, ui, false);
+        return;
+    }
     ensure_loaded(app);
     if !app.assistant.widget.busy {
         app.assistant.widget.target_label = app.title_stem();
@@ -85,6 +134,11 @@ pub fn pane(app: &mut WordApp, ui: &mut egui::Ui) {
 }
 
 pub fn settings(app: &mut WordApp, ui: &mut egui::Ui) {
+    #[cfg(not(target_arch = "wasm32"))]
+    if app.assistant.remote.enabled {
+        remote::show(app, ui, true);
+        return;
+    }
     ensure_loaded(app);
     if !app.assistant.enabled {
         ui.label(tl!("The assistant is available in the desktop app."));
@@ -106,12 +160,21 @@ fn apply_actions(app: &mut WordApp, actions: Vec<Action>) {
 
 fn ensure_loaded(app: &mut WordApp) {
     #[cfg(not(target_arch = "wasm32"))]
+    if app.assistant.remote.enabled {
+        remote::ensure_loaded(app);
+        return;
+    }
+    #[cfg(not(target_arch = "wasm32"))]
     native::ensure_loaded(app);
     #[cfg(target_arch = "wasm32")]
     let _ = app;
 }
 
 fn action(app: &mut WordApp, action: Action) -> Result<(), String> {
+    #[cfg(not(target_arch = "wasm32"))]
+    if app.assistant.remote.enabled {
+        return remote::action(app, action);
+    }
     #[cfg(not(target_arch = "wasm32"))]
     {
         native::action(app, action)
@@ -125,7 +188,29 @@ fn action(app: &mut WordApp, action: Action) -> Result<(), String> {
 
 pub(crate) fn poll(app: &mut WordApp, ctx: &egui::Context) {
     #[cfg(not(target_arch = "wasm32"))]
+    if app.assistant.remote.enabled {
+        remote::poll(app, ctx);
+        return;
+    }
+    #[cfg(not(target_arch = "wasm32"))]
     native::poll(app, ctx);
     #[cfg(target_arch = "wasm32")]
     let _ = (app, ctx);
+}
+
+#[cfg(all(test, not(target_arch = "wasm32")))]
+mod shared_component_commands {
+    use super::*;
+    #[test]
+    fn update_controls_require_activation_and_report_status_without_starting_a_helper() {
+        let mut app = WordApp::new(wordcraft_engine::Session::new(wordcraft_doc::Document::new()), Default::default());
+        for id in ["ui.assistant.updateCheck", "ui.assistant.updateInstall", "ui.assistant.reloadComponent"] {
+            assert!(command(&mut app, id, &json!({})).unwrap().is_err());
+        }
+        app.enable_shared_assistant();
+        assert!(app.assistant.remote.enabled);
+        assert!(command(&mut app, "ui.assistant.updateStatus", &json!({})).unwrap().is_ok());
+        assert!(command(&mut app, "ui.assistant.updateStatus", &json!({"source":"untrusted"})).unwrap().is_err());
+        assert!(command(&mut app, "ui.assistant.updateCheck", &json!({})).unwrap().unwrap_err().contains("active app window"));
+    }
 }
