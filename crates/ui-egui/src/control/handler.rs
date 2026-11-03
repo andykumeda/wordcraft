@@ -25,6 +25,7 @@ pub fn inspect(app: &mut WordApp, ctx: &egui::Context) -> Value {
         "ui": app.prefs(),
         "view": view,
         "interfaceTheme": {"setting":app.ui.theme.code(), "effective":if app.ui_is_dark() {"dark"} else {"light"}},
+        "proofing": app.spelling_review,
         "dialog": app.dialog.as_ref().map(|d| serde_json::to_value(d).unwrap_or_default()),
         "window": [r.width(), r.height()],
         "canvasRect": app.canvas.canvas_rect.map(|c| [c.left(), c.top(), c.width(), c.height()]),

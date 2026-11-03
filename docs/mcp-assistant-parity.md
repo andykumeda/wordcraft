@@ -65,3 +65,9 @@ raw-input hook before screenshot admission; rendering and screenshot results mat
 Native installed-app and live-provider acceptance remain pending for this increment. Earlier
 document-scope restrictions and their historical tests in the assistant implementation ledger
 are superseded by this explicit MCP-parity requirement.
+
+## Upstream 0.15 source reconciliation
+
+The independently verified 0.15 integration and final shared Git pin are recorded in
+[the integration ledger](upstream-assistant-v015.md). Its assistant/control/updater and MCP
+regressions pass; the older results above describe the pre-reconciliation source.

@@ -32,6 +32,13 @@ Configure the other apps as additional entries in the same file. Restart the app
 source configuration. Missing, malformed, unavailable or incompatible sources report an error;
 they never select upstream or another publisher.
 
+For an explicitly approved local-only signed distribution, the same entry may additionally
+set `local_certificate_sha1` to the signing certificate's exact 40-character hexadecimal SHA-1
+identity. This opts into that certificate instead of Apple's Developer ID/notarization trust
+requirement; cryptographic signature verification, the configured team identity, bundle/source
+metadata and package checksum still apply. Omitting it keeps the ordinary Apple-trusted policy.
+Unsigned and ad-hoc packages remain refused.
+
 ## Release contract
 
 Customized macOS releases must preserve the installed app's `ai.storyteller.wordcraft` bundle
@@ -54,7 +61,8 @@ The tag must equal the release tag. Before code signing, the app's `Contents/Inf
 include `CraftAssistantBridgeProtocol` (integer) and `CraftUpdateRepository` (string) matching
 that source policy. The package must publish a SHA-256 digest through GitHub's asset digest or
 `SHA256SUMS.txt`. Installation verifies the checksum, configured Developer ID signature, bundle
-identity, version and signed bridge/source metadata before replacing anything. A release-side
+identity, version and signed bridge/source metadata before replacing anything (or the explicitly
+configured local certificate identity under that opt-in policy). A release-side
 manifest alone cannot establish compatibility or publisher identity.
 
 Updates retain the existing save-before-restart safeguard. No app update starts over unsaved
@@ -63,10 +71,11 @@ publisher is accepted. The assistant's own update remains independent of this fl
 
 ## Delivery state
 
-No source file has been written into a user's settings, no repository has been created, and no
-release or installed app was changed by this implementation. The WordCraft fork
-`andykumeda/wordcraft` returned HTTP 404 during read-only verification on 2026-11-02; do not
-configure that destination until it exists and publishes compatible signed releases.
+No source file has been written into a user's settings, and no public release or installed
+app was changed by this update integration. The initial read-only check for
+`andykumeda/wordcraft` returned HTTP 404 on 2026-11-02; the task fork was subsequently created
+and source task branches pushed. A compatible signed release remains a separate delivery step;
+do not configure an unverified release as an update source.
 
 ## Embedded component controls
 
@@ -104,3 +113,21 @@ work. No published release or installed application was changed.
 Shared implementation pin: `andykumeda/craft-libs@17c5ea725866fa2e8f7f89a6cb3bec269ad8d571` (task branch `codex/independent-assistant`). All shared dependencies use that revision together. Cargo locks must resolve the published Git source, never the temporary local verification patch.
 
 The shared assistant/config/installer/updater final test run passed **228 tests, 4 ignored**. PDF production UI Clippy and Word/Grid production UI checks passed against byte-identical reviewed local source before publishing this pin. Native consumer test links were deferred for disk headroom; do not treat compilation as installed acceptance. No release or user configuration was changed.
+
+## Signed package metadata
+
+Both macOS packagers accept the paired explicit inputs `CRAFT_UPDATE_REPOSITORY=owner/repository`
+and `CRAFT_ASSISTANT_BRIDGE_PROTOCOL=1`. When supplied, they write the source string and integer
+protocol into `Info.plist` before signing. Both inputs are required together; neither has a
+source default. Omitting both preserves ordinary package metadata. The chosen protocol must
+match the built shared bridge.
+
+`packaging/macos/test-assistant-metadata.sh` verifies both bundle variants, omitted metadata and
+invalid inputs with synthetic plists. The preview retains its distinct bundle identifier,
+profile directory and launcher `--disable-updates`; compatibility metadata does not enable its
+updater or make it interchangeable with the standard app.
+
+Signed candidate resources include the app licenses/attribution, embedded Latin and pinned
+craft-fonts font licenses, and the pinned craft-i18n attribution, proofing manifest and standard
+license texts. Upstream trademark artwork is omitted from this modified build; original
+trademark terms and copyright notices remain included.

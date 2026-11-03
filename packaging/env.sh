@@ -52,7 +52,30 @@ copy_docs() {
   for f in README.md LICENSE LICENSE-MIT LICENSE-APACHE COPYRIGHT NOTICE ATTRIBUTION.md; do
     if [[ -f "$ROOT/$f" ]]; then cp "$ROOT/$f" "$dest/"; fi
   done
+  if [[ -f "$ROOT/docs/brand/LICENSE-brand.txt" ]]; then
+    mkdir -p "$dest/docs/brand"
+    cp "$ROOT/docs/brand/LICENSE-brand.txt" "$dest/docs/brand/"
+  fi
+  # NOTICE refers to these embedded Latin faces' license paths; retain that layout.
+  mkdir -p "$dest/assets/fonts"
+  for f in "$ROOT"/assets/fonts/OFL-*.txt; do
+    if [[ -f "$f" ]]; then cp "$f" "$dest/assets/fonts/"; fi
+  done
   copy_font_licences "$dest"
+  # The release input embeds translation catalogs and proofing data under their own notices.
+  if [[ -n "${CRAFT_I18N_DIR:-}" ]]; then
+    local input_docs="$dest/build-inputs/craft-i18n"
+    mkdir -p "$input_docs/language-data/licences"
+    for f in "$CRAFT_I18N_DIR"/LICENSE* "$CRAFT_I18N_DIR"/NOTICE* "$CRAFT_I18N_DIR"/ATTRIBUTION*; do
+      if [[ -f "$f" ]]; then cp "$f" "$input_docs/"; fi
+    done
+    if [[ -f "$CRAFT_I18N_DIR/language-data/manifest.toml" ]]; then
+      cp "$CRAFT_I18N_DIR/language-data/manifest.toml" "$input_docs/language-data/"
+    fi
+    for f in "$CRAFT_I18N_DIR"/language-data/licences/*.txt; do
+      if [[ -f "$f" ]]; then cp "$f" "$input_docs/language-data/licences/"; fi
+    done
+  fi
   return 0
 }
 
@@ -71,4 +94,26 @@ sha256() {
   local file="$1"
   if command -v sha256sum >/dev/null; then sha256sum "$file" | cut -d' ' -f1; else shasum -a 256 "$file" | cut -d' ' -f1; fi
   return $?
+}
+
+# Optional signed assistant compatibility metadata. Both values are supplied by the
+# packager's explicit release configuration; ordinary packages have neither field.
+write_assistant_update_metadata() {
+  local app_info="$1" app_repo="${CRAFT_UPDATE_REPOSITORY:-}" bridge="${CRAFT_ASSISTANT_BRIDGE_PROTOCOL:-}"
+  if [[ -z "$app_repo" && -z "$bridge" ]]; then return 0; fi
+  if [[ -z "$app_repo" || ! "$app_repo" =~ ^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$ ||
+        "${app_repo%/*}" = . || "${app_repo%/*}" = .. || "${app_repo#*/}" = . || "${app_repo#*/}" = .. ]]; then
+    echo "error: configure CRAFT_UPDATE_REPOSITORY as owner/repository together with CRAFT_ASSISTANT_BRIDGE_PROTOCOL" >&2
+    return 2
+  fi
+  if [[ ! "$bridge" =~ ^[1-9][0-9]*$ || ${#bridge} -gt 10 ]]; then
+    echo "error: CRAFT_ASSISTANT_BRIDGE_PROTOCOL must be a nonzero u32" >&2
+    return 2
+  fi
+  if (( 10#$bridge > 4294967295 )); then
+    echo "error: CRAFT_ASSISTANT_BRIDGE_PROTOCOL exceeds u32" >&2
+    return 2
+  fi
+  plutil -replace CraftUpdateRepository -string "$app_repo" "$app_info"
+  plutil -replace CraftAssistantBridgeProtocol -integer "$bridge" "$app_info"
 }

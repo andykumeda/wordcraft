@@ -56,6 +56,7 @@ pub enum Pane {
     AltText,
     FormatShape,
     RestrictEditing,
+    Proofing,
     Comments,
     Assistant,
 }
@@ -72,6 +73,7 @@ impl Pane {
             Self::AltText => "Alt Text",
             Self::FormatShape => "Format Shape",
             Self::RestrictEditing => "Restrict Editing",
+            Self::Proofing => "Proofing",
             Self::Comments => "Comments",
             Self::Assistant => "Assistant",
         }
@@ -88,6 +90,7 @@ impl Pane {
             Self::AltText => (Edge::End, 260.0),
             Self::FormatShape => (Edge::End, 280.0),
             Self::RestrictEditing => (Edge::End, 270.0),
+            Self::Proofing => (Edge::End, 400.0),
             Self::Comments => (Edge::End, 290.0),
             Self::Assistant => (Edge::End, 360.0),
         };
@@ -106,12 +109,13 @@ impl Pane {
             Self::AltText => "altText",
             Self::FormatShape => "formatShape",
             Self::RestrictEditing => "restrictEditing",
+            Self::Proofing => "proofing",
             Self::Comments => "comments",
             Self::Assistant => "assistant",
         }
     }
 
-    const ALL: [Self; 11] = [
+    const ALL: [Self; 12] = [
         Self::SmartArtText,
         Self::Navigation,
         Self::Clipboard,
@@ -121,6 +125,7 @@ impl Pane {
         Self::AltText,
         Self::FormatShape,
         Self::RestrictEditing,
+        Self::Proofing,
         Self::Comments,
         Self::Assistant,
     ];
@@ -142,7 +147,7 @@ impl Pane {
             Self::FormatShape => Some("view.formatShapePane"),
             Self::Comments => Some("view.commentsPane"),
             Self::Assistant => Some("ui.assistant"),
-            Self::RestrictEditing => None,
+            Self::RestrictEditing | Self::Proofing => None,
         }
     }
 }
@@ -166,6 +171,7 @@ impl PaneContent<Pane> for Content<'_> {
                 egui::ScrollArea::vertical().show(ui, |ui| crate::format_shape::pane(app, ui));
             }
             Pane::RestrictEditing => crate::dialogs_review::restrict_pane(app, ui),
+            Pane::Proofing => crate::proofing_pane::show(app, ui),
             Pane::Comments => comments(app, ui),
             Pane::Assistant => crate::assistant::pane(app, ui),
         }
