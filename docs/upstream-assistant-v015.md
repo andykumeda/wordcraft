@@ -165,3 +165,21 @@ asset/layer/wasm checks. UI compilation used a temporary package `opt-level=0` o
 artifacts; no build configuration or dependency changes were committed. The full workspace CI
 sweep was not run during concurrent app verification. Native VoiceOver, live-provider inference,
 installed-app and other-Mac acceptance were not repeated for this placement-only source change.
+
+
+## Shared helper 0.1.4 delivery — 2026-11-04
+
+| Work | State | Acceptance and evidence |
+|---|---|---|
+| Hide tool-call and result rows | Deployed | Shared helper 0.1.4 installed with pinned local signature on Mini and MacBook; prior helper versions retained. App binaries and configuration were unchanged. |
+| Actual configured-model acceptance | Verified | Codex account `gpt-6.1-terra` edited a disposable document on both Macs; Undo, Redo, save and reopen passed. Mini 15.11 seconds, MacBook 13.18 seconds. The instruction not to save was followed; the test then saved to verify persistence. Conversation screenshots show no tool rows. |
+| Remaining checks | Not started | Native VoiceOver, IME and clipboard. The separate View toolbar source change remains uninstalled. |
+
+Cloud-provider routing can send document task content to the selected provider. Existing windows
+need Assistant closed and reopened to adopt the new helper. No public release was made.
+See the [shared rollout ledger](https://github.com/andykumeda/craft-libs/blob/codex/independent-assistant/docs/two-mac-rollout.md) for package hashes and receipts.
+
+The required `cargo xtask ci` passed all nine steps with the pinned `CRAFT_I18N_DIR`
+(`059cbf95`) and open-font input configured. An initial run without language data passed fmt
+and Clippy but failed the German hyphenation test; the corrected run passed. Logs are under
+`/private/tmp/craft-assistant-014-20261104/`.

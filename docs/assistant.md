@@ -237,3 +237,5 @@ OpenAI-compatible API cannot change this setting; configure a larger context in 
 (for example, `PARAMETER num_ctx` in a model's Modelfile). See
 [Ollama's context configuration](https://github.com/ollama/ollama/blob/main/docs/api/openai-compatibility.mdx#setting-the-local-context-size).
 No automatic retry or provider substitution occurs; completed edits can still be undone.
+
+The conversation hides tool-call, tool-result and activity rows; the assistant retains the underlying tool records for its work. Shared helper 0.1.4 is installed on both Macs.

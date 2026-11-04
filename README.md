@@ -157,7 +157,7 @@ new preview builds. Models/providers remain externally configurable. Installed v
 
 ## For agents: CLI and MCP
 
-The desktop [Assistant pane](docs/assistant.md) provides one conversation and selected model
+The desktop [Assistant pane](docs/assistant.md) hides tool activity rows and provides one conversation and selected model
 for chat and document work. Choose a model in the composer or open the gear for connection settings. The portable
 shared implementation is available in this branch; [verification and release gates](docs/assistant-implementation.md)
 track what has actually been tested.
