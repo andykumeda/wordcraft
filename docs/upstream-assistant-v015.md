@@ -99,7 +99,7 @@ hashes, report references and qualification limits are in
 | Workstream / owner | State | Acceptance / evidence | Delivery |
 | --- | --- | --- | --- |
 | Shared UI pin / Word owner | Verified | Pin host libraries 83e61084; exact workspace CI all nine stages passed; scoped assistant/control and packaging metadata checks passed | Source only |
-| Signed desktop candidates / Word owner | In progress | Required pinned font/proofing inputs; standard and preview signatures, protocol/repository metadata and extracted-image checks | Not installed |
+| Signed desktop candidates / Word owner | Verified | Source dbacf0c4, pinned required inputs, actual compiled source/arm64, exact local certificate/IDs, ZIP/DMG mounted-copy signatures and notice-byte checks passed | Ready for primary installation |
 
 The independently installed panel uses New chat/Chat history controls and a gear for settings,
 keeps update checks inside settings, and has compact
@@ -125,3 +125,16 @@ layering (19 crates) and WASM (15 crates). Engine tests passed 1148; UI passed 1
 explicitly ignored tests; integration suites passed. Earlier focused checks passed assistant 36
 (two ignored), control 26 and packaging metadata/shell syntax. Full CI was executed; live
 provider, manual visual captures and installed-app acceptance remain separate checks.
+
+Optimized desktop build from `dbacf0c4b5c9571ad1c03df83efb926895ee7444` succeeded with
+`WORDCRAFT_BUILD_SHA` set to that exact commit. Both variants report `wordcraft 0.15.0
+(dbacf0c4)`, are arm64, and carry signed protocol 1 / repository `andykumeda/wordcraft`
+metadata. Supported packagers verified standard/preview mounted DMG copies and preview ZIP
+extraction. Independent certificate/identifier, source/version and all license/notice byte
+checks passed. `APPLE_ID`, `APPLE_PASSWORD` and `APPLE_TEAM_ID` were explicitly unset; local
+certificate signing only, no notarization or public release.
+
+Artifacts and hashes are in [the candidate qualification](wordcraft-015-local-qualification.md#compact-layout-candidate--2026-11-03).
+The installed CLI was not changed. An unused CLI archive produced by the standard packager
+uses its pre-rollout cached executable and is excluded from this app delivery. Primary owns
+both-Mac installation, preserved-user-instance checks and final native qualification.
