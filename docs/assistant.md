@@ -19,7 +19,7 @@ saved/reopened content and formatting, and one normal Undo. Hosted-provider, bro
 adversarial containment and other-Mac acceptance remain open. This is a private local preview,
 not a public release; see [the implementation ledger](assistant-implementation.md).
 
-Open **View → Assistant** (the first ribbon button) or **Home → Assistant** to show or hide the pane. The pane can dock, float and
+Open **View → Assistant** (pinned at the far right of the ribbon, outside its scrolling groups) or **Home → Assistant** to show or hide the pane. The pane can dock, float and
 resize like the other task panes. Open the gear for connection/model settings in the compact panel.
 The app also retains its Options connection editor. Browser inference is not available.
 

@@ -327,85 +327,88 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
             let bg = ui.interact(ui.max_rect(), ui.scope_id().with("ribbon_background"), Sense::click());
             bg.context_menu(|ui| crate::widgets::customize_menu_items(ui, app));
             let entry = user_tabs.iter().find(|e| e.name == app.ui.tab);
-            let ribbon_width = ui.available_width() - 4.0;
-            // 0.37 keeps the scroll offset private: an edge-chevron click leaves a one-frame
-            // request here and the next scroll area is built at that offset.
-            let pending_id = ui.scope_id().with("ribbon_scroll_pending");
-            let pending = ui.data(|d| d.get_temp::<f32>(pending_id));
-            let mut area = egui::ScrollArea::horizontal().scroll_bar_visibility(egui::scroll_area::ScrollBarVisibility::AlwaysHidden);
-            if let Some(x) = pending {
-                area = area.horizontal_scroll_offset(x);
-            }
-            let scroll = area.show(ui, |ui| {
-                ui.horizontal_top(|ui| {
-                    ui.spacing_mut().item_spacing = vec2(2.0, 2.0);
-                    let start = ui.cursor().min.x;
-                    if app.ui.tab == "View" && entry.is_none_or(|entry| !entry.hidden && !entry.custom) {
-                        common::assistant_button(app, ui);
-                        ui.add_space(10.0);
+            ui.with_layout(egui::Layout::right_to_left(egui::Align::Min), |ui| {
+                if app.ui.tab == "View" && entry.is_none_or(|entry| !entry.hidden && !entry.custom) {
+                    common::assistant_button(app, ui);
+                    ui.add_space(10.0);
+                }
+                ui.with_layout(egui::Layout::left_to_right(egui::Align::Min), |ui| {
+                    let ribbon_width = ui.available_width() - 4.0;
+                    // 0.37 keeps the scroll offset private: an edge-chevron click leaves a one-frame
+                    // request here and the next scroll area is built at that offset.
+                    let pending_id = ui.scope_id().with("ribbon_scroll_pending");
+                    let pending = ui.data(|d| d.get_temp::<f32>(pending_id));
+                    let mut area = egui::ScrollArea::horizontal().scroll_bar_visibility(egui::scroll_area::ScrollBarVisibility::AlwaysHidden);
+                    if let Some(x) = pending {
+                        area = area.horizontal_scroll_offset(x);
                     }
-                    crate::ribbon_fit::begin(ui.ctx(), &app.ui.tab, ribbon_width - (ui.cursor().min.x - start));
-                    match entry {
-                        // Every tab hidden: nothing to show.
-                        Some(e) if e.hidden => return,
-                        Some(e) if e.custom => return custom_groups(app, ui, &e.groups),
-                        _ => {}
+                    let scroll = area.show(ui, |ui| {
+                        ui.horizontal_top(|ui| {
+                            ui.spacing_mut().item_spacing = vec2(2.0, 2.0);
+                            crate::ribbon_fit::begin(ui.ctx(), &app.ui.tab, ribbon_width);
+                            match entry {
+                                // Every tab hidden: nothing to show.
+                                Some(e) if e.hidden => return,
+                                Some(e) if e.custom => return custom_groups(app, ui, &e.groups),
+                                _ => {}
+                            }
+                            match app.ui.tab.as_str() {
+                                "Home" => home(app, ui),
+                                "Insert" => insert(app, ui),
+                                "Draw" => draw(app, ui),
+                                "Design" => design(app, ui),
+                                "Layout" => layout(app, ui),
+                                "References" => references(app, ui),
+                                "Mailings" => mailings(app, ui),
+                                "Review" => review(app, ui),
+                                "View" => view(app, ui),
+                                "Developer" => developer(app, ui),
+                                "Zotero" => zotero(app, ui),
+                                "Help" => help(app, ui),
+                                "Table Design" => table_design(app, ui),
+                                "Table Layout" => table_layout(app, ui),
+                                "Equation" if app.session.math.is_some() => crate::equation_tab::show(app, ui),
+                                "Picture Format" => picture_format(app, ui),
+                                "Shape Format" => shape_format(app, ui),
+                                "SmartArt Design" => smart_art_design(app, ui),
+                                "Outlining" => outlining(app, ui),
+                                "Chart Design" => chart_design(app, ui),
+                                _ => home(app, ui),
+                            }
+                            if let Some(e) = entry {
+                                custom_groups(app, ui, &e.groups);
+                            }
+                        });
+                    });
+                    if pending.is_some() {
+                        let _ = ui.data_mut(|d| d.remove_temp::<f32>(pending_id));
                     }
-                    match app.ui.tab.as_str() {
-                        "Home" => home(app, ui),
-                        "Insert" => insert(app, ui),
-                        "Draw" => draw(app, ui),
-                        "Design" => design(app, ui),
-                        "Layout" => layout(app, ui),
-                        "References" => references(app, ui),
-                        "Mailings" => mailings(app, ui),
-                        "Review" => review(app, ui),
-                        "View" => view(app, ui),
-                        "Developer" => developer(app, ui),
-                        "Zotero" => zotero(app, ui),
-                        "Help" => help(app, ui),
-                        "Table Design" => table_design(app, ui),
-                        "Table Layout" => table_layout(app, ui),
-                        "Equation" if app.session.math.is_some() => crate::equation_tab::show(app, ui),
-                        "Picture Format" => picture_format(app, ui),
-                        "Shape Format" => shape_format(app, ui),
-                        "SmartArt Design" => smart_art_design(app, ui),
-                        "Outlining" => outlining(app, ui),
-                        "Chart Design" => chart_design(app, ui),
-                        _ => home(app, ui),
+                    crate::ribbon_fit::end(ui.ctx());
+                    // The bar is hidden, so a row wider than the window would be clipped with no sign. Edge chevrons show
+                    // where more is and scroll it on click. Every command also stays reachable through Search Commands.
+                    let r = scroll.inner_rect;
+                    let overflow = scroll.content_size.x - r.width();
+                    let offset = scroll.state.clamped_offset().x;
+                    let step = 160.0;
+                    let mut next = None;
+                    if offset > 1.0 {
+                        let left = Rect::from_min_max(r.left_top(), pos2(r.left() + 18.0, r.bottom()));
+                        if edge_cue(ui, left, "‹", tl!("Scroll ribbon left"), &t) {
+                            next = Some(offset - step);
+                        }
                     }
-                    if let Some(e) = entry {
-                        custom_groups(app, ui, &e.groups);
+                    if overflow - offset > 1.0 {
+                        let right = Rect::from_min_max(pos2(r.right() - 18.0, r.top()), r.right_bottom());
+                        if edge_cue(ui, right, "›", tl!("Scroll ribbon right"), &t) {
+                            next = Some(offset + step);
+                        }
+                    }
+                    if let Some(x) = next {
+                        ui.data_mut(|d| d.insert_temp(pending_id, x.clamp(0.0, overflow.max(0.0))));
+                        ui.ctx().request_repaint();
                     }
                 });
             });
-            if pending.is_some() {
-                let _ = ui.data_mut(|d| d.remove_temp::<f32>(pending_id));
-            }
-            crate::ribbon_fit::end(ui.ctx());
-            // The bar is hidden, so a row wider than the window would be clipped with no sign. Edge chevrons show
-            // where more is and scroll it on click. Every command also stays reachable through Search Commands.
-            let r = scroll.inner_rect;
-            let overflow = scroll.content_size.x - r.width();
-            let offset = scroll.state.clamped_offset().x;
-            let step = 160.0;
-            let mut next = None;
-            if offset > 1.0 {
-                let left = Rect::from_min_max(r.left_top(), pos2(r.left() + 18.0, r.bottom()));
-                if edge_cue(ui, left, "‹", tl!("Scroll ribbon left"), &t) {
-                    next = Some(offset - step);
-                }
-            }
-            if overflow - offset > 1.0 {
-                let right = Rect::from_min_max(pos2(r.right() - 18.0, r.top()), r.right_bottom());
-                if edge_cue(ui, right, "›", tl!("Scroll ribbon right"), &t) {
-                    next = Some(offset + step);
-                }
-            }
-            if let Some(x) = next {
-                ui.data_mut(|d| d.insert_temp(pending_id, x.clamp(0.0, overflow.max(0.0))));
-                ui.ctx().request_repaint();
-            }
         });
 }
 

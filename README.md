@@ -147,6 +147,7 @@ Web: `cd apps/wordcraft-web && trunk serve`, then open <http://127.0.0.1:8771/?s
 
 ## Assistant preview builds
 
+The View ribbon keeps its Assistant button at the far right, including when other groups scroll.
 This branch includes an integrated assistant preview. It is installed as
 `/Applications/WordCraft Assistant Preview.app`, separately from the normal app, and delivered
 as a versioned Apple-silicon DMG. Its launcher disables the standard updater so an official

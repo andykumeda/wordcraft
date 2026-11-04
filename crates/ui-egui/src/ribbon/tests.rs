@@ -787,9 +787,12 @@ fn shape_and_chart_formats_leave_out_of_range_sizes_alone() {
 #[test]
 fn view_assistant_button_is_visible_and_toggles_the_panel() {
     use egui_kittest::kittest::Queryable;
-    for (tab, width) in [("View", 800.0), ("View", 1440.0), ("Home", 2600.0)] {
+    for (tab, width, dark) in
+        [("View", 600.0, false), ("View", 800.0, true), ("View", 1440.0, false), ("View", 1440.0, true), ("Home", 2600.0, false)]
+    {
         let mut app = WordApp::new(Session::new(wordcraft_doc::Document::from_text("Keep this text")), crate::Services::default());
         app.run("ui.tab", json!({"tab": tab})).unwrap();
+        app.run("ui.theme", json!({"value": if dark { "dark" } else { "light" }})).unwrap();
         let mut harness = egui_kittest::Harness::builder().with_size(vec2(width, 900.0)).build_ui_state(
             |ui, app: &mut WordApp| {
                 let ctx = ui.ctx().clone();
@@ -801,10 +804,15 @@ fn view_assistant_button_is_visible_and_toggles_the_panel() {
         harness.run_steps(6);
         let button = harness.get_by_role_and_label(egui::Role::Button, "Assistant");
         assert!(button.rect().right() <= width, "Assistant is visible without scrolling at {width}");
+        if tab == "View" {
+            assert!(button.rect().left() > width - 120.0, "Assistant stays at the far right at {width}");
+        }
         button.click();
         harness.run_steps(3);
         assert!(harness.state().assistant.open, "{tab} at {width}: button must open pane; tab = {}", harness.state().ui.tab);
-        harness.get_by_role_and_label(egui::Role::Button, "Assistant").click();
+        harness.get_by_role_and_label(egui::Role::Button, "Assistant").focus();
+        harness.step();
+        harness.key_press(egui::Key::Space);
         harness.run_steps(3);
         assert!(!harness.state().assistant.open);
         assert_eq!(harness.state().session.doc.plain_text(wordcraft_doc::StoryRef::Body), "Keep this text");

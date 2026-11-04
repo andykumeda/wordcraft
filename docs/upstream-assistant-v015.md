@@ -147,3 +147,21 @@ both-Mac installation, preserved-user-instance checks and final native qualifica
 | MacBook standard and Assistant Preview | Deployed | After the user saved/closed Preview and restored access, both dbacf0c4 bundles were atomically installed and independently passed the same helper0.1.2/native/settings/MCP checks; prior apps retained. |
 
 Both-Mac installation and native acceptance are complete. No user-owned preview was force-quit, and no provider inference was requested. Exact MacBook receipts and the resolved connection/test-harness checkpoint are in the candidate qualification below.
+
+## View toolbar refinement — 2026-11-04
+
+| Work | State | Acceptance and evidence |
+|---|---|---|
+| Move View Assistant | Verified | Pin the existing icon/label control at the ribbon's far right, outside the horizontally scrolling groups; retain `ui.assistant`, selected state, tooltip and accessible name. Home's existing Assistant stays in its group. |
+| Verification | Verified | All 39 ribbon tests pass, including 600/800/1440-point View widths, light/dark palettes, far-right placement, pointer open/keyboard Space close and unchanged document text. The new regression fails with the old layout at 600 points. Scoped all-target Clippy with `-D warnings`, formatting, asset attribution and layering pass. |
+| Visual review and wasm | Verified | Offscreen source renders at 600 and 1440 points in light/dark were inspected: the original comment icon and Assistant label remain visible at the far right while narrow groups scroll. The wasm constituent passes for all 15 supported crates, including the UI. |
+| Install/package/release | Not started | Existing installed apps and other-Mac artifacts remain unchanged. |
+
+No provider, model, permission, conversation or document API changes are included.
+
+Verification used the existing `ribbon::tests` suite, scoped UI all-target Clippy and the existing
+asset/layer/wasm checks. UI compilation used a temporary package `opt-level=0` override and
+`CARGO_INCREMENTAL=0` after an interrupted optimized build left unusable incremental linker
+artifacts; no build configuration or dependency changes were committed. The full workspace CI
+sweep was not run during concurrent app verification. Native VoiceOver, live-provider inference,
+installed-app and other-Mac acceptance were not repeated for this placement-only source change.
