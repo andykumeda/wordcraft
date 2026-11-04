@@ -115,3 +115,21 @@ the standard packager is excluded from this app rollout. Exact full CI passed al
 including the deterministic unsupported-language fixture correction documented in the source ledger.
 Final installed-app smoke and preservation of any running user preview are the primary workstream's
 remaining acceptance steps; these candidate results do not claim deployment or live inference.
+
+## Compact-layout installed acceptance checkpoint — 2026-11-03
+
+Mini **standard and preview: Deployed**. Primary installed source dbacf0c4 atomically and
+verified both candidates' signatures/native hashes. Two independent isolated native runs
+passed with helper **0.1.2**: settings-gear update placement, all **17** MCP tools listed,
+synthetic edit/read/Undo/Redo, save/close/reopen and a **1,793-byte** page PNG. Both runs quit
+their test-owned instances normally and released the listener and control key. The preview
+panel screenshot was visually inspected: New chat/history and gear header, compact bottom
+file/model controls and no main-chat version/update toolbar. Empty isolated model settings
+are not a configured-provider acceptance claim. No inference or personal settings were used.
+
+MacBook **standard and preview: Blocked**. Access became unavailable before new Word host
+installation, so verified candidates remain ready but no new MacBook Word deployment or
+installed smoke is claimed. A user-owned preview had last been observed running; it was not
+force-quit. Restoring access and saving/closing that preview are required before safe replacement.
+The independently installed helper 0.1.2 had already been verified there; that is not evidence
+that the new Word host is installed. Prior two-Mac v0.15 evidence above remains historical.

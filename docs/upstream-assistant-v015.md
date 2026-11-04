@@ -138,3 +138,15 @@ Artifacts and hashes are in [the candidate qualification](wordcraft-015-local-qu
 The installed CLI was not changed. An unused CLI archive produced by the standard packager
 uses its pre-rollout cached executable and is excluded from this app delivery. Primary owns
 both-Mac installation, preserved-user-instance checks and final native qualification.
+
+## Compact-layout installation checkpoint — 2026-11-03
+
+| Device | State | Actual evidence / remaining action |
+| --- | --- | --- |
+| Mini standard and Assistant Preview | Deployed | Source dbacf0c4 installed atomically; matching signed candidate hashes. Both isolated native runs passed helper 0.1.2, gear/settings-only updates, 17 MCP tools, synthetic edit/read/Undo/Redo, save/close/reopen and PNG rendering; owned listeners/keys cleaned up. |
+| MacBook standard and Assistant Preview | Blocked | New Word host candidates are verified and ready but were not installed: device access became unavailable before installation. A user-owned Preview instance had last been observed running; save/close it and restore access before replacement. |
+
+The MacBook's previously installed helper 0.1.2 is a separate component; its earlier success
+does not establish that the new Word host was installed. No user-owned preview was force-quit.
+No provider inference was requested. Current scope is not complete on both Macs until the
+MacBook host installation and independent native checks pass.
