@@ -127,9 +127,8 @@ panel screenshot was visually inspected: New chat/history and gear header, compa
 file/model controls and no main-chat version/update toolbar. Empty isolated model settings
 are not a configured-provider acceptance claim. No inference or personal settings were used.
 
-MacBook **standard and preview: Blocked**. Access became unavailable before new Word host
-installation, so verified candidates remain ready but no new MacBook Word deployment or
-installed smoke is claimed. A user-owned preview had last been observed running; it was not
-force-quit. Restoring access and saving/closing that preview are required before safe replacement.
-The independently installed helper 0.1.2 had already been verified there; that is not evidence
-that the new Word host is installed. Prior two-Mac v0.15 evidence above remains historical.
+MacBook **standard and preview: Deployed**. After the user saved/closed Preview and restored access, both signed dbacf0c4 bundles were atomically installed. Exact certificate/identifier, source stamp and native SHA-256 match the candidates above. Previous bundles are retained under `~/Applications/Craft Rollout Backups/2026-11-03-compact/`; existing CLI and user settings/history were preserved.
+
+Independent standard and Preview native runs passed helper0.1.2, settings-gear update placement,17 MCP tools, synthetic edit/read/Undo/Redo, save/close/reopen and1793-byte PNG rendering. Each test instance quit normally and released its control listener/key. Standard receipt root: `/var/folders/z6/7ct4dgns2236tw0d27zdb9s40000gn/T/wordcraft-installed-smoke-1hmcgwgf`; Preview: `/var/folders/z6/7ct4dgns2236tw0d27zdb9s40000gn/T/wordcraft-installed-smoke-rr3j8hfg`. The Preview main-chat screenshot was visually inspected.
+
+The initial MacBook UI test failed to find an exact OCR row; the temporary test now accepts the same explicit navigation labels within a row, including combined text. Successful reruns passed. No product code changed. A dropped connection was resolved by the user waking/unlocking the MacBook; successful reruns used a temporary sleep hold only for the test duration. No inference or personal settings were used. Live provider, IME, clipboard, VoiceOver and public-feed activation remain unverified; packages are locally signed, not notarized.

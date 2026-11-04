@@ -144,9 +144,6 @@ both-Mac installation, preserved-user-instance checks and final native qualifica
 | Device | State | Actual evidence / remaining action |
 | --- | --- | --- |
 | Mini standard and Assistant Preview | Deployed | Source dbacf0c4 installed atomically; matching signed candidate hashes. Both isolated native runs passed helper 0.1.2, gear/settings-only updates, 17 MCP tools, synthetic edit/read/Undo/Redo, save/close/reopen and PNG rendering; owned listeners/keys cleaned up. |
-| MacBook standard and Assistant Preview | Blocked | New Word host candidates are verified and ready but were not installed: device access became unavailable before installation. A user-owned Preview instance had last been observed running; save/close it and restore access before replacement. |
+| MacBook standard and Assistant Preview | Deployed | After the user saved/closed Preview and restored access, both dbacf0c4 bundles were atomically installed and independently passed the same helper0.1.2/native/settings/MCP checks; prior apps retained. |
 
-The MacBook's previously installed helper 0.1.2 is a separate component; its earlier success
-does not establish that the new Word host was installed. No user-owned preview was force-quit.
-No provider inference was requested. Current scope is not complete on both Macs until the
-MacBook host installation and independent native checks pass.
+Both-Mac installation and native acceptance are complete. No user-owned preview was force-quit, and no provider inference was requested. Exact MacBook receipts and the resolved connection/test-harness checkpoint are in the candidate qualification below.
