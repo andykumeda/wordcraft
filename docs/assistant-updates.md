@@ -1,15 +1,19 @@
 # Assistant preview updates
 
-Status: 2026-10-29 — the preview remains an integrated WordCraft build. Background-service separation is a design proposal, not an implemented feature.
+Status: 2026-11-03 — independent shared-helper updates are implemented. WordCraft's document
+engine and host controls still require a rebuilt app binary. The current compact-layout source
+and installed candidate state are in the [integration ledger](upstream-assistant-v015.md#compact-assistant-rollout--2026-11-03).
+The gear contains helper update checks; preview host app updates remain disabled.
+No public release is implied by a local signed candidate.
 
-## Current delivery
+## Historical delivery (2026-10-29)
 
 The owner uses `/Applications/WordCraft Assistant Preview.app`, separately from the ordinary
 `/Applications/WordCraft.app`. Every delivered preview also has a version/commit-named
 Apple-silicon DMG and SHA-256 checksum. Existing profiles, conversations and credentials stay
 outside the bundle and are never copied into packages.
 
-Current installed preview is **0.12.0 (`9c6c2cb0`)**. Mounted/copied DMG apps, rollback copy and
+The then-installed preview was **0.12.0 (`9c6c2cb0`)**. Mounted/copied DMG apps, rollback copy and
 installed native hash were verified; launcher/View/settings/updater smoke passed. Sol/Terra
 synthetic document acceptance and external comparisons are in [benchmarks](assistant-benchmarks.md).
 WordCraft's canonical per-app choice is now Terra; other settings, credentials and chats remain.

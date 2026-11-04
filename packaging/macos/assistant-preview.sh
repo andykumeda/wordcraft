@@ -153,8 +153,9 @@ Signing: $SIGNING
 3. Open the preview. Keep your existing **WordCraft.app**; this is a separate app.
    If macOS blocks it, follow [Apple's per-app approval instructions](https://support.apple.com/en-us/102445)
    after verifying its source and checksum. Do not disable Gatekeeper globally.
-4. Open **Assistant** and configure **File → Options → Agents**. General chat and
-   App control have separate model choices; no model or credentials are included.
+4. Open **Assistant**. Use the model menu in the composer, or the gear for connection
+   settings and helper updates. One selected model handles chat and document work; no model
+   or credentials are included.
 
 Install [Codex CLI](https://developers.openai.com/codex/cli) and sign in through this
 preview's isolated Craft connection on each Mac. Install [Ollama for macOS](https://ollama.com/download/mac)
@@ -167,7 +168,7 @@ Document preferences and recovery use
 ~/Library/Application Support/WordCraft Assistant Preview.
 WORDCRAFT_PROFILE_DIR can override that location. Assistant connections and chats
 use the destination user's shared Craft AI store; CRAFT_AI_CONFIG_DIR can override
-it. Relevant document content may reach both configured model providers.
+it. Relevant document content may reach the selected model provider.
 
 The preview launcher disables the standard WordCraft updater, including manual
 Check for Updates. Preview updates arrive as new preview DMGs. Save your documents

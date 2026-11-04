@@ -93,3 +93,35 @@ save/reopen, page rendering and helper 0.1.0 readiness, with all temporary liste
 cleaned up. No inference or deployment edits were performed by these checks. Exact artifacts,
 hashes, report references and qualification limits are in
 [the local qualification record](wordcraft-015-local-qualification.md).
+
+## Compact assistant rollout — 2026-11-03
+
+| Workstream / owner | State | Acceptance / evidence | Delivery |
+| --- | --- | --- | --- |
+| Shared UI pin / Word owner | Verified | Pin host libraries 83e61084; exact workspace CI all nine stages passed; scoped assistant/control and packaging metadata checks passed | Source only |
+| Signed desktop candidates / Word owner | In progress | Required pinned font/proofing inputs; standard and preview signatures, protocol/repository metadata and extracted-image checks | Not installed |
+
+The independently installed panel uses New chat/Chat history controls and a gear for settings,
+keeps update checks inside settings, and has compact
+file and model controls in the rounded composer. Existing model validation, profiles and
+credentials are retained. The helper updates independently; moving the host's update controls
+requires this one-time desktop rebuild. Older helpers retain their update toolbar until updated.
+No installed app, CLI, user configuration or public release has changed in this workstream.
+
+The first exact workspace CI passed formatting and workspace strict lint, then found a stale
+language-test fixture: `review_language_validates_tags_and_marks_text_unchecked` assumed
+French had no proofing tools. The unchanged pinned proofing implementation supports installed
+French dictionaries. Its existing test binary reproduced the failure in 0.09s. Only the
+synthetic unsupported-language fixture is changed to reserved `zxx` (no linguistic content);
+production proofing, dictionaries, configuration and preceding validation assertions are unchanged.
+The exact workspace filtered test passed, followed by the complete CI rerun: all nine stages passed.
+
+The host pin remains 83e61084 while compatible helper UI revisions can advance independently; the subsequent 0.1.2 helper refinement requires no further WordCraft rebuild.
+
+Final source verification: `CARGO_BUILD_JOBS=1 RUST_TEST_THREADS=1 cargo xtask ci` with
+required pinned fonts/proofing passed formatting, workspace/all-target Clippy with warnings
+denied, workspace tests, i18n audit/report, language embedding, doctests, assets (40),
+layering (19 crates) and WASM (15 crates). Engine tests passed 1148; UI passed 1059 with five
+explicitly ignored tests; integration suites passed. Earlier focused checks passed assistant 36
+(two ignored), control 26 and packaging metadata/shell syntax. Full CI was executed; live
+provider, manual visual captures and installed-app acceptance remain separate checks.

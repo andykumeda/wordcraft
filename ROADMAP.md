@@ -1123,3 +1123,5 @@ Footer page-table height and body wrapping are corrected. Other pagination gaps 
 | 2026-10-28 | trivial | Progress log: Chinese and Japanese text counts a word per character (#4547) |
 
 - 2026-11-02 — A2: desktop adapter for an independently installed embedded assistant; shared global model/auth, app-owned guarded tools, explicit update/reload automation and customized source checks. Shared tests: 228 passed / 4 ignored. Consumer UI compilation passed; native linked/installed acceptance remains pending. See `docs/custom-assistant-updates.md`.
+
+- 2026-11-03 — Assistant: compact shared panel0.1.1 pin and desktop candidates are tracked in `docs/upstream-assistant-v015.md`; no document-engine or readiness-estimate change.

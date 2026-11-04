@@ -151,14 +151,13 @@ This branch includes an integrated assistant preview. It is installed as
 `/Applications/WordCraft Assistant Preview.app`, separately from the normal app, and delivered
 as a versioned Apple-silicon DMG. Its launcher disables the standard updater so an official
 release cannot replace the custom preview. Upstream changes are integrated and verified before
-new preview builds. Models/providers remain externally configurable. This installed preview
-predates the independently updated helper implemented in the current source below; it has not
-been replaced by this task. See [preview updates](docs/assistant-updates.md).
+new preview builds. Models/providers remain externally configurable. Installed versions and the current compact-layout candidate are tracked in
+[the integration ledger](docs/upstream-assistant-v015.md). See [preview updates](docs/assistant-updates.md).
 
 ## For agents: CLI and MCP
 
-The desktop [Assistant pane](docs/assistant.md) provides one conversation with independent general
-chat and app-control models. Configure connections under File → Options → Agents. The portable
+The desktop [Assistant pane](docs/assistant.md) provides one conversation and selected model
+for chat and document work. Choose a model in the composer or open the gear for connection settings. The portable
 shared implementation is available in this branch; [verification and release gates](docs/assistant-implementation.md)
 track what has actually been tested.
 
@@ -366,4 +365,8 @@ The desktop entry point uses a separately installed shared assistant for its emb
 
 The panel uses all 17 tools from the same live MCP server as external clients, with unchanged schemas, descriptor metadata, image/results and normal permissions. See [MCP parity evidence](docs/mcp-assistant-parity.md).
 
-See [custom assistant and app updates](docs/custom-assistant-updates.md) for configuration, approved updates and compatibility safeguards. This implementation is not an installed release: native accessibility/input acceptance and signed update installation remain pending.
+See [custom assistant and app updates](docs/custom-assistant-updates.md) for configuration, approved updates and compatibility safeguards. Installed versions and native accessibility/input qualification are recorded in the integration ledger; local candidate signing does not imply a public or notarized release.
+
+The current assistant source uses gear settings and compact composer file/model menus.
+The compact-layout build and its installation state are tracked in
+[the source and candidate ledger](docs/upstream-assistant-v015.md#compact-assistant-rollout--2026-11-03).

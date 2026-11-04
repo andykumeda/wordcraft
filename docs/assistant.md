@@ -1,8 +1,15 @@
 # Desktop assistant
 
-Current source uses the independently updated shared helper and the [complete external MCP interface](mcp-assistant-parity.md). The installed preview described below is an earlier build; this task has not replaced it.
+Current host source pins compatible shared libraries and loads the independently installed helper, with the [complete external MCP interface](mcp-assistant-parity.md).
+The [integration ledger](upstream-assistant-v015.md#compact-assistant-rollout--2026-11-03) records the current build and installation state.
+The current helper panel has New chat and Chat history controls, gear settings, and `+` file/model controls in the composer.
+Quick model choices apply to WordCraft; settings retains suite defaults and custom model IDs.
+Helper version and update controls appear in settings. The separate preview app still disables
+host app updates; that does not disable shared-helper updates.
 
-Status: preview **0.12.0 (`9c6c2cb0`)** installed at
+The following 0.12.0 qualification is historical; it does not describe the latest installed version.
+
+Historical preview: **0.12.0 (`9c6c2cb0`)** installed at
 `/Applications/WordCraft Assistant Preview.app`, 2026-10-29. Single-model settings, View discovery
 and disabled-updater smoke passed. Sol/Terra actual document/readback/save/reopen/Undo checks and
 external MCP comparisons are recorded in [benchmarks](assistant-benchmarks.md). WordCraft's
@@ -13,8 +20,8 @@ adversarial containment and other-Mac acceptance remain open. This is a private 
 not a public release; see [the implementation ledger](assistant-implementation.md).
 
 Open **View → Assistant** (the first ribbon button) or **Home → Assistant** to show or hide the pane. The pane can dock, float and
-resize like the other task panes. **File → Options → Agents** contains its connection and model
-settings. Browser inference is not available.
+resize like the other task panes. Open the gear for connection/model settings in the compact panel.
+The app also retains its Options connection editor. Browser inference is not available.
 
 The installed preview uses **one model choice** for general conversation and document work.
 Choose an OpenAI subscription through Codex, a local Ollama connection, or an OpenRouter/API

@@ -1,5 +1,7 @@
 # Portable assistant implementation ledger
 
+The current compact-layout rollout (2026-11-03) is tracked in [the v0.15 integration ledger](upstream-assistant-v015.md#compact-assistant-rollout--2026-11-03). The last completed v0.15 two-Mac qualification is in [the local qualification record](wordcraft-015-local-qualification.md). Earlier installation statements below are historical.
+
 Current source (2026-11-02): full side-panel and external MCP capability parity is verified by focused automated tests. The [full MCP parity change](mcp-assistant-parity.md) supersedes the assistant-only document, command and exact-file restrictions described in earlier historical entries below. This increment is not yet an installed release.
 
 Updated 2026-10-29 (America/Los_Angeles). **Core single-model implementation: Verified and Deployed at `9c6c2cb0`; full MCP capability parity and reliable local-model acceptance remain open.**
