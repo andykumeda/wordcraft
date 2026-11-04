@@ -1,5 +1,7 @@
 # WordCraft — instructions for agents
 
+Before starting any new task, read `../pdfcraft/docs/assistant-toolbar-next-update.md` for the deferred cross-app assistant toolbar request. It is context only: do not implement it unless the user requests implementation. If that sibling checkout is unavailable, note that the document could not be read.
+
 WordCraft is a clean-room, open-source, Rust-native word processor targeting Microsoft Word parity — and going further on speed, openness and agent control. It runs natively on macOS, Windows, Linux and BSD, and on the web via WASM. Siblings with the same conventions: `../photocraft` (Photoshop), `../vectorcraft` (Illustrator), `../filmcraft` (Premiere), `../lightcraft` (Lightroom), `../pdfcraft` (Acrobat), `../effectcraft` (After Effects), `../designcraft` (InDesign).
 
 ## Start every session here
