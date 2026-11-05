@@ -1,6 +1,6 @@
 # WordCraft v0.15 assistant integration
 
-Status: In progress — official v0.15.2 preview update, 2026-11-04. See [the current update ledger](#official-v0152-reconciliation--2026-11-04). Installed previews remain unchanged until acceptance and delivery below. Earlier checkpoints are historical.
+Status: **Deployed on both Macs** — WordCraft Assistant Preview0.15.2, source `fccdfe38`, 2026-11-04. See [the current update ledger](#official-v0152-reconciliation--2026-11-04). Earlier checkpoints are historical.
 
 The isolated task branch combines assistant commit `05d5fb21` with upstream `origin/main`
 `ab0020d6` (WordCraft 0.15.0). This retains the embedded, independently installed assistant
@@ -191,8 +191,44 @@ and Clippy but failed the German hyphenation test; the corrected run passed. Log
 | Verify official source | Verified | Published GitHub release v0.15.2 points to `edfea68101220c9bdc4b2b0ccf4acd9612bedb6e`; fetched exact tag from storytold/wordcraft. |
 | Reconcile custom host | Verified | Merged the official tag while preserving embedded assistant, model-menu flicker fix, far-right View control, isolated preview profile and disabled official updater. Upstream RTL, fitted ribbon, modal dialog, language/proofing and document fidelity changes retained. |
 | Source verification | Verified | All nine required CI steps passed, including 5202 ordinary native tests (9 ignored), translation audit and all15 WASM crates. Release-pinned craft-i18n `9d6d54d6d9ff603cc41e12e5f6ba51af3554ab66` and existing open-font input `b076417b5880bd4154bd22f00695b1d28c6bea83`; log `/tmp/wordcraft-v0152-ci.log`. |
-| Native model/package/two-Mac install | Not started | Actual configured Terra synthetic edit, Undo/Redo/save/reopen required before activation. Package, mounted/copied verification and rollback retained; preserve open instances and writing. |
+| Native model/package/two-Mac install | Deployed | Signed candidate model checks passed before activation on each Mac; mounted/copied DMG and installed-path native checks passed. Both exact `/Applications/WordCraft Assistant Preview.app` paths are0.15.2(fccdfe38). Mini rollback retained. |
 
 Generated package instructions now describe the existing normal Codex profile rather than the retired isolated account flow. No new provider, permission, profile or conversation behavior is introduced. The installed shared
 helper0.1.6 remains separate. Standard WordCraft installation is coordinated independently; this
 work owns only `/Applications/WordCraft Assistant Preview.app`. No public release is implied.
+
+### Two-Mac delivery receipt
+
+Release source: **`fccdfe385a07e70f51ab71f9544e0be08f7a0484`**, following merge
+`076ea94c`. Cargo normalized the merge's ambiguous AES/HMAC dependency edges; the normalized
+working bytes were what the complete passing CI and build used. The lock-only follow-up retains
+those exact tested resolutions. No new runtime feature was added beyond the upstream merge.
+The final required-input release desktop/CLI build passed in21m16s. The MCP client used for QA
+is byte-identical to that final CLI (`94187b148f62392eaa418fde1d115d59896347b29aece107419ac821bcb1f647`).
+
+| Acceptance | Mini | MacBook |
+|---|---|---|
+| Actual configured model | Codex account / gpt-6.1-terra,29.21s | Codex account / gpt-6.1-terra,14.15s |
+| Exact synthetic text; no premature save | Passed full decoded-text equality and unchanged saved-file bytes | Passed same independent oracles |
+| One Undo, Redo, explicit DOCX save/reopen | Passed | Passed |
+| Signed installed-path native smoke |17 MCP tools; edit/read/Undo/Redo/save/reopen/render; helper0.1.6 handshake | Same checks passed |
+| Own test cleanup | Normal quit, listener released, owner-only key removed | Same checks passed |
+
+The two actual chat screenshots were inspected: the requested four-word text is visible, the
+original Assistant icon/toggle stays at the far right of View, and helper tool-call rows stay
+hidden. Model latency is an observation during the rollout, not a performance comparison.
+The installed-path smoke did not repeat inference after the identical signed candidate bytes
+had already passed it. Native VoiceOver, IME and clipboard acceptance remain unperformed.
+
+- Installed native SHA-256 on both Macs: `e956b241a39c106f9c3b8ce32bf229df0587134f0741d24c7814d4ccb1b969aa`.
+- DMG: `dist/assistant-preview/fccdfe38/wordcraft-assistant-preview-0.15.2-fccdfe38-macos-aarch64.dmg`; SHA-256 `92f75302526e5c6d5b7e2a968d6f6e164f64003b4643c23e3865323f2f6d3f24`.
+- ZIP: same prefix; SHA-256 `328286ba4cdc3c648f27f1f96474c761199e857065f4e18e2d6309bbbd3a7cd3`.
+- Matching DMG/checksum and installation instructions are in both users' Downloads. Both mounted DMGs and copied apps passed signatures, version/source and native-byte checks before installation.
+- Mini previous0.15.0(dbacf0c4) bundle, signature verified after retention: `/Users/andy/Applications/WordCraft Preview Backups/WordCraft Assistant Preview-replaced-fccdfe38-20261104-205921.app`. Book had no bundle at the target, so no preview was replaced there. Other legacy paths remain untouched.
+- Both bundles keep ID `ai.storyteller.wordcraft.assistant-preview`, local signer `stt-dev`, separate Word profile and launcher `--disable-updates`. No notarization or public release. Installation touched app bundles and LaunchServices registration, without copying/removing profiles, credentials or conversations.
+- The installed shared helper0.1.6 and production connection/model settings remain separate and were not changed. Each QA copied public AI configuration into its own private store, used a private Codex workspace and retained the normal local HOME/CODEX_HOME account. No credentials were transferred between Macs. Selected cloud inference receives the task's document context; no local-only privacy claim.
+
+Private receipts: Mini `/var/folders/cg/796c5bys74db15ww0b_qvw8c0000gn/T/wordcraft-v0152-smoke-97ehhbox/report.json` (actual model), `/tmp/wordcraft-v0152-installed-mini.log` and `/tmp/wordcraft-v0152-install-mini.log`; MacBook `/var/folders/z6/7ct4dgns2236tw0d27zdb9s40000gn/T/wordcraft-v0152-smoke-wq0njjf7/report.json` (actual model), `/private/tmp/wordcraft-v0152-fccdfe38/{installed-book,install-book}.log`. Package receipt `/private/tmp/wordcraft-v0152-fccdfe38/package-receipt.json`; source CI `/tmp/wordcraft-v0152-ci.log`, final release `/tmp/wordcraft-v0152-release-final.log`, packaging `/tmp/wordcraft-v0152-package.log`. Screenshots and synthetic documents remain private local QA outputs.
+
+The standard WordCraft apps are a separately owned official-release rollout. This preview task
+never force-quit a user instance or sent commands to an existing personal document window.

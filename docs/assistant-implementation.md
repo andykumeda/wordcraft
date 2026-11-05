@@ -1,5 +1,7 @@
 # Portable assistant implementation ledger
 
+Current preview delivery (2026-11-04): **WordCraft0.15.2, source `fccdfe38`, installed on both Macs**. Actual configured Terra edit/Undo/save/reopen, signed DMG/copy and installed native checks passed; see [the current delivery receipt](upstream-assistant-v015.md#official-v0152-reconciliation--2026-11-04). Earlier source and installation statements below are historical.
+
 The November 4 normal Codex profile/skills/plugins integration and DeckCraft work are tracked in
 [the current runtime ledger](codex-native-deckcraft-ledger.md). That record supersedes historical
 Craft-isolated account and restricted-native-tool descriptions below.
