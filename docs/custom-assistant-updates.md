@@ -33,8 +33,7 @@ and underlying-source metadata, and binary version/source. The full `cargo xtask
 `3b6d253ef92373dae725ae500e24fe4cc0415be9bfbbad2c28e4b98fc56a8328`.
 The standard DMG SHA-256 is
 `cd891f32fd9a57a44cfcebde32ea5c11ed02d4655113797a451c516383cb8dd4`.
-Native installed acceptance and launcher update delivery remain owned by the suite
-consolidation ledger; packaging does not claim either Mac was changed.
+Native installed acceptance and launcher update delivery remain owned by [the central suite ledger](../../pdfcraft/docs/single-app-assistant-rollout.md); packaging does not claim either Mac was changed.
 
 ## Configure the app source
 
