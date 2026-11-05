@@ -1355,6 +1355,11 @@ fn paint_file_and_tools(pen: &Pen, name: &str) -> bool {
     let red = Color32::from_rgb(0xD1, 0x3B, 0x3B);
     let yellow = Color32::from_rgb(0xF2, 0xC8, 0x11);
     match name {
+        "assistant" => {
+            pen.closed(&[(8.0, 2.0), (10.0, 6.0), (14.0, 8.0), (10.0, 10.0), (8.0, 14.0), (6.0, 10.0), (2.0, 8.0), (6.0, 6.0)], c);
+            pen.line_c(&[(16.0, 12.0), (16.0, 18.0)], a);
+            pen.line_c(&[(13.0, 15.0), (19.0, 15.0)], a);
+        }
         // Open: a folder with its flap lifted.
         "open" => {
             pen.closed(&[(2.5, 5.0), (7.5, 5.0), (9.0, 6.5), (15.5, 6.5), (15.5, 9.0)], c);

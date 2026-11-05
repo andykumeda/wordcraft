@@ -385,11 +385,23 @@ pub fn title_bar(app: &mut WordApp, ui: &mut Ui) {
                                 medium(11.5),
                                 t.on_accent,
                             );
+                            resp.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Button, true, tl!("Discord")));
                             if resp.on_hover_text(tl!("Visit the upstream WordCraft community on Discord")).clicked() {
                                 let _ = app.run("ui.discord", json!({}));
                             }
                             ui.add_space(8.0);
                         }
+                        let open = app.assistant.open;
+                        let response = crate::widgets::small(
+                            ui,
+                            app,
+                            "assistant",
+                            None,
+                            "Assistant",
+                            crate::widgets::ButtonAction::new("ui.assistant", json!({}), open),
+                        );
+                        response.widget_info(|| egui::WidgetInfo::selected(egui::Role::Button, true, open, tl!("Assistant")));
+                        ui.add_space(8.0);
                         search_box(app, ui, control_h);
                         right_start = if rtl { ui.min_rect().max.x } else { ui.min_rect().min.x };
                     });

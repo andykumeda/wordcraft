@@ -281,3 +281,30 @@ Private receipts: Mini `/var/folders/cg/796c5bys74db15ww0b_qvw8c0000gn/T/wordcra
 
 The standard WordCraft apps are a separately owned official-release rollout. This preview task
 never force-quit a user instance or sent commands to an existing personal document window.
+
+
+## Title-bar Assistant placement — 2026-11-05
+
+| Work / owner | State | Acceptance / evidence |
+|---|---|---|
+| Word title bar / Word owner | Verified | One icon-only Assistant beside Discord, across Home/View/Insert; existing `ui.assistant`, selected state, accessible name and tooltip retained. Home/View duplicates removed. |
+| Source verification / Word owner | Verified | Placement/pointer/Space regression across 600/800/1440 points, Home/View/Insert and both palettes; collapsed ribbon/hidden Discord. All nine `cargo xtask ci` gates passed; four 600/1440-point light/dark renders inspected. |
+| Standard package / Word owner | Not started | Preserve normal identity/profile, integrated assistant and managed launcher update route. |
+| Two-Mac delivery / primary | Not started | No installed app or personal document changed by source work. Native/model checks remain separate. |
+
+This supersedes the historical View-only placement above. No provider/model/credential,
+conversation or document behavior changes are requested. Verification and deployment evidence
+will be recorded independently; no public release is implied.
+
+Source verification used pinned fonts `b076417b5880bd4154bd22f00695b1d28c6bea83` and
+craft-i18n `9d6d54d6d9ff603cc41e12e5f6ba51af3554ab66`. Complete CI passed formatting,
+workspace/all-target strict Clippy, 5202 ordinary native tests (9 ignored), translation audit,
+language embedding, doctests, attribution, layering and all 15 WASM crates. Existing WASM
+warnings remain. The placement regression failed on the old ribbon layout at 600 points and
+passes after the move. Pointer open and keyboard Space close preserve synthetic document text.
+The title-bar icon uses original code-drawn sparkle art, matching the suite's Assistant identity;
+no new asset/dependency is added. Source screenshots are private QA outputs under
+`/private/tmp/wordcraft-title-toolbar-shots/`; CI log `/tmp/wordcraft-title-toolbar-ci.log`.
+The normal desktop minimum width remains 760 points; the 600-point offscreen stress case retains
+the existing crowded title/search controls, while the Assistant itself stays visible.
+Native installed checks, VoiceOver, IME, clipboard and inference have not been repeated here.

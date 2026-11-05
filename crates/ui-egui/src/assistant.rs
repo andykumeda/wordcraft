@@ -74,7 +74,7 @@ pub(crate) fn owns_keyboard(app: &WordApp) -> bool {
 
 pub fn commands() -> Vec<Value> {
     vec![
-        json!({"id":"ui.assistant","label":"Assistant","location":"View › Assistant","params":"value?: bool","enabled":true}),
+        json!({"id":"ui.assistant","label":"Assistant","location":"Title bar › Assistant","params":"value?: bool","enabled":true}),
         json!({"id":"ui.assistant.send","label":"Send assistant prompt","location":"Agents","params":"text: string; files?: array of exact paths","enabled":cfg!(not(target_arch="wasm32"))}),
         json!({"id":"ui.assistant.newChat","label":"New assistant chat","location":"Agents","params":"{}","enabled":cfg!(not(target_arch="wasm32"))}),
         json!({"id":"ui.assistant.stop","label":"Stop assistant","location":"Agents","params":"{}","enabled":true}),

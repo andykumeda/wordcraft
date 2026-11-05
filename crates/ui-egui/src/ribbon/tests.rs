@@ -901,15 +901,20 @@ fn shape_and_chart_formats_leave_out_of_range_sizes_alone() {
     assert_eq!(shown(a), before, "Chart Design shown, the chart untouched");
 }
 
-/// Assistant is a visible View control, including at a narrow desktop width; it opens and
-/// closes the same side panel as command search without changing the document.
+/// Assistant stays beside Discord in the title bar across tabs, narrow widths and themes.
 #[test]
-fn view_assistant_button_is_visible_and_toggles_the_panel() {
+fn title_bar_assistant_button_is_visible_and_toggles_the_panel() {
     use egui_kittest::kittest::Queryable;
-    for (tab, width, dark) in
-        [("View", 600.0, false), ("View", 800.0, true), ("View", 1440.0, false), ("View", 1440.0, true), ("Home", 2600.0, false)]
-    {
+    for (tab, width, dark) in [
+        ("View", 600.0, false),
+        ("View", 800.0, true),
+        ("View", 1440.0, false),
+        ("View", 1440.0, true),
+        ("Home", 600.0, false),
+        ("Insert", 800.0, true),
+    ] {
         let mut app = WordApp::new(Session::new(wordcraft_doc::Document::from_text("Keep this text")), crate::Services::default());
+        app.integrated_titlebar = true;
         app.run("ui.tab", json!({"tab": tab})).unwrap();
         app.run("ui.theme", json!({"value": if dark { "dark" } else { "light" }})).unwrap();
         let mut harness = egui_kittest::Harness::builder().with_size(vec2(width, 900.0)).build_ui_state(
@@ -923,9 +928,11 @@ fn view_assistant_button_is_visible_and_toggles_the_panel() {
         harness.run_steps(6);
         let button = harness.get_by_role_and_label(egui::Role::Button, "Assistant");
         assert!(button.rect().right() <= width, "Assistant is visible without scrolling at {width}");
-        if tab == "View" {
-            assert!(button.rect().left() > width - 120.0, "Assistant stays at the far right at {width}");
-        }
+        assert!(button.rect().top() < 38.0, "Assistant stays in the title bar at {width}");
+        let discord = harness.get_by_role_and_label(egui::Role::Button, "Discord");
+        assert!((button.rect().center().y - discord.rect().center().y).abs() < 1.0);
+        assert!(button.rect().right() <= discord.rect().left(), "Assistant is beside Discord at {width}");
+        assert!(discord.rect().left() - button.rect().right() <= 12.0);
         button.click();
         harness.run_steps(3);
         assert!(harness.state().assistant.open, "{tab} at {width}: button must open pane; tab = {}", harness.state().ui.tab);
@@ -939,5 +946,10 @@ fn view_assistant_button_is_visible_and_toggles_the_panel() {
         harness.state_mut().run("ui.tab", json!({"tab": "Mine"})).unwrap();
         harness.run_steps(4);
         assert!(crate::ribbon_fit::planned(&harness.ctx, "New Group").is_some(), "custom tabs own their fit plan");
+        harness.state_mut().ui.ribbon_collapsed = true;
+        harness.state_mut().ui.show_discord = false;
+        harness.run_steps(3);
+        let button = harness.get_by_role_and_label(egui::Role::Button, "Assistant");
+        assert!(button.rect().top() < 38.0, "Assistant remains available with ribbon collapsed and Discord hidden");
     }
 }

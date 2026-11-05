@@ -141,10 +141,3 @@ pub(super) fn graphic_size(ui: &mut Ui, app: &mut WordApp) {
         });
     });
 }
-
-/// The assistant stays a direct control in View, even when the other groups collapse.
-pub(super) fn assistant_button(app: &mut WordApp, ui: &mut Ui) {
-    let open = app.assistant.open;
-    let response = super::big_toggle(ui, app, "comment", "Assistant", "ui.assistant", open);
-    response.widget_info(|| egui::WidgetInfo::selected(egui::Role::Button, true, open, tl!("Assistant")));
-}

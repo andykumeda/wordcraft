@@ -349,10 +349,6 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
             crate::rtl::context_menu(&bg, |ui| crate::rtl::root(ui, |ui| crate::widgets::customize_menu_items(ui, app)));
             let entry = user_tabs.iter().find(|e| e.name == app.ui.tab);
             ui.with_layout(egui::Layout::right_to_left(egui::Align::Min), |ui| {
-                if app.ui.tab == "View" && entry.is_none_or(|entry| !entry.hidden && !entry.custom) {
-                    common::assistant_button(app, ui);
-                    ui.add_space(10.0);
-                }
                 ui.with_layout(
                     if crate::rtl::on() { egui::Layout::right_to_left(egui::Align::Min) } else { egui::Layout::left_to_right(egui::Align::Min) },
                     |ui| {

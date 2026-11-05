@@ -19,7 +19,7 @@ saved/reopened content and formatting, and one normal Undo. Hosted-provider, bro
 adversarial containment and other-Mac acceptance remain open. This is a private local preview,
 not a public release; see [the implementation ledger](assistant-implementation.md).
 
-Open **View → Assistant** (pinned at the far right of the ribbon, outside its scrolling groups) or **Home → Assistant** to show or hide the pane. The pane can dock, float and
+Click the **Assistant** sparkle icon in the top title bar beside **Discord** to show or hide the pane. The pane can dock, float and
 resize like the other task panes. Open the gear for connection/model settings in the compact panel.
 The app also retains its Options connection editor. Browser inference is not available.
 
@@ -110,7 +110,7 @@ app-session compatibility proofs, bundled background inspection/verification, th
 safe context-limit diagnostics and disabled standard updates. Native View/settings/updater smoke
 passed with synthetic content. The installed Terra handbook edit also passed in **11.477s**, with
 visible result, saved/reopened content/formatting and one normal Undo verified.
-Open **View → Assistant**, then configure the model under **File → Options → Agents**.
+Click the title-bar **Assistant** icon, then configure the model under **File → Options → Agents**.
 Codex `gpt-6.1-terra` is the applied WordCraft-only default after matching observed correctness
 and lower measured medians than Sol. Those small samples do not guarantee every turn is faster.
 The main `/Applications/WordCraft.app` (0.10) and its MCP wrappers are unchanged. Existing legacy
