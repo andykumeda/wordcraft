@@ -1,6 +1,6 @@
 # WordCraft v0.15 assistant integration
 
-Status: In progress. Source reconciliation only; installed apps and published releases are unchanged.
+Status: In progress — official v0.15.2 preview update, 2026-11-04. See [the current update ledger](#official-v0152-reconciliation--2026-11-04). Installed previews remain unchanged until acceptance and delivery below. Earlier checkpoints are historical.
 
 The isolated task branch combines assistant commit `05d5fb21` with upstream `origin/main`
 `ab0020d6` (WordCraft 0.15.0). This retains the embedded, independently installed assistant
@@ -183,3 +183,16 @@ The required `cargo xtask ci` passed all nine steps with the pinned `CRAFT_I18N_
 (`059cbf95`) and open-font input configured. An initial run without language data passed fmt
 and Clippy but failed the German hyphenation test; the corrected run passed. Logs are under
 `/private/tmp/craft-assistant-014-20261104/`.
+
+## Official v0.15.2 reconciliation — 2026-11-04
+
+| Work | State | Acceptance / evidence |
+|---|---|---|
+| Verify official source | Verified | Published GitHub release v0.15.2 points to `edfea68101220c9bdc4b2b0ccf4acd9612bedb6e`; fetched exact tag from storytold/wordcraft. |
+| Reconcile custom host | Verified | Merged the official tag while preserving embedded assistant, model-menu flicker fix, far-right View control, isolated preview profile and disabled official updater. Upstream RTL, fitted ribbon, modal dialog, language/proofing and document fidelity changes retained. |
+| Source verification | Verified | All nine required CI steps passed, including 5202 ordinary native tests (9 ignored), translation audit and all15 WASM crates. Release-pinned craft-i18n `9d6d54d6d9ff603cc41e12e5f6ba51af3554ab66` and existing open-font input `b076417b5880bd4154bd22f00695b1d28c6bea83`; log `/tmp/wordcraft-v0152-ci.log`. |
+| Native model/package/two-Mac install | Not started | Actual configured Terra synthetic edit, Undo/Redo/save/reopen required before activation. Package, mounted/copied verification and rollback retained; preserve open instances and writing. |
+
+Generated package instructions now describe the existing normal Codex profile rather than the retired isolated account flow. No new provider, permission, profile or conversation behavior is introduced. The installed shared
+helper0.1.6 remains separate. Standard WordCraft installation is coordinated independently; this
+work owns only `/Applications/WordCraft Assistant Preview.app`. No public release is implied.

@@ -251,11 +251,9 @@ pub fn global_shortcuts(app: &mut WordApp, ctx: &egui::Context) {
     if crate::assistant::owns_keyboard(app) {
         return;
     }
-    // Customize Keyboard records the keys pressed; they never run commands meanwhile.
-    if app.canvas.focused
-        || ctx.text_edit_focused()
-        || (ctx.egui_wants_keyboard_input() && crate::panes::overlay_open(app, ctx))
-        || matches!(app.dialog, Some(crate::dialogs::Dialog::CustomizeKeyboard { .. }))
+    // No shortcuts run while a modal dialog is open (#3859); Customize Keyboard records the keys
+    // pressed meanwhile.
+    if app.canvas.focused || ctx.text_edit_focused() || (ctx.egui_wants_keyboard_input() && crate::panes::overlay_open(app, ctx)) || app.modal_open()
     {
         return;
     }

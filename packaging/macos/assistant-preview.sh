@@ -157,8 +157,9 @@ Signing: $SIGNING
    settings and helper updates. One selected model handles chat and document work; no model
    or credentials are included.
 
-Install [Codex CLI](https://developers.openai.com/codex/cli) and sign in through this
-preview's isolated Craft connection on each Mac. Install [Ollama for macOS](https://ollama.com/download/mac)
+Install [Codex CLI](https://developers.openai.com/codex/cli) and sign in using the normal
+Codex CLI profile on each Mac. The independently installed shared helper reuses that account,
+configuration and native permissions. Install [Ollama for macOS](https://ollama.com/download/mac)
 separately and download the desired local model there if used.
 The launcher discovers Codex on PATH, including standard Homebrew locations;
 CRAFT_CODEX_BINARY can explicitly select another executable. Settings, chats,

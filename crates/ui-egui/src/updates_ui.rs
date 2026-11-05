@@ -169,16 +169,18 @@ pub(crate) fn show(app: &mut WordApp, ctx: &egui::Context) {
             .collapsible(false)
             .anchor(egui::Align2::CENTER_CENTER, egui::vec2(0.0, 0.0))
             .show(ctx, |ui| {
-                #[cfg(not(target_arch = "wasm32"))]
-                if let Some(repo) = app.updates_rt.updater.repository() {
-                    ui.label(tl!("Update source: {repo}").replace("{repo}", repo));
-                }
-                if let Some(msg) = &app.updates_rt.status_message {
-                    ui.label(msg);
-                }
-                if ui.button(tl!("Close")).clicked() {
-                    close = true;
-                }
+                crate::rtl::root(ui, |ui| {
+                    #[cfg(not(target_arch = "wasm32"))]
+                    if let Some(repo) = app.updates_rt.updater.repository() {
+                        ui.label(tl!("Update source: {repo}").replace("{repo}", repo));
+                    }
+                    if let Some(msg) = &app.updates_rt.status_message {
+                        ui.label(msg);
+                    }
+                    if ui.button(tl!("Close")).clicked() {
+                        close = true;
+                    }
+                })
             });
         if !open || close {
             app.updates_rt.manual_window_open = false;
