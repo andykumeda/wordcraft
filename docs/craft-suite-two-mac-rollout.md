@@ -1,5 +1,38 @@
 # Craft suite — two-Mac update
 
+Status: Single-app consolidation **Deployed on both Macs**, 2026-11-05. This supersedes the historical
+split official/Assistant Preview installation policy below. The owner requires one normal app
+with its assistant panel on each Mac, and ArtCraft Launcher updates must retain the integration.
+Do not install ordinary upstream binaries over these customized apps.
+
+| App | Official base | Normal assistant source | Mini / MacBook | Active Preview |
+| --- | --- | --- | --- | --- |
+| WordCraft | 0.15.2 | fccdfe38 | Deployed / Deployed | Removed both |
+| GridCraft | 0.16.1 | f5785668 | Deployed / Deployed | Removed both |
+| DeckCraft | 0.15.1 | dfa02f39 | Deployed / Deployed | Removed both |
+| PdfCraft | 0.18.2 | 5181ac82 | Deployed / Deployed | Removed both |
+
+Managed ArtCraft Launcher0.14.1/source1917013 and shared helper0.1.7/sourcef2295dd are deployed
+and independently checked on both Macs. Normal Word/Grid/Deck installs used the installed
+launcher's actual protected update path. Their live model candidate checks and installed
+no-model light/dark panel checks pass; normal profiles/recovery/shared AI data stay unchanged.
+The normal PdfCraft replacement passed actual configured-model edit/no-early-save/Undo/Redo/
+save/reopen/render independently on both Macs, with all five bundled OCR resources retained
+exactly. Helper0.1.7 bottom message-box outlines passed light/dark idle/focus checks inside PDF
+on both hosts. All four active Preview apps and legacy duplicate shortcuts are retired. See the [current central ledger](https://github.com/andykumeda/pdfcraft/blob/codex/independent-assistant/docs/single-app-assistant-rollout.md).
+
+Use **Check for updates** in the managed ArtCraft Launcher. App details retain the official
+underlying version and show **Updates preserve Assistant** with the configured source.
+Save/quit the app before updating. Update Mini first, then MacBook: Book obtains the signed
+compatible artifact from Mini over its existing SSH connection. Source conflicts, unavailable
+builder or failed validation leave the installed app intact; there is no upstream-only fallback.
+The launcher protects its own integration from replacement by an ordinary official self-update.
+No public release or notarization is claimed. Rollback app bundles/installers are retained as
+non-launchable ZIPs under each host's `~/Library/Application Support/Craft/retired-apps/`.
+
+## Historical split rollout (before single-app consolidation)
+
+
 Status: Deployed on both Macs. Updated: 2026-11-05 (America/Los_Angeles).
 
 The owner requested the latest apps on Mini and MacBook. Scope is the installed Craft suite, confirmed by the owner on2026-11-05. Standard official releases and custom
