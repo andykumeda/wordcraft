@@ -78,7 +78,7 @@ Coordinator completion gate: all nine Word repository CI steps passed with pinne
 Independent final inventories `/private/tmp/craft-suite-rollout-20261104/final-{mini,book}.json`
 match full source commits, versions and native hashes for all four previews and six official
 standard apps on both Macs; Mini official Word0.15.2 also matches its release. Helper active
-version is0.1.6 on both. Every preview has signed version/commit DMG, checksum and instructions
+version is0.1.6 on both. Every preview has a version/commit DMG containing a signed app, checksum and instructions
 in each Downloads directory. Final PDF installed native confirmation additionally passes on both
 hosts with unchanged standard app/config/helper hashes. Owned test processes exit normally and
 loopback listeners release; no user process is stopped.
