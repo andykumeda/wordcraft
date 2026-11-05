@@ -35,6 +35,21 @@ The standard DMG SHA-256 is
 `cd891f32fd9a57a44cfcebde32ea5c11ed02d4655113797a451c516383cb8dd4`.
 Native installed acceptance and launcher update delivery remain owned by [the central suite ledger](../../pdfcraft/docs/single-app-assistant-rollout.md); packaging does not claim either Mac was changed.
 
+### Standard candidate native acceptance — 2026-11-05
+
+The signed standard candidate (native `3b6d253e`, source `fccdfe38`) passed independent
+Mini and MacBook native acceptance using the existing configured Codex/Terra connection
+and shared helper0.1.6: model latency24.62s Mini and13.19s Book. Exact synthetic edits,
+no save until requested, Undo/Redo, explicit save/close/reopen and rendered edited PNGs
+passed; screenshots were inspected. Owned processes quit normally and their listeners
+and keys were cleaned up. Protected standard/Preview profiles and shared AI data were
+unchanged. This is candidate qualification, not an installation claim.
+
+Receipts: Mini `/var/folders/cg/796c5bys74db15ww0b_qvw8c0000gn/T/wordcraft-standard-native-fy6qwyin`;
+Book `/var/folders/z6/7ct4dgns2236tw0d27zdb9s40000gn/T/wordcraft-standard-native-sw8ydspk`.
+Consolidated local evidence: `/private/tmp/craft-single-app-evidence/word-{mini,book}`.
+Installed acceptance and update delivery remain in [the central suite ledger](../../pdfcraft/docs/single-app-assistant-rollout.md).
+
 ## Configure the app source
 
 Add this app to `sources.json` in the shared assistant settings directory (macOS:
