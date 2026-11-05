@@ -1,6 +1,6 @@
 # Native Codex capabilities and DeckCraft panel
 
-Status: In progress. Updated: 2026-11-04.
+Status: Deployed on Mini; shared helper deployed on both Macs before MacBook went offline. DeckCraft MacBook installation explicitly deferred. Updated: 2026-11-04.
 
 The requested behavior is the normal Codex skills/plugins environment presented through the
 Craft side panel, alongside app document tools. Existing plugin permissions and approvals must
@@ -9,8 +9,8 @@ remain effective; the panel must handle requests rather than silently approve or
 | Workstream | Owner | State | Acceptance | Dependencies / release |
 | --- | --- | --- | --- | --- |
 | Shared Codex runtime | Shared runtime agent | Deployed | Normal profile/capability discovery; skills/plugins/MCP usable; permission and approval UI; document tools, cancellation and Undo retained | Protocol 1 compatible; signed helper 0.1.6 active on both Macs |
-| DeckCraft host | DeckCraft agent | In progress | Embedded shared panel and settings, full existing MCP tools, command/control access, synthetic deck edit/Undo/save/reopen, real UI and WASM checks | Clean upstream cloned to `/Users/andy/Dev/deckcraft`; branch integration and shared contract required |
-| Runtime and device acceptance | Primary | In progress | Installed runtime schema and capability probes; per-device model/tool/approval checks; signed package and rollback verification | Existing helper 0.1.4 remains deployed until a verified replacement is ready |
+| DeckCraft host | DeckCraft agent | Deployed | Embedded shared panel and settings, full existing MCP tools, command/control access, synthetic deck edit/Undo/save/reopen, real UI and WASM checks | Mini private preview source `a3cf375e`; MacBook preview deferred while offline |
+| Runtime and device acceptance | Primary | Deployed | Installed runtime schema and capability probes; per-device model/tool/approval checks; signed package and rollback verification | Helper 0.1.6 active on both; native Mini Deck preview qualified; 0.1.4 retained for rollback |
 
 The shared runtime and DeckCraft host own separate mutable repositories. Shared protocol/API
 changes must be agreed before DeckCraft depends on them. App document edits must continue through
@@ -112,3 +112,33 @@ layers and all 15 WASM crates. Log: `/private/tmp/wordcraft-native-ledger-ci.log
 Deck's full eight-step CI also passed; final source pin, live model acceptance and preview
 packaging remain separate. Native VoiceOver/IME/clipboard and every connected plugin have not
 been exhaustively tested. Craft chats stay app-owned; external native edits are outside app Undo.
+
+## Final Mini DeckCraft delivery
+
+Deck source `7c680aa2` plus preview packager `a3cf375e` are committed locally on
+`codex/assistant-panel` in `/Users/andy/Dev/deckcraft`. The committed final helper pin passed
+full `cargo xtask ci` again (all eight steps, including 23 WASM crates), strict focused gates,
+and the original-dispatcher safety negative controls. The signed helper requirement is 0.1.6.
+
+Installed `/Applications/DeckCraft Assistant Preview.app` on Mini, with a separate profile,
+standard updater disabled and alternate native-file registration. Standard DeckCraft remains
+unchanged. Locally signed ZIP/DMG, checksum verification, extracted/mounted/copied DMG signatures
+and the installed source stamp passed. The preview is not notarized or publicly released.
+
+Both live Deck checks used the real configured `gpt-6.1-terra`: in-window harness 16.201 s
+(with prior dirty graph/Undo preserved), then installed native preview 19.06 s (visible exact
+text, no save until requested, Undo/Redo/save/reopen/render). Screenshots were inspected. One
+initial native fixture omitted quotes around a replacement sentence; the model omitted its final
+period, failing the exact assertion. The rerun explicitly quoted the expected punctuation;
+no app code or assertion was weakened. Owned QA windows quit normally and released listeners.
+
+Artifacts: `/Users/andy/Dev/deckcraft/dist/assistant-preview/a3cf375e/`.
+DMG SHA-256 `d4a41d9fadfc2b26367e2f6b55cf9466a4c28648070bb5a2b82d6994632538e1`.
+See `/Users/andy/Dev/deckcraft/docs/assistant-implementation.md` for full delivery receipts.
+Deck upstream grants READ only; no fork/new remote/upstream push was created. Shared/Word
+changes are pushed to their existing personal fork branches.
+
+The owner explicitly deferred MacBook DeckCraft installation while offline; remote work stopped.
+The previously completed MacBook helper1.6 acceptance remains recorded above. Native VoiceOver,
+IME/clipboard and every connected service are untested; native external changes are outside
+app Undo and Craft chat history remains app-owned.
