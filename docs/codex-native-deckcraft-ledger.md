@@ -8,7 +8,7 @@ remain effective; the panel must handle requests rather than silently approve or
 
 | Workstream | Owner | State | Acceptance | Dependencies / release |
 | --- | --- | --- | --- | --- |
-| Shared Codex runtime | Shared runtime agent | In progress | Normal profile/capability discovery; skills/plugins/MCP usable; permission and approval UI; document tools, cancellation and Undo retained | Define compatible helper/host contract; no installation claimed |
+| Shared Codex runtime | Shared runtime agent | Deployed | Normal profile/capability discovery; skills/plugins/MCP usable; permission and approval UI; document tools, cancellation and Undo retained | Protocol 1 compatible; signed helper 0.1.6 active on both Macs |
 | DeckCraft host | DeckCraft agent | In progress | Embedded shared panel and settings, full existing MCP tools, command/control access, synthetic deck edit/Undo/save/reopen, real UI and WASM checks | Clean upstream cloned to `/Users/andy/Dev/deckcraft`; branch integration and shared contract required |
 | Runtime and device acceptance | Primary | In progress | Installed runtime schema and capability probes; per-device model/tool/approval checks; signed package and rollback verification | Existing helper 0.1.4 remains deployed until a verified replacement is ready |
 
@@ -72,3 +72,43 @@ a separate bundle identity and retain its updater opt-out before installation.
 Temporary test fixture and receipts: `/private/tmp/craft-native-helper-acceptance.py` and
 `/private/tmp/craft-assistant-015-20261104/`. Test authentication used a temporary link to the
 existing account file, removed after each test; no credentials or personal chats were copied.
+
+## Normal-profile rollout correction
+
+Helper 0.1.5 briefly passed signed installation/handshakes on both Macs, but the Mini's actual
+WordCraft model turn failed before editing. The adapter forced `--strict-config`, which rejected
+an existing account skills field that normal Codex startup accepts. Both devices were explicitly
+returned to signature-verified 0.1.4; 0.1.5 and all prior data remain retained. No user process
+was killed. The earlier isolated-profile fixture did not expose this normal-profile defect.
+
+Shared fix `1ebb61ac04923c0cd79e11514eddebd38a99793c` is committed/pushed as helper 0.1.6.
+It uses normal Codex config parsing, with a regression on the exact startup command; native/helper
+tests and strict scoped Clippy/fmt passed. The signed candidate passed all four host handshakes in
+a temporary installation before activation. Mini actual WordCraft preview `dbacf0c4` then passed
+with normal Codex HOME/config and `gpt-6.1-terra` in 24.27 s: visible requested edit, Undo/Redo,
+save/reopen and screenshot inspection. The synthetic listener and key were removed normally.
+Mini activation follows that acceptance; MacBook candidate qualification remains in progress.
+
+Candidate source `1ebb61a`, font input `37827adc41fd165f9a9234ac40f94dbad353aa69`;
+archive SHA-256 `75085a4ea473e4bea1bcd1a4644a2f92664fd87b469e314766b6ebf8a7486a42`;
+executable SHA-256 `224527703fd06f01cfec8a7de637ecedd55209263ff21e48fa91a652caa110e1`.
+Local signature is verified; no notarization/public release is claimed. Receipts and isolated QA
+are under `/private/tmp/craft-assistant-016-20261104/`.
+
+## Two-Mac helper acceptance completed
+
+Both devices now resolve helper 0.1.6, retaining 0.1.4 for rollback. MacBook preactivation
+qualification passed independently in 10.11 s with the same configured Terra model and actual
+WordCraft `dbacf0c4` document edit/Undo/Redo/save/reopen checks. Both screenshots were inspected:
+requested text visible, compact composer present, tool rows hidden. Installer checks confirmed
+unchanged production configuration and all existing app binaries, verified signatures/hashes,
+and successful PDF/Word/Grid/Deck handshakes. No existing user window was terminated.
+
+The exact signed 0.1.6 native MCP fixture passed in 16.94 s. Earlier skill and cancellation
+checks remain recorded above; the final startup flag change adds a targeted command regression.
+WordCraft's required `cargo xtask ci` passed all nine steps with the exact pinned craft-i18n
+input and the reviewed font checkout: fmt, Clippy, tests, i18n report, language, doctests, assets,
+layers and all 15 WASM crates. Log: `/private/tmp/wordcraft-native-ledger-ci.log`.
+Deck's full eight-step CI also passed; final source pin, live model acceptance and preview
+packaging remain separate. Native VoiceOver/IME/clipboard and every connected plugin have not
+been exhaustively tested. Craft chats stay app-owned; external native edits are outside app Undo.

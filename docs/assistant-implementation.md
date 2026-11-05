@@ -1,5 +1,9 @@
 # Portable assistant implementation ledger
 
+The November 4 normal Codex profile/skills/plugins integration and DeckCraft work are tracked in
+[the current runtime ledger](codex-native-deckcraft-ledger.md). That record supersedes historical
+Craft-isolated account and restricted-native-tool descriptions below.
+
 The current compact-layout rollout (2026-11-03) is tracked in [the v0.15 integration ledger](upstream-assistant-v015.md#compact-assistant-rollout--2026-11-03). The last completed v0.15 two-Mac qualification is in [the local qualification record](wordcraft-015-local-qualification.md). Earlier installation statements below are historical.
 
 Current source (2026-11-02): full side-panel and external MCP capability parity is verified by focused automated tests. The [full MCP parity change](mcp-assistant-parity.md) supersedes the assistant-only document, command and exact-file restrictions described in earlier historical entries below. This increment is not yet an installed release.

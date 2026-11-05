@@ -2,6 +2,7 @@
 
 Current host source pins compatible shared libraries and loads the independently installed helper, with the [complete external MCP interface](mcp-assistant-parity.md).
 The [integration ledger](upstream-assistant-v015.md#compact-assistant-rollout--2026-11-03) records the current build and installation state.
+The [native Codex and DeckCraft ledger](codex-native-deckcraft-ledger.md) records the November 4 runtime qualification and deployment.
 The current helper panel has New chat and Chat history controls, gear settings, and `+` file/model controls in the composer.
 Quick model choices apply to WordCraft; settings retains suite defaults and custom model IDs.
 Helper version and update controls appear in settings. The separate preview app still disables
@@ -42,31 +43,29 @@ connection and model, then select the Apply button, which names whether the chan
 **Advanced model options** contains the app override switch and **Use suite default**. API keys go into the platform credential
 store, separate from settings and chats. If that store is unavailable, saving the key fails visibly.
 
-Codex uses a separate Craft-managed sign-in. It does not reuse your coding assistant's credentials,
-history, settings or MCP registrations. Under **Add or edit a connection → Codex account**, choose **Sign in to Codex**, then
-enter the one-time code shown in WordCraft on the browser page. Keep WordCraft open until it shows
-**Codex connection saved**, then choose and apply the model. Signing into the browser
-account alone does not complete the device connection.
+Helper 0.1.6 uses the normal Codex account and configuration: `CODEX_HOME` when explicitly
+set, otherwise the user's normal Codex home. Enabled skills, plugins, MCP servers and native
+tools follow that profile. Use `$skill-name` to invoke an enabled skill explicitly. Sign-in in
+connection settings applies to that same profile; the legacy Craft `codex/` directory is retained
+but is no longer selected automatically. Craft chats remain app-owned; this does not merge Codex
+CLI or desktop conversation history.
 
-The installed Codex executable must pass compatibility and
-containment checks before document context is supplied. Failures remain visible and do not switch
-providers. Set `CRAFT_CODEX_BINARY` to an absolute executable path when Codex is not on the
-desktop app's PATH. Sign-in and discovery alone do not confirm readiness: a synthetic callback
-and result-continuation check must succeed for the selected model before document context is sent.
-Earlier Codex basic edit/read-back/Undo acceptance passed; broader adversarial containment remains
-a release gate. The preview retains successful compatibility proofs in memory
-for the app session. Every turn gets fresh callback exchanges and checks the signed-in account
-before private context; conversations and pending tool exchanges are never shared between turns.
-Changing the executable, model or runtime limits invalidates the proof. Reloading settings,
-starting sign-in or changing the configuration root clears the template. Ordinary document or
-window changes keep it. No proof is saved to disk. Source gates and synthetic model acceptance
-are recorded in the ledger and benchmarks.
+Native approvals, questions, permissions and MCP elicitation appear in the pane and require an
+explicit response. Native tools follow Codex's configured policies. App document tools retain
+normal Undo; changes made by external/native tools are outside WordCraft Undo.
+
+Set `CRAFT_CODEX_BINARY` to select an absolute Codex executable path. Missing executables,
+account failures and unavailable models fail visibly without selecting another provider or
+credential. The account is checked before document context is sent. A normal Codex workspace
+is retained under the shared AI root's `workspaces/wordcraft`; `CRAFT_CODEX_WORKSPACE` can select
+an absolute project/output directory. Settings displays the effective workspace. Finder's launch
+directory is never used as the default. Root and application-bundle workspaces are rejected.
 
 Ask for document work in the same conversation as general chat. Requested edits apply directly and
 use normal **Undo**. Relevant document text and tool results go to
 the selected provider when the task needs them. Selecting Ollama removes the two-provider handoff;
 this is not a network privacy audit. Existing chat history can contain document text and tool
-results; changing providers does not erase it. Tool activity and results appear in the pane. **Stop** cancels inference and
+results; changing providers does not erase it. Tool activity/result rows are hidden; approvals and model replies remain visible. **Stop** cancels inference and
 invalidates commands that have not been dispatched. Completed edits remain in the document and can
 be undone; an uncertain command outcome is never replayed automatically.
 
@@ -179,7 +178,9 @@ directory followed by `Craft/ai` (on macOS, `~/Library/Application Support/Craft
 | `runtime.json` | Validated request timeouts, context/response limits and tool-round limits |
 | `chats/wordcraft/` | WordCraft conversations; each Craft app has a separate namespace |
 | Platform credential store | API credentials; never embedded in documents or transcript files |
-| `codex/` under the shared root | Craft account state and restricted runtime configuration; child HOME, USERPROFILE and CODEX_HOME all use this isolated home |
+| Normal Codex home | Existing account, configuration, skills, plugins and MCP registrations; `CODEX_HOME` selects an explicit profile |
+| `workspaces/wordcraft/` | Retained native-tool output directory unless `CRAFT_CODEX_WORKSPACE` overrides it |
+| Legacy `codex/` under the shared root | Preserved historical account data; not automatically reused by helper 0.1.6 |
 
 The preview uses the existing `assistant.chat` binding as its canonical model
 choice. Legacy `assistant.control` bindings, credentials and conversations are preserved but do
