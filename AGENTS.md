@@ -94,7 +94,7 @@ Progress docs: `ROADMAP.md` (stage, headline numbers, progress log), `docs/targe
 
 - The owner now requires one normal `/Applications/WordCraft.app` with the integrated
   Assistant on both Macs. Separate Assistant Preview apps are obsolete. This supersedes
-  the historical Preview-only delivery instructions below.
+  the historical Preview-only delivery policy.
 - Use `packaging/macos/assistant-preview.sh --standard` with explicit compatible-source
   and verified underlying tag/commit metadata. Preserve both old profiles and shared
   assistant settings/conversations; never overwrite profile data to consolidate apps.
@@ -103,30 +103,18 @@ Progress docs: `ROADMAP.md` (stage, headline numbers, progress log), `docs/targe
   replace this app with one. Keep rollback copies and verify installed model/document
   behavior independently on each Mac before removing active Preview copies.
 
-### Historical Preview workflow (superseded)
-
-
-- New preview builds are installed at `/Applications/WordCraft Assistant Preview.app`; keep
-  `/Applications/WordCraft.app` separate and unchanged. This replaces the earlier `~/Applications`
-  delivery location. Preserve existing profiles, credentials and conversations.
-- Every delivered preview build also gets a version/commit-named Apple-silicon DMG and SHA-256
-  checksum for the other Mac. Use `packaging/macos/assistant-preview.sh`; verify the mounted
-  app and a copy extracted from the DMG before installation. No public release is implied.
-- The preview launcher passes `--disable-updates` so the standard WordCraft updater cannot replace
-  the custom preview. Bring upstream WordCraft changes into the preview source deliberately,
-  retain assistant changes, run the quality gates, then rebuild/install/package together.
-- Keep the assistant in the WordCraft window. A background service may eventually separate its
-  update lifecycle, but a second chat/MCP-client window does not meet the owner's goal. The
-  service split is design work until explicitly implemented; do not claim it already exists.
-- Never force-quit an instance or discard writing to install a build. Retain a rollback copy of
-  any replaced preview. If an old instance remains open, explain that the new build takes effect
-  after saving/quitting it and opening the exact `/Applications` path.
-- Before handing off or deploying assistant changes, run the actual configured models on
-  synthetic documents, verify the requested visible edit, saved/reopened content and Undo.
-  UI-only smoke and assistant success narration are insufficient. Record model, latency,
-  instruction adherence and any failed acceptance; do not claim those failures are complete.
-- Local document inference is a soft preference for now; general chat may use cloud models.
-  The integrated two-role handoff can send document tasks/results to the chat provider. State
-  that limitation; do not claim local-only privacy or add routing modes without agreement.
-- Record the deployed source, artifact checksums, updater policy, smoke checks and remaining
-  destination-Mac acceptance in the implementation ledger and local handoff.
+- Preserve the managed ArtCraft Launcher and its self-update protection. Normal app updates
+  must use its trusted builder/verifier; never install a stock app or launcher over this setup.
+  Current per-app state is in [the integration ledger](docs/upstream-assistant-v015.md);
+  [the suite ledger](https://github.com/andykumeda/pdfcraft/blob/codex/independent-assistant/docs/single-app-assistant-rollout.md) remains authoritative for remaining apps.
+- Never force-quit an instance or discard writing. Retain rollback bundles outside active app
+  folders, preserve standard/retired Preview profiles and shared AI data, and verify each Mac.
+- Before delivering a changed native app, run the configured model on synthetic content and
+  verify the visible edit, no early save, Undo/Redo and saved/reopened output. A helper-only UI
+  update may reuse exact-native model evidence and add installed no-model rendering checks.
+- Keep the Assistant in the document window. Local document inference remains a soft
+  preference; general chat may use cloud models. Respect the selected provider and credentials;
+  relevant document context may reach a selected cloud provider. Do not claim local-only
+  privacy or add routing modes without agreement. Record actual checks and limitations.
+- Historical Preview delivery records remain in `docs/assistant-updates.md`; they are not
+  instructions to reinstall or update a separate Preview app.

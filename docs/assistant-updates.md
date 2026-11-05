@@ -1,5 +1,11 @@
 # Assistant preview updates
 
+Historical reference only (superseded2026-11-05). The active app is now
+`/Applications/WordCraft.app` with its integrated Assistant on both Macs; Preview apps and
+obsolete MCP shortcuts are retired. Use the managed ArtCraft Launcher, not the Preview
+procedure below. See [current per-app delivery](upstream-assistant-v015.md#current-single-app-deployment--2026-11-05)
+and [the overall suite ledger](https://github.com/andykumeda/pdfcraft/blob/codex/independent-assistant/docs/single-app-assistant-rollout.md); suite completion is tracked separately.
+
 Status: 2026-11-03 — independent shared-helper updates are implemented. WordCraft's document
 engine and host controls still require a rebuilt app binary. The current compact-layout source
 and installed candidate state are in the [integration ledger](upstream-assistant-v015.md#compact-assistant-rollout--2026-11-03).

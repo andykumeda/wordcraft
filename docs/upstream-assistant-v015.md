@@ -1,13 +1,62 @@
 # WordCraft v0.15 assistant integration
 
-Status: **Deployed on both Macs** — WordCraft Assistant Preview0.15.2, source `fccdfe38`, 2026-11-04. See [the current update ledger](#official-v0152-reconciliation--2026-11-04). Earlier checkpoints are historical.
+Status: **Deployed for WordCraft on both Macs**, 2026-11-05 (America/Los_Angeles).
+The active app is `/Applications/WordCraft.app` with the integrated Assistant; its separate
+Assistant Preview app and old MCP shortcut have been retired. This closes this app's workstream only. The
+[suite consolidation ledger](https://github.com/andykumeda/pdfcraft/blob/codex/independent-assistant/docs/single-app-assistant-rollout.md) owns overall progress; this per-app deployment does not claim all four apps are complete.
+
+## Current single-app deployment — 2026-11-05
+
+| Component | Installed / verified state |
+| --- | --- |
+| Normal app | WordCraft 0.15.2, native source `fccdfe385a07e70f51ab71f9544e0be08f7a0484` |
+| Underlying official release | `v0.15.2`, commit `edfea68101220c9bdc4b2b0ccf4acd9612bedb6e` |
+| Signed native SHA-256 | `3b6d253ef92373dae725ae500e24fe4cc0415be9bfbbad2c28e4b98fc56a8328` |
+| Assistant helper | 0.1.7 on Mini and MacBook; bridge protocol1 unchanged |
+| Update owner | Managed ArtCraft Launcher 0.14.1/source19170137; actual installed-launcher replacements passed on both Macs |
+| Local signing | Exact `stt-dev` certificate `D7B1B5524FFEB37AB01D3960017BDF6743E3EDFD`; not notarized or a public release |
+
+Use the **managed ArtCraft Launcher** to check official release freshness and update this app.
+Its trusted source builder retains the Assistant, reconciles the requested official tag,
+runs the required checks and produces a signed normal bundle. The launcher verifies the
+standard identity, exact certificate, assistant protocol/repository and signed
+`CraftUnderlyingTag`/`CraftUnderlyingCommit` before replacement. Failed builds, unavailable
+build hosts or source conflicts leave the installed app intact; there is no stock-package
+fallback. The MacBook uses signed artifacts from the Mini, which must be reachable for a new
+build. The app's own updater is disabled by its standard wrapper. Preserve the managed launcher,
+including its self-update protection; ordinary upstream app/launcher packages are not this route.
+
+The exact native above passed configured Codex/Terra/helper 0.1.6 candidate acceptance
+independently on both Macs (24.62s Mini / 13.19s MacBook): requested synthetic edit, no early save,
+Undo/Redo, explicit save/reopen and rendered output. After the protected installations,
+no-model checks on the normal paths passed with helper 0.1.7 on both hosts: panel/status,
+control responses, light/dark composer outlines and update guidance. Screenshots were
+inspected; the bottom composer border is complete without clipping. The helper update was
+not qualified by repeating a paid model turn. Full source CI passed all nine gates;
+this documentation-only closeout does not rerun or imply new code checks.
+
+Evidence: `/private/tmp/wordcraft-standard-ci.log`,
+`/private/tmp/craft-single-app-evidence/word-{mini,book}/` (actual-model candidates),
+and `/private/tmp/craft-single-app-evidence/word-{mini,book}-installed/` (installed reports/rendered panels).
+Owned processes exited normally; listeners and task-owned control keys were cleaned up.
+Standard and old Preview profiles, recovery data, shared AI settings and conversations were
+preserved, without profile merging or credential copying. Active Preview bundles and obsolete
+MCP shortcuts were retired, and Preview installers archived under the per-host
+`~/Library/Application Support/Craft/retired-apps/2026-11-05-single-app.noindex/` record.
+No owner process was force-quit. Physical IME, clipboard and VoiceOver checks were not repeated.
+
+## Historical integration and Preview delivery (superseded)
+
+Everything below records earlier checkpoints, not the active installation policy.
+
+Historical checkpoint: WordCraft Assistant Preview0.15.2/source `fccdfe38` was deployed on2026-11-04. See [the current update ledger](#official-v0152-reconciliation--2026-11-04). Earlier checkpoints are historical.
 
 The isolated task branch combines assistant commit `05d5fb21` with upstream `origin/main`
 `ab0020d6` (WordCraft 0.15.0). This retains the embedded, independently installed assistant
 and its complete live MCP client interface while taking upstream document, proofing,
 interface and file-format fixes. The original assistant checkout remains separate.
 
-## Task ledger
+## Historical integration task ledger
 
 | Work | State | Acceptance and evidence |
 |---|---|---|

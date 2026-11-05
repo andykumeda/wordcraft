@@ -1227,3 +1227,5 @@ Footer page-table height and body wrapping are corrected. Other pagination gaps 
 - 2026-11-03 — Assistant: compact shared panel0.1.1 pin and desktop candidates are tracked in `docs/upstream-assistant-v015.md`; no document-engine or readiness-estimate change.
 
 - 2026-11-05: Added reproducible single-app Assistant packaging with verified underlying-source metadata; installation and launcher preservation are tracked separately in the suite consolidation ledger.
+
+- 2026-11-05: Documented the deployed single normal app on both Macs, managed-launcher update ownership, helper0.1.7 outlines, preserved data and retired Preview delivery. This app is deployed; overall suite completion is tracked separately in the central ledger. Documentation-only closeout, no new code checks claimed.

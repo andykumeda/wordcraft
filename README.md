@@ -145,15 +145,18 @@ wordcraft-cli run --script job.json                 # the same from a file: comm
 
 Web: `cd apps/wordcraft-web && trunk serve`, then open <http://127.0.0.1:8771/?sample>.
 
-## Assistant preview builds
+## Integrated Assistant and app updates
 
-The View ribbon keeps its Assistant button at the far right, including when other groups scroll.
-This branch includes an integrated assistant preview. It is installed as
-`/Applications/WordCraft Assistant Preview.app`, separately from the normal app, and delivered
-as a versioned Apple-silicon DMG. Its launcher disables the standard updater so an official
-release cannot replace the custom preview. Upstream changes are integrated and verified before
-new preview builds. Models/providers remain externally configurable. Installed versions and the current compact-layout candidate are tracked in
-[the integration ledger](docs/upstream-assistant-v015.md). See [preview updates](docs/assistant-updates.md).
+Open `/Applications/WordCraft.app` on either Mac. The Assistant is integrated into this normal
+app, with its View-ribbon button at the far right; separate Preview apps are retired.
+Use the **managed ArtCraft Launcher** to check underlying official releases and update the
+app while preserving the panel. Its signed source/protocol checks reject an incompatible
+replacement, and failed builds preserve the current app. The app's own updater is disabled;
+do not replace this build or its managed launcher with ordinary upstream packages.
+
+[Installed versions and checks](docs/upstream-assistant-v015.md#current-single-app-deployment--2026-11-05),
+[update policy](docs/custom-assistant-updates.md) and
+[the overall suite ledger](https://github.com/andykumeda/pdfcraft/blob/codex/independent-assistant/docs/single-app-assistant-rollout.md) record overall suite progress separately from this app's deployed state.
 
 ## For agents: CLI and MCP
 
@@ -369,5 +372,5 @@ The panel uses all 17 tools from the same live MCP server as external clients, w
 See [custom assistant and app updates](docs/custom-assistant-updates.md) for configuration, approved updates and compatibility safeguards. Installed versions and native accessibility/input qualification are recorded in the integration ledger; local candidate signing does not imply a public or notarized release.
 
 The current assistant source uses gear settings and compact composer file/model menus.
-The compact-layout build and its installation state are tracked in
-[the source and candidate ledger](docs/upstream-assistant-v015.md#compact-assistant-rollout--2026-11-03).
+The current normal-app installation and helper 0.1.7 qualification are tracked in
+[the integration ledger](docs/upstream-assistant-v015.md#current-single-app-deployment--2026-11-05).
