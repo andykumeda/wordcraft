@@ -8,6 +8,34 @@ checks begin. The app then uses `craft-update` with an explicit custom release p
 builds retain their existing updater. `--disable-updates` always blocks both startup and manual
 checks; configuring a source never overrides that opt-out.
 
+## Single normal app packaging — 2026-11-05
+
+The owner has replaced the separate Preview delivery requirement with one normal
+WordCraft.app containing the Assistant on both Macs. `packaging/macos/assistant-preview.sh --standard` packages a verified existing native under the normal name and bundle ID.
+It preserves the existing standard document profile, leaves old Preview profiles intact,
+and continues to use the shared Craft AI store for assistant settings/conversations.
+The standard wrapper disables app self-updates; ArtCraft Launcher owns compatible app updates.
+Packaging alone does not make an unchanged official launcher preserve the Assistant.
+
+Required explicit inputs: `CRAFT_UPDATE_REPOSITORY`, `CRAFT_ASSISTANT_BRIDGE_PROTOCOL`,
+`CRAFT_UPSTREAM_TAG` and `CRAFT_UPSTREAM_SHA`. The underlying tag must match the app
+version, resolve to the supplied full commit, and be an ancestor of the binary's
+verified source commit. The signed plist carries `CraftUnderlyingTag` and
+`CraftUnderlyingCommit` alongside the assistant protocol/repository metadata.
+
+Packaging verification: shell syntax, required-input rejection, metadata valid/invalid
+cases, signed ZIP extraction, mounted DMG and copied-app strict signature checks.
+`packaging/macos/test-standard-package.sh /path/to/WordCraft.app` checks standard
+identity, updater-only wrapper, absence of Preview profile overrides, signed protocol
+and underlying-source metadata, and binary version/source. The full `cargo xtask ci` pipeline passed all nine gates on 2026-11-05
+(`/private/tmp/wordcraft-standard-ci.log`). Standard package source is existing
+`fccdfe38`; the native app was reused rather than rebuilt. Signed native SHA-256:
+`3b6d253ef92373dae725ae500e24fe4cc0415be9bfbbad2c28e4b98fc56a8328`.
+The standard DMG SHA-256 is
+`cd891f32fd9a57a44cfcebde32ea5c11ed02d4655113797a451c516383cb8dd4`.
+Native installed acceptance and launcher update delivery remain owned by the suite
+consolidation ledger; packaging does not claim either Mac was changed.
+
 ## Configure the app source
 
 Add this app to `sources.json` in the shared assistant settings directory (macOS:

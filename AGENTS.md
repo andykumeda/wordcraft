@@ -90,7 +90,21 @@ Progress docs: `ROADMAP.md` (stage, headline numbers, progress log), `docs/targe
 - Maintainers refresh the stats with `python3 ../../craftrules/scripts/contributors.py .` (it also
   re-verifies who wrote each `people.toml` entry; `--check` only verifies).
 
-## Owner's assistant-preview delivery workflow
+## Owner's single-app assistant delivery workflow (2026-11-05)
+
+- The owner now requires one normal `/Applications/WordCraft.app` with the integrated
+  Assistant on both Macs. Separate Assistant Preview apps are obsolete. This supersedes
+  the historical Preview-only delivery instructions below.
+- Use `packaging/macos/assistant-preview.sh --standard` with explicit compatible-source
+  and verified underlying tag/commit metadata. Preserve both old profiles and shared
+  assistant settings/conversations; never overwrite profile data to consolidate apps.
+- ArtCraft Launcher owns app updates and must install assistant-compatible builds.
+  An official upstream bundle alone would remove the custom panel; never silently
+  replace this app with one. Keep rollback copies and verify installed model/document
+  behavior independently on each Mac before removing active Preview copies.
+
+### Historical Preview workflow (superseded)
+
 
 - New preview builds are installed at `/Applications/WordCraft Assistant Preview.app`; keep
   `/Applications/WordCraft.app` separate and unchanged. This replaces the earlier `~/Applications`
