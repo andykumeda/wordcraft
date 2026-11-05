@@ -9,9 +9,9 @@ Assistant Preview app and old MCP shortcut have been retired. This closes this a
 
 | Component | Installed / verified state |
 | --- | --- |
-| Normal app | WordCraft 0.15.2, native source `fccdfe385a07e70f51ab71f9544e0be08f7a0484` |
+| Normal app | WordCraft 0.15.2, native source `847526d8838553ad2c15e8d3ab7db9795d3e7f48`; one title-bar Assistant sparkle beside Discord |
 | Underlying official release | `v0.15.2`, commit `edfea68101220c9bdc4b2b0ccf4acd9612bedb6e` |
-| Signed native SHA-256 | `3b6d253ef92373dae725ae500e24fe4cc0415be9bfbbad2c28e4b98fc56a8328` |
+| Signed native SHA-256 | `ebd7751d715f6f6fcba306ad900811fd94c03184ff33377a7b60b247d6597f85` |
 | Assistant helper | 0.1.7 on Mini and MacBook; bridge protocol1 unchanged |
 | Update owner | Managed ArtCraft Launcher 0.14.1/source19170137; actual installed-launcher replacements passed on both Macs |
 | Local signing | Exact `stt-dev` certificate `D7B1B5524FFEB37AB01D3960017BDF6743E3EDFD`; not notarized or a public release |
@@ -26,14 +26,15 @@ fallback. The MacBook uses signed artifacts from the Mini, which must be reachab
 build. The app's own updater is disabled by its standard wrapper. Preserve the managed launcher,
 including its self-update protection; ordinary upstream app/launcher packages are not this route.
 
-The exact native above passed configured Codex/Terra/helper 0.1.6 candidate acceptance
+The previous native `fccdfe38` passed configured Codex/Terra/helper 0.1.6 candidate acceptance
 independently on both Macs (24.62s Mini / 13.19s MacBook): requested synthetic edit, no early save,
 Undo/Redo, explicit save/reopen and rendered output. After the protected installations,
 no-model checks on the normal paths passed with helper 0.1.7 on both hosts: panel/status,
 control responses, light/dark composer outlines and update guidance. Screenshots were
 inspected; the bottom composer border is complete without clipping. The helper update was
 not qualified by repeating a paid model turn. Full source CI passed all nine gates;
-this documentation-only closeout does not rerun or imply new code checks.
+this historical acceptance does not imply a new model turn on the toolbar-only native above.
+The current toolbar source and installed checks are recorded in the [title-bar ledger](#title-bar-assistant-placement--2026-11-05).
 
 Evidence: `/private/tmp/wordcraft-standard-ci.log`,
 `/private/tmp/craft-single-app-evidence/word-{mini,book}/` (actual-model candidates),
@@ -287,10 +288,10 @@ never force-quit a user instance or sent commands to an existing personal docume
 
 | Work / owner | State | Acceptance / evidence |
 |---|---|---|
-| Word title bar / Word owner | Verified | One icon-only Assistant beside Discord, across Home/View/Insert; existing `ui.assistant`, selected state, accessible name and tooltip retained. Home/View duplicates removed. |
+| Word title bar / Word owner | Deployed | One icon-only Assistant beside Discord, across Home/View/Insert; existing `ui.assistant`, selected state, accessible name and tooltip retained. Home/View duplicates removed. |
 | Source verification / Word owner | Verified | Placement/pointer/Space regression across 600/800/1440 points, Home/View/Insert and both palettes; collapsed ribbon/hidden Discord. All nine `cargo xtask ci` gates passed; four 600/1440-point light/dark renders inspected. |
-| Standard package / Word owner | Not started | Preserve normal identity/profile, integrated assistant and managed launcher update route. |
-| Two-Mac delivery / primary | Not started | No installed app or personal document changed by source work. Native/model checks remain separate. |
+| Standard package / Word owner | Verified | Source `847526d8`, optimized required-input build passed in 13m05s; standard signed ZIP extraction, DMG mount/copy, exact certificate/metadata and independent both-host candidate checks passed. |
+| Two-Mac delivery / primary + Word owner | Deployed | Protected launcher installed normal app on both Macs; independently repeated actual icon open/close, helper 0.1.7 light/dark renders and data/cleanup checks on each installed path. No inference requested. |
 
 This supersedes the historical View-only placement above. No provider/model/credential,
 conversation or document behavior changes are requested. Verification and deployment evidence
@@ -308,3 +309,49 @@ no new asset/dependency is added. Source screenshots are private QA outputs unde
 The normal desktop minimum width remains 760 points; the 600-point offscreen stress case retains
 the existing crowded title/search controls, while the Assistant itself stays visible.
 Native installed checks, VoiceOver, IME, clipboard and inference have not been repeated here.
+
+
+### Title-bar package and installed acceptance
+
+Source `847526d8838553ad2c15e8d3ab7db9795d3e7f48` is committed/pushed to the existing
+`fork/codex/independent-assistant`; no upstream-main push, public release or notarization.
+The standard package retains `ai.storyteller.wordcraft`, the normal profile, disabled built-in
+updater, protocol 1 and exact underlying official `v0.15.2`/`edfea681` metadata. The exact local
+certificate SHA-1 is `D7B1B5524FFEB37AB01D3960017BDF6743E3EDFD`. Artifacts:
+`dist/assistant-standard/847526d8/wordcraft-0.15.2-macos-aarch64.{zip,dmg}`.
+ZIP SHA-256 `7c901009dfef1234030f4e141a4b7c3ed21701164126905a931ca590146f8f29`;
+DMG SHA-256 `1fda3d98fdb816b7e53c535257e3210ac6eee14c921eef0cf526074b5ca9b70d`.
+The exact installed signed native on both hosts is
+`ebd7751d715f6f6fcba306ad900811fd94c03184ff33377a7b60b247d6597f85`.
+
+| Host / component | State | Independent observed evidence |
+|---|---|---|
+| Mini / signed candidate | Verified | Actual top icon opened/closed Assistant in light/dark, helper 0.1.7 child rendered; reviewed PNGs; source/native verified. |
+| MacBook / signed candidate | Verified | Same independent checks and exact native bytes; temporary candidate unregistered after normal exit. |
+| Mini / `/Applications/WordCraft.app` | Deployed | Protected launcher replacement; actual icon open/close, helper light/dark PNG review, synthetic document/readback and saved bytes unchanged. |
+| MacBook / `/Applications/WordCraft.app` | Deployed | Same independent installed-path checks; exact signed native source/hash matched Mini. |
+
+All four isolated native runs used disposable profiles and empty connection stores, copied only
+public helper/source configuration, requested no inference and read no real provider credentials.
+The unavailable-model label in those disposable screenshots is expected from that deliberately
+empty store. Normal Word/retired Preview profiles, recovery files and the entire shared AI store
+had identical before/after file hashes. Every owned app exited normally, released its listener
+and removed its control key; no baseline user process was stopped. Candidate paths were
+unregistered after testing. Existing model credentials, routing, conversations and CLI/MCP
+registrations remain unchanged. Physical VoiceOver, IME and clipboard were not repeated.
+
+Private evidence (reports and reviewed PNGs):
+
+- Mini candidate: `/var/folders/cg/796c5bys74db15ww0b_qvw8c0000gn/T/wordcraft-top-toolbar-v6epzvtc/`.
+- Book candidate: `/var/folders/z6/7ct4dgns2236tw0d27zdb9s40000gn/T/wordcraft-top-toolbar-otn0ceyu/`.
+- Mini installed: `/var/folders/cg/796c5bys74db15ww0b_qvw8c0000gn/T/wordcraft-top-toolbar-vksjnm0f/`.
+- Book installed: `/var/folders/z6/7ct4dgns2236tw0d27zdb9s40000gn/T/wordcraft-top-toolbar-l4gyt71u/`.
+- Book report/PNG copies: `/private/tmp/wordcraft-title-toolbar-evidence/{book-candidate,book-installed}/` on Mini.
+- CI/build/package logs: `/tmp/wordcraft-title-toolbar-{ci,release,package}.log`.
+- Primary launcher receipts: `/private/tmp/word-toolbar-install-{mini,book}.log` on Mini.
+
+Primary retained exact verified prior-app ZIPs per host under
+`~/Library/Application Support/Craft/retired-apps/2026-11-05-top-toolbar.noindex/`
+as `wordcraft-HOST-before-toolbar.zip`. The root suite ledger owns final inventory and
+post-documentation cache-fingerprint refresh. No app/provider contract changes or remaining
+Word installation work are implied by that documentation-only finalization.

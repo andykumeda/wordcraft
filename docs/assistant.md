@@ -3,6 +3,7 @@
 Current host source pins compatible shared libraries and loads the independently installed helper, with the [complete external MCP interface](mcp-assistant-parity.md).
 The [current integration ledger](upstream-assistant-v015.md#current-single-app-deployment--2026-11-05) records the normal WordCraft0.15.2 installation on both Macs with helper 0.1.7. Separate Preview apps are retired.
 The [native Codex and DeckCraft ledger](codex-native-deckcraft-ledger.md) records the November 4 runtime qualification and deployment.
+The Assistant sparkle toggle is beside **Discord** in the top title bar on both Macs; [placement and installed verification](upstream-assistant-v015.md#title-bar-assistant-placement--2026-11-05).
 The current helper panel has New chat and Chat history controls, gear settings, and `+` file/model controls in the composer.
 Quick model choices apply to WordCraft; settings retains suite defaults and custom model IDs.
 Helper version and update controls appear in settings. The normal app wrapper disables its built-in app updater; use the managed ArtCraft Launcher for assistant-preserving app updates. Shared-helper updates remain independent.

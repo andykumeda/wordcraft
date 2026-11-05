@@ -139,7 +139,7 @@ Ranked, to beta (detail and remaining milestones in [docs/roadmap.md](docs/roadm
 
 ## Progress log
 
-- 2026-11-05: Assistant moves to one sparkle icon beside Discord in the title bar, independent of the active/collapsed ribbon. [Verification and delivery](docs/upstream-assistant-v015.md#title-bar-assistant-placement--2026-11-05) are tracked separately; document/provider behavior is unchanged.
+- 2026-11-05: Assistant moves to one sparkle icon beside Discord in the title bar, independent of the active/collapsed ribbon. [Verification and delivery](docs/upstream-assistant-v015.md#title-bar-assistant-placement--2026-11-05) are tracked separately; both normal installed apps passed independent icon/helper and data-preservation checks. Document/provider behavior is unchanged.
 
 - 2026-11-04: The custom View ribbon pins Assistant at the far right outside the scrolling groups, retaining its existing icon and toggle command. Source verification is recorded in [the integration ledger](docs/upstream-assistant-v015.md#view-toolbar-refinement--2026-11-04); installed previews are unchanged.
 
