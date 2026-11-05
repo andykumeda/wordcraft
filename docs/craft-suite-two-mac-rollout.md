@@ -1,9 +1,8 @@
 # Craft suite — two-Mac update
 
-Status: Deployed except blocked MacBook standard WordCraft. Updated: 2026-11-04 (America/Los_Angeles).
+Status: Deployed on both Macs. Updated: 2026-11-05 (America/Los_Angeles).
 
-The owner requested the latest apps on Mini and MacBook. Scope is the installed Craft suite;
-a clarification about other installed apps is pending. Standard official releases and custom
+The owner requested the latest apps on Mini and MacBook. Scope is the installed Craft suite, confirmed by the owner on2026-11-05. Standard official releases and custom
 assistant previews are separate workstreams. Preserve all documents, profiles, credentials,
 conversations, helper routing and rollback copies. Never replace a running app or force it to quit.
 
@@ -13,7 +12,7 @@ conversations, helper routing and rollback copies. Never replace a running app o
 | DeckCraft standard | 0.15.1 | Deployed | Deployed | Primary; official artifact/checksum, signature, version/startup |
 | FigCraft | 0.15.1 | Deployed | Deployed | Primary; official artifact/checksum, signature, version/startup |
 | LightCraft | 0.18.1 | Deployed | Deployed | Primary; official artifact/checksum, signature, version/startup |
-| WordCraft standard | 0.15.2 | Deployed | Blocked | Primary; MacBook app open (PID88575), owner asked to save/quit |
+| WordCraft standard | 0.15.2 | Deployed | Deployed | Primary; Book owner saved/quit; signature/hash/version and native GUI/MCP edit/Undo/save/reopen/render passed |
 | PdfCraft standard | 0.18.2 | Deployed | Deployed | Primary; official artifact/checksum, signature, version/startup |
 | GridCraft standard | 0.16.1 | Deployed | Deployed | Primary; official artifact/checksum, signature, version/startup |
 | WordCraft Assistant Preview | 0.15.2 + custom changes | Deployed | Deployed | Word owner; release reconciliation, CI, signed package, native Terra edit/Undo/save/reopen |
@@ -37,7 +36,7 @@ current custom behavior remains in the separately updated Assistant Preview apps
 release, upstream-main push, new remote or account/configuration copying is authorized by this
 ledger. Per-app owners keep source/verification/install records synchronized in their repositories.
 
-## Official installation checkpoint
+## Official installation checkpoint — 2026-11-04 (historical)
 
 All seven standard apps are installed at their latest resolved versions on Mini. MacBook has
 six updated; its running WordCraft is retained pending the owner saving/quitting. All six
@@ -55,7 +54,7 @@ authenticated GUI/MCP synthetic edit/read/Undo/Redo/save/reopen/render check; it
 and key were released. App configuration and user documents were not copied or changed.
 
 Temporary official reports: `/private/tmp/craft-suite-rollout-20261104/reports/` on each host.
-Word, Grid and Deck preview reconciliations, full gates, signed packages and actual configured Terra edit/Undo/save/reopen qualification passed on both hosts. PDF full CI (6586 passing tests,16 ignored), direct dependency-policy check and signed-package validation pass; Mini signed-candidate/installed actual Terra checks pass (23.49s/28.65s), and Book signed-candidate/installed checks pass (23.82s/20.21s). MacBook standard WordCraft still has PID88575 open and is never force-closed.
+Word, Grid and Deck preview reconciliations, full gates, signed packages and actual configured Terra edit/Undo/save/reopen qualification passed on both hosts. PDF full CI (6586 passing tests,16 ignored), direct dependency-policy check and signed-package validation pass; Mini signed-candidate/installed actual Terra checks pass (23.49s/28.65s), and Book signed-candidate/installed checks pass (23.82s/20.21s). At the2026-11-04 checkpoint, MacBook standard WordCraft had PID88575 open; the2026-11-05 completion below supersedes that blocker.
 
 ## Assistant preview delivery evidence
 
@@ -83,11 +82,28 @@ in each Downloads directory. Final PDF installed native confirmation additionall
 hosts with unchanged standard app/config/helper hashes. Owned test processes exit normally and
 loopback listeners release; no user process is stopped.
 
-Only blocked item: `/Applications/WordCraft.app` on MacBook remains0.15.0, PID88575 open.
-Owner has been asked to save/quit. The verified official0.15.2 archive and guarded installer are
-already staged at `/private/tmp/craft-suite-rollout-20261104/` on Book. After the app has closed,
-run `python3 /private/tmp/craft-suite-rollout-20261104/install-official.py wordcraft` on Book,
-then verify its report/version/signature and update this row. Do not substitute AppleEvent
-termination, force quit, or replacing the running bundle for the owner's normal save/quit.
-No other installed/non-Craft application scope was confirmed. Existing MCP processes and their
+### MacBook Word completion — 2026-11-05
+
+Owner confirmed Craft-suite scope and saved/quit WordCraft. Verified AKs-MBPro.local/andy/arm64
+and absence of running standard WordCraft before installation. The unchanged guarded installer
+(`305405fd51bc89c5d787054573d37d0003ece2dab2b653ef75f6e15535403f87`) installed official0.15.2
+source `edfea68101220c9bdc4b2b0ccf4acd9612bedb6e` from the previously verified archive
+SHA-256 `1ce120e09aa842fe24a82f0f0023d850416bc1f0bef6e4848dbfcb69d60ddadf`.
+Strict original signature, universal arm64/x86_64, version and installed native hash
+`c9e2cc8d5217162b8866e4923cfa39bf7cd23a70b8a3bd9c865e431749c3c0cc` passed.
+Rollback retained intact: `/Users/andy/Library/Application Support/Craft/app-update-backups/2026-11-04/wordcraft/before-0.15.0-adf9fce8.app`.
+
+Independent native GUI/MCP smoke passed on a disposable profile/document:17tools, exact typed
+text readback, Undo/Redo, explicit save/close/reopen and PNG rendering. No inference requested.
+Owned PID89460 quit normally through the control channel; listener17981 released and private
+key removed. Receipt: `/var/folders/z6/7ct4dgns2236tw0d27zdb9s40000gn/T/wordcraft-installed-smoke-uuf3qua7/report.json`
+on Book; copied report/render under `/private/tmp/craft-suite-rollout-20261104/book-word-completion-evidence/` on Mini.
+No owner document, assistant profile or conversation was changed; no user process force-quit.
+
+Latest official releases were rechecked2026-11-05: all seven target tags still current.
+Fresh complete inventories match exactly for seven standard apps, four Assistant Previews and
+helper0.1.6: `/private/tmp/craft-suite-rollout-20261104/final-{mini,book}-20261105.json`.
+There are no remaining rollout blockers. Existing MCP processes and their
 absolute registrations remain unchanged; current companion CLIs are available via `.local/bin`.
+
+Completion gates rerun2026-11-05: all nine `cargo xtask ci` steps passed with pinned font/language inputs, including5202 native tests (9 ignored) and15 WASM crates. Log `/private/tmp/craft-suite-word-completion-20261105-ci.log`. The copied Book synthetic render was inspected and its text matches the requested fixture. Native test PID89460 is confirmed exited.
