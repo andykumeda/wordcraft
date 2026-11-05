@@ -42,3 +42,33 @@ before delivery; the baseline engine/CLI gaps will remain explicitly documented.
 
 The existing standard DeckCraft 0.15.0 app is present on the Mini. A custom preview must use
 a separate bundle identity and retain its updater opt-out before installation.
+
+## Implementation and acceptance checkpoint
+
+- Shared source `eb0abbf` (helper 0.1.5) and font compatibility `0ff4f97` are committed/pushed.
+  Combined UI/native/helper/fonts tests, strict scoped lint and UI WASM passed. This is a candidate,
+  not an installed update. The normal account/config/skills/plugins environment is reused;
+  approvals are explicit helper UI requests with headless pending/respond commands.
+- Live synthetic candidate checks passed on the Mini: explicit native skill (10.9 s), native
+  stdio MCP call (10.78 s), Stop cleanup (18.52 s), and abrupt helper-death/EOF cleanup
+  (27.68 s). Fake document mutations were reversible in the fixture. These are not Deck engine
+  Undo proofs; Deck has its own tests. No existing app process was signalled.
+- The first cancellation fixture used an inherited working directory outside its declared
+  temporary permissions and was rejected before execution. Correcting its CWD made it pass.
+- A further rollout gate remains: inherited Finder CWD may be `/`, so it must not become a
+  default writable Codex workspace. The shared follow-up uses an explicit validated
+  `CRAFT_CODEX_WORKSPACE` override or a retained private workspace under the Craft AI root,
+  while keeping the normal Codex profile and its policies. No installation until verified.
+- Deck's original missing-glyph test passes with pinned fonts and the original deep-group test
+  passes in the normal build profile; the stack overflow occurred only under a temporary
+  unoptimized profile. Both were classified before source integration.
+- Deck's initial implementation compiles. Nine focused assistant/preview tests, desktop preview
+  startup tests and the narrow layering test pass. The full 25-tool catalog is retained.
+  Dirty raw quit and pathless native picker bypasses found in independent review are guarded
+  and tested alongside dirty close/revert, stale target/selection/revision, and cancellation.
+- Root-owned separate preview packager is prepared; packaging/source builds, live Deck model
+  acceptance, final full CI and deployment remain pending.
+
+Temporary test fixture and receipts: `/private/tmp/craft-native-helper-acceptance.py` and
+`/private/tmp/craft-assistant-015-20261104/`. Test authentication used a temporary link to the
+existing account file, removed after each test; no credentials or personal chats were copied.
