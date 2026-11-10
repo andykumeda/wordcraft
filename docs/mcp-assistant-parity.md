@@ -1,5 +1,7 @@
 # Assistant and external MCP parity
 
+> **0.17 reconciliation in progress:** The shared assistant refuses new turns after multiple native windows have appeared until extra windows are closed and WordCraft is restarted. Assistant calls with no explicit document id are refused if the active document changed during the turn. Explicit calls to other documents and discovery remain available; after a window switch, even a call naming the active document requires a new turn because its selection belongs to that window. Assistant visual input is temporarily unavailable because queued actions are not bound to a window; page rendering and window-bound screenshots remain available. The full source CI gate passed; signed-package and installed-app verification remain pending. Older statements below describe the previous implementation.
+
 Status: implementation verified by focused automated tests, 2026-11-02. Evidence is recorded below;
 no new installed-app or live-provider acceptance is implied.
 

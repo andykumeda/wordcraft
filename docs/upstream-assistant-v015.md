@@ -355,3 +355,54 @@ Primary retained exact verified prior-app ZIPs per host under
 as `wordcraft-HOST-before-toolbar.zip`. The root suite ledger owns final inventory and
 post-documentation cache-fingerprint refresh. No app/provider contract changes or remaining
 Word installation work are implied by that documentation-only finalization.
+
+## WordCraft 0.17 reconciliation — 2026-11-09
+
+| Workstream | State | Acceptance / evidence |
+| --- | --- | --- |
+| 0.17 merge candidate | In progress | Isolated candidate only; 0.15.2 is not an ancestor of 0.17.0, so the provisional prior-release merge base and auto-merged changes require review. |
+| Assistant document/window safety | In progress | Implicit operations fail if the active document or window changes; queued visual input fails closed pending window-bound delivery. Assistant suite passed locked/offline against exact b347 with the clean configured font checkout and official pinned i18n checkout (36 passed, 2 ignored), including delayed multi-window rejection. The switched-document regression failed with its guard disabled because the command succeeded; the passing guard source was restored. Existing screenshot document-switch cancellation, active-window capture and title-bar toggle tests passed against b347. Bound screenshots remain available; queued visual input remains disabled pending a window-bound queue. |
+| Shared dependencies | In progress | Exact local b347 shared revision is pinned and Cargo metadata resolved locked/offline; publication is not assumed. Configured font checkout is clean; a separate official i18n checkout matches the pinned revision. |
+| Build and delivery | In progress | Locked/offline GUI and CLI checks, scoped strict Clippy for UI/GUI/CLI, formatting, assets and layers passed against b347 and the pinned font and i18n inputs. Full source gates, actual-model document/Undo/Redo/save/reopen checks, signed packaging and protected launcher installation on both Macs remain required. Existing installations are unchanged. |
+
+The first full offline `cargo xtask ci` run with b347 and the pinned font/i18n inputs passed
+workspace formatting and Clippy, but its test stage failed when four desktop argument tests all
+timed out after 30 seconds. The remaining CI stages were skipped. Running the same compiled
+`--help` test alone then passed in 4.47 seconds; running all four argument tests together passed
+in 0.67 seconds. The cause of the original timeouts is not established. The full gate therefore
+has not passed. The original run is recorded in `/private/tmp/wordcraft-b347-full-ci.log`.
+An offline rerun with `RUST_TEST_THREADS=1` again passed formatting and workspace Clippy,
+but the invalid-port integration test timed out; the other three argument tests passed and
+subsequent gates were skipped. That invalid-port test passed independently in 0.76 seconds
+with the same external temporary directory. The serial run is recorded in
+`/private/tmp/wordcraft-b347-full-ci-serial.log`; the timeout's cause remains unconfirmed.
+Twenty direct runs of the invalid-port test passed; none was slow enough to capture a stack.
+The separate Cargo-driven reproduction was paused at the user's request during compilation,
+before its first test started. Its task-owned process tree (PIDs 4382, 4394, 13118, 13884,
+and 13886) was stopped; sources and the external target under
+`/Volumes/X10 Pro/codex-craft-build-20261109/wordcraft-full-ci` were retained. Its partial
+log is `/private/tmp/wordcraft-argument-reproduction.log`. Resume only when requested, and
+repeat full CI after concurrent builds have finished to assess the load hypothesis.
+The shared dependency branch `codex/assistant-upstream-20261109` was independently checked
+on the remote and points at the exact pinned b347 revision. A resumed full CI with one build
+job was stopped during workspace Clippy to coordinate CPU use; formatting had passed and its
+partial log is `/private/tmp/wordcraft-b347-full-ci-resumed.log`. The external target remains
+available for a subsequent run.
+The subsequent low-load full CI run passed all nine stages (formatting, workspace Clippy and
+tests, translation audit, language check, doctests, assets, layers and wasm) with one build job
+and one test thread, exact b347 and the pinned release inputs. The wasm check emitted two
+warnings but passed. All four formerly timing-out argument tests passed. A sample of one slow
+test child showed it still in macOS dynamic-loader startup before Word's argument handling;
+this observation does not establish the cause of the earlier failures. Log:
+`/private/tmp/wordcraft-b347-full-ci-lowload.log`.
+
+### Matching CLI and existing MCP registrations — 2026-11-09
+
+| Workstream | State | Acceptance and evidence |
+| --- | --- | --- |
+| WordCraft 0.17 CLI | Not started | Build `wordcraft-cli` from the exact reviewed integrated commit and b347 lock; sign and independently verify the artifact, version, architecture and digest before either host receives it. The integrated GUI packager currently includes only the GUI executable and does not update an external CLI. |
+| Mini CLI and MCP | Not started | Existing PATH symlink selects 0.15.2; the enabled Codex MCP entry directly names a 0.15.0 CLI with connect-mode arguments. After independent artifact validation, preserve backups and update the versioned CLI, PATH symlink and only the MCP command path; keep the current connect arguments and every other setting. Verify actual MCP startup and connect behavior against a synthetic document. |
+| MacBook CLI and MCP | Blocked | PATH selects 0.15.2 and the configured MCP wrapper selects the installed GUI version. Its 0.15.2 executable exists and its signature verifies, but the wrapper currently refuses it because that version's `approved-sha256.txt` is absent. Preserve the wrapper and connect arguments; once the exact 0.17 CLI is independently signed and verified, stage it without overwriting existing files, create its approval record only for that verified executable, and run `--diagnose-version 0.17.0` before GUI cutover. After cutover verify `--diagnose` and an actual synthetic MCP connection. Restart affected MCP client sessions as needed. |
+| Data and delivery | Not started | Preserve both hosts' app settings, profiles, credentials, conversations, existing registrations, recovery copies and unrelated files. Keep verified rollback copies of any symlink or configuration actually changed. CLI preparation does not authorize installing the unqualified GUI. |
+
+The wrapper has no approval-creation command; its supported check consumes an explicit, lowercase SHA-256 record next to the versioned executable. Do not manufacture an approval for an unverified artifact or replace the existing wrapper with an unguarded route. The current 0.15.2 missing approval and the planned 0.17 delivery are separate facts; neither has been modified.

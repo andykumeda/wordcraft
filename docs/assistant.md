@@ -1,5 +1,7 @@
 # Desktop assistant
 
+> **0.17 reconciliation in progress:** The shared assistant refuses new turns after multiple native windows have appeared until extra windows are closed and WordCraft is restarted. Assistant calls with no explicit document id are refused if the active document changed during the turn. Explicit calls to other documents and discovery remain available; after a window switch, even a call naming the active document requires a new turn because its selection belongs to that window. Assistant visual input is temporarily unavailable because queued actions are not bound to a window; page rendering and window-bound screenshots remain available. The full source CI gate passed; signed-package and installed-app verification remain pending. Older statements below describe the previous implementation.
+
 Current host source pins compatible shared libraries and loads the independently installed helper, with the [complete external MCP interface](mcp-assistant-parity.md).
 The [current integration ledger](upstream-assistant-v015.md#current-single-app-deployment--2026-11-05) records the normal WordCraft0.15.2 installation on both Macs with helper 0.1.7. Separate Preview apps are retired.
 The [native Codex and DeckCraft ledger](codex-native-deckcraft-ledger.md) records the November 4 runtime qualification and deployment.

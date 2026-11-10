@@ -70,7 +70,7 @@ use shape::shape_format;
 use table::{table_design, table_layout};
 #[cfg(test)]
 use tabs::MIN_TAB_W;
-use tabs::{MORE_TABS_W, reading_toolbar};
+use tabs::{MORE_TABS_W, TAB_ENTRY_SECS, TAB_ENTRY_SLIDE, ease_out_cubic, note_contextual_tabs, reading_toolbar, tab_entry};
 pub use tabs::{
     StripPlan, TABS, TabSpec, contextual_tabs, fit_tabs, has_chart_selected, has_picture_selected, has_shape_selected, has_smart_art_selected,
     in_table_public, plan_strip, resolve_tab,
@@ -129,6 +129,25 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
         if next != app.ui.tab {
             app.ui.tab = next.to_string();
         }
+    }
+    let (now, animate) = (ui.input(|i| i.time), app.animations_on());
+    let leaving = {
+        let user_names: Vec<&str> = user_tabs.iter().filter(|e| e.custom).map(|e| e.name.as_str()).collect();
+        let contextual: Vec<(&str, usize)> = tabs
+            .iter()
+            .enumerate()
+            .map(|(i, (n, _))| (n.as_str(), i))
+            .filter(|(n, _)| wordcraft_engine::ribbon::CONTEXTUAL_TABS.contains(n) && !user_names.contains(n))
+            .collect();
+        note_contextual_tabs(ui.ctx(), &contextual, now, animate)
+    };
+    // A tab that just left stays in its former slot while it slides and fades away.
+    let ghosts: Vec<(String, usize, f64)> = leaving.iter().filter(|(n, ..)| !tabs.iter().any(|(t, _)| t == n)).cloned().collect();
+    if !ghosts.is_empty() {
+        ui.ctx().request_repaint();
+    }
+    for (name, at, _) in &ghosts {
+        tabs.insert((*at).min(tabs.len()), (name.clone(), false));
     }
     // Tab strip.
     egui::Panel::top("tabs")
@@ -236,26 +255,42 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
                         };
                         ui.with_layout(tabs_layout, |ui| {
                             // The tabs that don't fit go into a » menu at the end of the strip (#897, #2026).
-                            for (i, ((tab, custom), _)) in tabs.iter().zip(&plan.fits).enumerate().filter(|(_, (_, fits))| **fits) {
+                            for (i, ((tab, custom), _)) in tabs
+                                .iter()
+                                .zip(&plan.fits)
+                                .enumerate()
+                                .filter(|(_, ((tab, _), fits))| **fits || ghosts.iter().any(|(n, ..)| n == tab))
+                            {
                                 let (tab, custom) = (tab.as_str(), *custom);
                                 let contextual = !custom && wordcraft_engine::ribbon::CONTEXTUAL_TABS.contains(&tab);
                                 // A custom tab's name is the user's own text: shown as typed.
                                 let shown = if custom { tab } else { tl!(tab) };
                                 let w = plan.widths.get(i).copied().unwrap_or(0.0) - 2.0;
                                 let cut = specs.get(i).is_some_and(|sp| sp.text_w + plan.pad > w + 0.5);
-                                let (r, resp) = ui.allocate_exact_size(vec2(w, 30.0), Sense::click());
-                                if app.ui.keytips == crate::keytips::Phase::Tabs {
+                                let ghost = ghosts.iter().find(|(n, ..)| n == tab);
+                                let (r, resp) = ui.allocate_exact_size(vec2(w, 30.0), if ghost.is_some() { Sense::hover() } else { Sense::click() });
+                                if app.ui.keytips == crate::keytips::Phase::Tabs && ghost.is_none() {
                                     crate::keytips::record_tab(r, tab, &app.ui.keytip_prefix, &mut app.keytip_rects);
-                                } else if app.ui.keytips == crate::keytips::Phase::Legacy {
+                                } else if app.ui.keytips == crate::keytips::Phase::Legacy && ghost.is_none() {
                                     // Every tab: they only place the legacy keys' hint (#1697).
                                     crate::keytips::record_tab(r, tab, "", &mut app.keytip_rects);
                                 }
                                 let active = app.ui.tab == tab && !app.ui.backstage;
                                 resp.widget_info(|| egui::WidgetInfo::selected(egui::Role::Button, true, active, shown));
-                                if resp.hovered() && !active {
+                                if resp.hovered() && !active && ghost.is_none() {
                                     ui.painter().rect_filled(r.shrink2(vec2(0.0, 4.0)), 4.0, t.hover);
                                 }
-                                let color = if contextual || active { t.accent_text } else { t.text };
+                                // Entering and departing contextual tabs move and fade without changing layout.
+                                let entry = match ghost {
+                                    Some((_, _, left)) => {
+                                        ui.ctx().request_repaint();
+                                        1.0 - ease_out_cubic(((now - left) / TAB_ENTRY_SECS) as f32)
+                                    }
+                                    None if contextual => tab_entry(ui.ctx(), tab, now, animate),
+                                    None => 1.0,
+                                };
+                                let shift = vec2(-(1.0 - entry) * TAB_ENTRY_SLIDE, 0.0);
+                                let color = (if contextual || active { t.accent_text } else { t.text }).gamma_multiply(entry);
                                 if cut {
                                     let mut job = egui::text::LayoutJob::single_section(
                                         shown.to_string(),
@@ -268,20 +303,20 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
                                         overflow_character: Some('…'),
                                     };
                                     let galley = ui.painter().layout_job(job);
-                                    ui.painter().galley(r.center() - galley.size() / 2.0, galley, color);
+                                    ui.painter().galley(r.center() + shift - galley.size() / 2.0, galley, color);
                                 } else {
                                     ui.painter().text(
-                                        r.center(),
+                                        r.center() + shift,
                                         Align2::CENTER_CENTER,
                                         shown,
                                         if active { semibold(12.5) } else { medium(12.5) },
                                         color,
                                     );
                                 }
-                                let resp = if cut { resp.on_hover_text(shown) } else { resp };
+                                let resp = if cut && ghost.is_none() { resp.on_hover_text(shown) } else { resp };
                                 if active {
-                                    let u = Rect::from_center_size(pos2(r.center().x, r.max.y - 2.0), vec2(w - 16.0, 3.0));
-                                    ui.painter().rect_filled(u, 2.0, t.accent);
+                                    let u = Rect::from_center_size(pos2(r.center().x + shift.x, r.max.y - 2.0), vec2(w - 16.0, 3.0));
+                                    ui.painter().rect_filled(u, 2.0, t.accent.gamma_multiply(entry));
                                 }
                                 if resp.clicked() {
                                     let _ = app.run("ui.tab", json!({"tab": tab}));
@@ -289,13 +324,15 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
                                 if resp.double_clicked() && tab != "File" {
                                     let _ = app.run("ui.collapseRibbon", json!({}));
                                 }
-                                resp.context_menu(|ui| crate::widgets::customize_menu_items(ui, app));
+                                if ghost.is_none() {
+                                    resp.context_menu(|ui| crate::widgets::customize_menu_items(ui, app));
+                                }
                             }
                             let left_out: Vec<(&str, &str)> = tabs
                                 .iter()
                                 .zip(&labels)
                                 .zip(&plan.fits)
-                                .filter(|(_, fits)| !**fits)
+                                .filter(|(((tab, _), _), fits)| !**fits && !ghosts.iter().any(|(n, ..)| n == tab))
                                 .map(|(((tab, _), shown), _)| (tab.as_str(), *shown))
                                 .collect();
                             if !left_out.is_empty() {
@@ -348,120 +385,112 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
             let bg = ui.interact(ui.max_rect(), ui.scope_id().with("ribbon_background"), Sense::click());
             crate::rtl::context_menu(&bg, |ui| crate::rtl::root(ui, |ui| crate::widgets::customize_menu_items(ui, app)));
             let entry = user_tabs.iter().find(|e| e.name == app.ui.tab);
-            ui.with_layout(egui::Layout::right_to_left(egui::Align::Min), |ui| {
-                ui.with_layout(
-                    if crate::rtl::on() { egui::Layout::right_to_left(egui::Align::Min) } else { egui::Layout::left_to_right(egui::Align::Min) },
-                    |ui| {
-                        crate::ribbon_fit::begin(ui.ctx(), &app.ui.tab, ui.available_width() - 4.0);
-                        // 0.37 keeps the scroll offset private: an edge-chevron click leaves a one-frame
-                        // request here and the next scroll area is built at that offset.
-                        let pending_id = ui.scope_id().with("ribbon_scroll_pending");
-                        let pending = ui.data(|d| d.get_temp::<f32>(pending_id));
-                        // Right to left, the groups start at the right edge. A scroll area's content is
-                        // unbounded, so the row gets a width: the view's, or last frame's content if wider.
-                        // The scroll position is kept as a distance from the right, where reading starts.
-                        let rtl = crate::rtl::on();
-                        let view_w = ui.available_width();
-                        let row_id = ui.scope_id().with(("ribbon_row", app.ui.tab.as_str()));
-                        let (content_w, from_right, last_over) = ui.data(|d| d.get_temp::<(f32, f32, f32)>(row_id)).unwrap_or((0.0, 0.0, 0.0));
-                        let row_w = content_w.max(view_w);
-                        let set_offset = (last_over - from_right).max(0.0);
-                        let mut area = egui::ScrollArea::horizontal().scroll_bar_visibility(egui::scroll_area::ScrollBarVisibility::AlwaysHidden);
-                        if rtl {
-                            area = area.horizontal_scroll_offset(set_offset);
-                        } else if let Some(x) = pending {
-                            area = area.horizontal_scroll_offset(x);
-                        }
-                        let mut measured = 0.0;
-                        let scroll = area.show(ui, |ui| {
-                            let size = vec2(if rtl { row_w } else { ui.available_size_before_wrap().x }, ui.available_size_before_wrap().y);
-                            let body = |ui: &mut Ui| {
-                                ui.spacing_mut().item_spacing = vec2(2.0, 2.0);
-                                match entry {
-                                    // Every tab hidden: nothing to show.
-                                    Some(e) if e.hidden => return,
-                                    Some(e) if e.custom => return custom_groups(app, ui, &e.groups),
-                                    _ => {}
-                                }
-                                match app.ui.tab.as_str() {
-                                    "Home" => home(app, ui),
-                                    "Insert" => insert(app, ui),
-                                    "Draw" => draw(app, ui),
-                                    "Design" => design(app, ui),
-                                    "Layout" => layout(app, ui),
-                                    "References" => references(app, ui),
-                                    "Mailings" => mailings(app, ui),
-                                    "Review" => review(app, ui),
-                                    "View" => view(app, ui),
-                                    "Developer" => developer(app, ui),
-                                    "Zotero" => zotero(app, ui),
-                                    "Help" => help(app, ui),
-                                    "Table Design" => table_design(app, ui),
-                                    "Table Layout" => table_layout(app, ui),
-                                    "Equation" if app.session.math.is_some() => crate::equation_tab::show(app, ui),
-                                    "Picture Format" => picture_format(app, ui),
-                                    "Shape Format" => shape_format(app, ui),
-                                    "SmartArt Design" => smart_art_design(app, ui),
-                                    "Outlining" => outlining(app, ui),
-                                    "Chart Design" => chart_design(app, ui),
-                                    _ => home(app, ui),
-                                }
-                                if let Some(e) = entry {
-                                    custom_groups(app, ui, &e.groups);
-                                }
-                            };
-                            if rtl {
-                                measured =
-                                    ui.allocate_ui_with_layout(size, egui::Layout::right_to_left(egui::Align::Min), body).response.rect.width();
-                            } else {
-                                crate::rtl::horizontal_top(ui, body);
-                            }
-                        });
-                        if rtl {
-                            let over = (scroll.content_size.x - scroll.inner_rect.width()).max(0.0);
-                            // Only the user's own scrolling moves the remembered distance: while the width
-                            // is still settling, the offset set above lags a frame behind.
-                            let scrolled = (scroll.state.clamped_offset().x - set_offset).abs() > 0.5 && set_offset <= over;
-                            let from_right = if scrolled { (over - scroll.state.clamped_offset().x).max(0.0) } else { from_right.min(over) };
-                            ui.data_mut(|d| d.insert_temp(row_id, (measured, from_right, over)));
-                            if (over - last_over).abs() > 0.5 {
-                                ui.ctx().request_repaint();
-                            }
-                        }
-                        if pending.is_some() {
-                            let _ = ui.data_mut(|d| d.remove_temp::<f32>(pending_id));
-                        }
-                        crate::ribbon_fit::end(ui.ctx());
-                        // The bar is hidden, so a row wider than the window would be clipped with no sign. Edge chevrons show
-                        // where more is and scroll it on click. Every command also stays reachable through Search Commands.
-                        let r = scroll.inner_rect;
-                        let overflow = scroll.content_size.x - r.width();
-                        let offset = scroll.state.clamped_offset().x;
-                        let step = 160.0;
-                        let mut next = None;
-                        if offset > 1.0 {
-                            let left = Rect::from_min_max(r.left_top(), pos2(r.left() + 18.0, r.bottom()));
-                            if edge_cue(ui, left, "‹", tl!("Scroll ribbon left"), &t) {
-                                next = Some(offset - step);
-                            }
-                        }
-                        if overflow - offset > 1.0 {
-                            let right = Rect::from_min_max(pos2(r.right() - 18.0, r.top()), r.right_bottom());
-                            if edge_cue(ui, right, "›", tl!("Scroll ribbon right"), &t) {
-                                next = Some(offset + step);
-                            }
-                        }
-                        if let Some(x) = next {
-                            let x = x.clamp(0.0, overflow.max(0.0));
-                            if rtl {
-                                ui.data_mut(|d| d.insert_temp(row_id, (measured, (overflow - x).max(0.0), overflow.max(0.0))));
-                            }
-                            ui.data_mut(|d| d.insert_temp(pending_id, x));
-                            ui.ctx().request_repaint();
-                        }
-                    },
-                );
+            crate::ribbon_fit::begin(ui.ctx(), &app.ui.tab, ui.available_width() - 4.0);
+            // 0.37 keeps the scroll offset private: an edge-chevron click leaves a one-frame
+            // request here and the next scroll area is built at that offset.
+            let pending_id = ui.scope_id().with("ribbon_scroll_pending");
+            let pending = ui.data(|d| d.get_temp::<f32>(pending_id));
+            // Right to left, the groups start at the right edge. A scroll area's content is
+            // unbounded, so the row gets a width: the view's, or last frame's content if wider.
+            // The scroll position is kept as a distance from the right, where reading starts.
+            let rtl = crate::rtl::on();
+            let view_w = ui.available_width();
+            let row_id = ui.scope_id().with(("ribbon_row", app.ui.tab.as_str()));
+            let (content_w, from_right, last_over) = ui.data(|d| d.get_temp::<(f32, f32, f32)>(row_id)).unwrap_or((0.0, 0.0, 0.0));
+            let row_w = content_w.max(view_w);
+            let set_offset = (last_over - from_right).max(0.0);
+            let mut area = egui::ScrollArea::horizontal().scroll_bar_visibility(egui::scroll_area::ScrollBarVisibility::AlwaysHidden);
+            if rtl {
+                area = area.horizontal_scroll_offset(set_offset);
+            } else if let Some(x) = pending {
+                area = area.horizontal_scroll_offset(x);
+            }
+            let mut measured = 0.0;
+            let scroll = area.show(ui, |ui| {
+                let size = vec2(if rtl { row_w } else { ui.available_size_before_wrap().x }, ui.available_size_before_wrap().y);
+                let body = |ui: &mut Ui| {
+                    ui.spacing_mut().item_spacing = vec2(2.0, 2.0);
+                    match entry {
+                        // Every tab hidden: nothing to show.
+                        Some(e) if e.hidden => return,
+                        Some(e) if e.custom => return custom_groups(app, ui, &e.groups),
+                        _ => {}
+                    }
+                    match app.ui.tab.as_str() {
+                        "Home" => home(app, ui),
+                        "Insert" => insert(app, ui),
+                        "Draw" => draw(app, ui),
+                        "Design" => design(app, ui),
+                        "Layout" => layout(app, ui),
+                        "References" => references(app, ui),
+                        "Mailings" => mailings(app, ui),
+                        "Review" => review(app, ui),
+                        "View" => view(app, ui),
+                        "Developer" => developer(app, ui),
+                        "Zotero" => zotero(app, ui),
+                        "Help" => help(app, ui),
+                        "Table Design" => table_design(app, ui),
+                        "Table Layout" => table_layout(app, ui),
+                        "Equation" if app.session.math.is_some() => crate::equation_tab::show(app, ui),
+                        "Picture Format" => picture_format(app, ui),
+                        "Shape Format" => shape_format(app, ui),
+                        "SmartArt Design" => smart_art_design(app, ui),
+                        "Outlining" => outlining(app, ui),
+                        "Chart Design" => chart_design(app, ui),
+                        _ => home(app, ui),
+                    }
+                    if let Some(e) = entry {
+                        custom_groups(app, ui, &e.groups);
+                    }
+                };
+                if rtl {
+                    measured = ui.allocate_ui_with_layout(size, egui::Layout::right_to_left(egui::Align::Min), body).response.rect.width();
+                } else {
+                    crate::rtl::horizontal_top(ui, body);
+                }
             });
+            if rtl {
+                let over = (scroll.content_size.x - scroll.inner_rect.width()).max(0.0);
+                // Only the user's own scrolling moves the remembered distance: while the width
+                // is still settling, the offset set above lags a frame behind.
+                let scrolled = (scroll.state.clamped_offset().x - set_offset).abs() > 0.5 && set_offset <= over;
+                let from_right = if scrolled { (over - scroll.state.clamped_offset().x).max(0.0) } else { from_right.min(over) };
+                ui.data_mut(|d| d.insert_temp(row_id, (measured, from_right, over)));
+                if (over - last_over).abs() > 0.5 {
+                    ui.ctx().request_repaint();
+                }
+            }
+            if pending.is_some() {
+                let _ = ui.data_mut(|d| d.remove_temp::<f32>(pending_id));
+            }
+            crate::ribbon_fit::end(ui.ctx());
+            // The bar is hidden, so a row wider than the window would be clipped with no sign. Edge chevrons show
+            // where more is and scroll it on click. Every command also stays reachable through Search Commands.
+            let r = scroll.inner_rect;
+            let overflow = scroll.content_size.x - r.width();
+            let offset = scroll.state.clamped_offset().x;
+            let step = 160.0;
+            let mut next = None;
+            if offset > 1.0 {
+                let left = Rect::from_min_max(r.left_top(), pos2(r.left() + 18.0, r.bottom()));
+                if edge_cue(ui, left, "‹", tl!("Scroll ribbon left"), &t) {
+                    next = Some(offset - step);
+                }
+            }
+            if overflow - offset > 1.0 {
+                let right = Rect::from_min_max(pos2(r.right() - 18.0, r.top()), r.right_bottom());
+                if edge_cue(ui, right, "›", tl!("Scroll ribbon right"), &t) {
+                    next = Some(offset + step);
+                }
+            }
+            if let Some(x) = next {
+                let x = x.clamp(0.0, overflow.max(0.0));
+                if rtl {
+                    ui.data_mut(|d| d.insert_temp(row_id, (measured, (overflow - x).max(0.0), overflow.max(0.0))));
+                }
+                ui.data_mut(|d| d.insert_temp(pending_id, x));
+                ui.ctx().request_repaint();
+            }
         });
 }
 

@@ -31,7 +31,6 @@ fn side_panel_catalog_matches_all_external_mcp_names_descriptions_and_schemas() 
     let catalog = host.tools(&target(), &cancel).unwrap();
     let tools = raw["tools"].as_array().unwrap();
     assert_eq!(catalog.len(), tools.len());
-    assert_eq!(catalog.len(), 17);
     for (tool, external) in catalog.iter().zip(tools) {
         assert_eq!(tool.name, external["name"].as_str().unwrap());
         assert_eq!(tool.description, external["description"].as_str().unwrap());
@@ -94,7 +93,7 @@ fn mcp(app: &mut WordApp, calls: Vec<(&'static str, Value)>, side_panel: bool, r
 }
 
 #[test]
-fn omitted_render_screenshot_click_and_key_calls_match_the_external_live_server() {
+fn render_and_bound_screenshot_work_but_unbound_input_fails_closed() {
     let calls = vec![
         ("render_page", json!({"page":1,"scale":0.1})),
         ("screenshot", json!({})),
@@ -105,15 +104,17 @@ fn omitted_render_screenshot_click_and_key_calls_match_the_external_live_server(
     let mut external = app();
     let side = mcp(&mut embedded, calls.clone(), true, None);
     let outside = mcp(&mut external, calls, false, None);
-    assert_eq!(side, outside);
     assert_eq!(side.len(), 4);
-    for image in side.iter().take(2) {
-        assert_eq!(image["isError"], false, "{image}");
-        assert_eq!(image["content"][0]["type"], "image");
-        assert_eq!(image["content"][0]["mimeType"], "image/png");
-        assert!(image["content"][0]["data"].as_str().unwrap().starts_with("iVBOR"));
+    for (result, external) in side.iter().zip(&outside).take(2) {
+        assert_eq!(result, external);
+        assert_eq!(result["isError"], false);
+        assert_eq!(result["content"][0]["type"], "image");
     }
-    assert_eq!(embedded.synthetic, external.synthetic);
+    for result in &side[2..] {
+        assert_eq!(result["isError"], true);
+        assert!(result.to_string().contains("target window can change"));
+    }
+    assert!(embedded.synthetic.is_empty());
 }
 
 #[test]
@@ -311,4 +312,50 @@ fn capture_wordcraft_assistant_pane() {
     let path = std::env::temp_dir().join("wordcraft-assistant-pane.png");
     harness.render().unwrap().save(&path).unwrap();
     eprintln!("{}", path.display());
+}
+
+#[test]
+fn switched_active_document_refuses_implicit_edits_and_window_input_but_allows_explicit_doc() {
+    let mut app = app();
+    let first = app.session.document_id();
+    let mut guard = Guard::new(&app, String::new(), vec![]);
+    app.execute("file.new", json!({"template":"blank"})).unwrap();
+    let second = app.session.document_id();
+    assert_ne!(first, second);
+    let ctx = egui::Context::default();
+    let mut call = |method: &str, params: Value| {
+        let (request, reply) = control::ControlRequest::new(method, params);
+        let pending = Pending { request, cancel: Cancellation::new(), expires: Instant::now() + Duration::from_secs(10) };
+        dispatch(&mut app, &ctx, &mut guard, pending);
+        reply.recv_timeout(Duration::from_secs(1)).unwrap()
+    };
+    let rejected = call("engine.execute", json!({"command":"text.insert", "params":{"text":"wrong"}}));
+    assert_eq!(rejected["ok"], false);
+    assert!(rejected["error"].as_str().unwrap().contains("changed during this assistant turn"));
+    assert_eq!(call("ui.key", json!({"key":"A"}))["ok"], false);
+    assert_eq!(call("engine.execute", json!({"command":"view.switchWindows"}))["ok"], true);
+    assert_eq!(call("engine.execute", json!({"command":"text.insert", "params":{"text":" intended"}, "doc":first}))["ok"], true);
+    assert!(!text(&app).contains("wrong"));
+    assert!(app.session.with_document(first, |s| s.doc.plain_text(wordcraft_doc::StoryRef::Body)).unwrap().contains("intended"));
+}
+
+#[test]
+fn switching_windows_on_the_same_document_refuses_even_an_explicit_current_document_edit() {
+    let mut app = app();
+    let doc = app.session.document_id();
+    let mut guard = Guard::new(&app, String::new(), vec![]);
+    app.new_window();
+    assert_eq!(app.session.document_id(), doc);
+    assert_ne!(app.windows.shown(), guard.window);
+    let (request, reply) = control::ControlRequest::new("engine.execute", json!({"command":"text.insert","params":{"text":"wrong"},"doc":doc}));
+    dispatch(
+        &mut app,
+        &egui::Context::default(),
+        &mut guard,
+        Pending { request, cancel: Cancellation::new(), expires: Instant::now() + Duration::from_secs(10) },
+    );
+    let result = reply.recv_timeout(Duration::from_secs(1)).unwrap();
+    assert_eq!(result["ok"], false);
+    assert!(result["error"].as_str().unwrap().contains("active window changed"));
+    assert!(!text(&app).contains("wrong"));
 }

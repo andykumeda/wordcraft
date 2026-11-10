@@ -26,6 +26,8 @@ pub(super) struct Remote {
     settings: Option<bool>,
     shown: bool,
     keyboard_visible: bool,
+    multiple_windows_seen: bool,
+    window_owner: Option<u64>,
     language: String,
     generation: u64,
     chooser: Option<mpsc::Receiver<crate::FileDialogAnswer>>,
@@ -66,6 +68,9 @@ pub(super) fn ensure_loaded(app: &mut WordApp) {
 pub(super) fn show(app: &mut WordApp, ui: &mut egui::Ui, settings: bool) {
     ensure_loaded(app);
     app.assistant.remote.shown = true;
+    let window = app.windows.shown();
+    app.assistant.remote.multiple_windows_seen |= app.window_count() > 1 || app.assistant.remote.window_owner.is_some_and(|owner| owner != window);
+    app.assistant.remote.window_owner.get_or_insert(window);
     let label = app.title_stem();
     let language = crate::i18n::current().code();
     if let Some(controller) = &mut app.assistant.remote.controller {
@@ -118,6 +123,12 @@ pub(super) fn action(app: &mut WordApp, action: Action) -> Result<(), String> {
 }
 
 fn begin(app: &mut WordApp, prompt: String, files: Vec<String>) -> Result<(), String> {
+    if app.window_count() > 1
+        || app.assistant.remote.multiple_windows_seen
+        || app.assistant.remote.window_owner.is_some_and(|owner| owner != app.windows.shown())
+    {
+        return Err("Save your work, close extra WordCraft windows, and restart WordCraft before starting an assistant turn; the shared assistant cannot safely identify the originating window yet.".into());
+    }
     if app.assistant.remote.turn.is_some() || app.assistant.remote.dispatching {
         return Err("Finish or stop the current assistant turn first.".into());
     }
@@ -384,6 +395,25 @@ mod tests {
         assert!(!app.assistant.remote.controller.as_ref().unwrap().ready());
         assert!(!app.assistant.remote.owns_keyboard());
     }
+    #[test]
+    fn multiple_windows_refuse_a_turn_even_if_the_extra_window_closed_before_delivery() {
+        let mut app = WordApp::new(wordcraft_engine::Session::new(wordcraft_doc::Document::new()), Default::default());
+        let first = app.windows.shown();
+        app.assistant.remote.window_owner = Some(first);
+        app.new_window();
+        assert_eq!(app.window_count(), 2);
+        assert!(begin(&mut app, "Edit the document".into(), vec![]).unwrap_err().contains("restart WordCraft"));
+        assert!(app.enter_window(first));
+        assert!(app.close_window_only());
+        assert_eq!(app.window_count(), 1);
+        assert_ne!(app.windows.shown(), first);
+        assert!(begin(&mut app, "Edit the document".into(), vec![]).unwrap_err().contains("restart WordCraft"));
+        app.assistant.remote.multiple_windows_seen = true;
+        app.assistant.remote.window_owner = Some(app.windows.shown());
+        assert!(begin(&mut app, "Edit the document".into(), vec![]).unwrap_err().contains("restart WordCraft"));
+        assert!(app.assistant.remote.turn.is_none());
+    }
+
     #[test]
     fn nested_begin_and_reload_are_rejected_while_turn_is_taken_for_gui_dispatch() {
         let mut app = WordApp::new(wordcraft_engine::Session::new(wordcraft_doc::Document::new()), Default::default());

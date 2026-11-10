@@ -257,6 +257,9 @@ fn turn_request(shared: &SharedStore, app: AppId, messages: Vec<Message>, target
 }
 
 fn send(app: &mut WordApp, root: PathBuf, prompt: String) -> Result<(), String> {
+    if app.window_count() > 1 {
+        return Err("Close extra WordCraft windows before starting an assistant turn.".into());
+    }
     if app.assistant.native.job.is_some() {
         return Err("wait for assistant settings to finish loading".into());
     }

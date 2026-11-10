@@ -17,10 +17,11 @@ pub(super) struct Pending {
     expires: Instant,
 }
 
-/// Correlation metadata for the assistant turn, not a restriction on MCP document arguments.
-/// The live backend authorizes `doc`, files, protected documents and dirty-close requests.
+/// The originating document and window identify implicit requests for this turn.
+/// The live backend still validates explicit documents, files and dirty-close requests.
 pub(super) struct Guard {
     target: Target,
+    window: u64,
 }
 
 impl Guard {
@@ -29,7 +30,7 @@ impl Guard {
     }
 
     pub(super) fn new(app: &WordApp, _prompt: String, _files: Vec<String>) -> Self {
-        Self { target: Target { id: app.session.document_id().to_string(), revision: app.session.rev() } }
+        Self { target: Target { id: app.session.document_id().to_string(), revision: app.session.rev() }, window: app.windows.shown() }
     }
 }
 
@@ -118,14 +119,34 @@ impl ToolHost for McpHost {
     }
 }
 
-pub(super) fn dispatch(app: &mut WordApp, ctx: &egui::Context, _guard: &mut Guard, pending: Pending) {
+pub(super) fn dispatch(app: &mut WordApp, ctx: &egui::Context, guard: &mut Guard, pending: Pending) {
     if pending.cancel.is_cancelled() || Instant::now() >= pending.expires {
         pending.cancel.cancel();
         let _ = pending.request.reply.send(json!({"ok":false,"error":"assistant request expired or was stopped before execution"}));
         return;
     }
-    // Exactly the external control-channel path, including asynchronous screenshot admission.
-    // Existing process/thread file roots remain authoritative; no assistant-only scope is added.
+    let request = &pending.request;
+    if request.method.starts_with("ui.") && !matches!(request.method.as_str(), "ui.inspect" | "ui.parity" | "ui.render" | "ui.screenshot") {
+        let _ = pending.request.reply.send(json!({"ok":false,"error":"Assistant visual input is unavailable because the target window can change before the action completes. Use document commands instead."}));
+        return;
+    }
+    let addressed = matches!(request.method.as_str(), "engine.execute" | "command" | "document.inspect" | "ui.render")
+        && request.params.get("doc").is_some_and(|doc| !doc.is_null());
+    let discovery = matches!(request.method.as_str(), "engine.commands" | "ui.inspect" | "ui.parity")
+        || (matches!(request.method.as_str(), "engine.execute" | "command")
+            && request.params.get("command").or_else(|| request.params.get("id")).and_then(Value::as_str) == Some("view.switchWindows"));
+    if guard.window != app.windows.shown()
+        && !discovery
+        && (!addressed || request.params.get("doc").and_then(Value::as_u64) == Some(app.session.document_id()))
+    {
+        let _ = pending.request.reply.send(json!({"ok":false,"error":"The active window changed during this assistant turn. Start a new turn in the intended window, or explicitly address another document with `doc`."}));
+        return;
+    }
+    if guard.target.id != app.session.document_id().to_string() && !addressed && !discovery {
+        let _ = pending.request.reply.send(json!({"ok":false,"error":"The active document changed during this assistant turn. Specify the document id with `doc`, or start a new turn in the intended window."}));
+        return;
+    }
+    // Document commands keep the control channel's validation and file-root checks.
     match control::handle(app, ctx, &pending.request) {
         control::Outcome::Done(value) => {
             let _ = pending.request.reply.send(value);
